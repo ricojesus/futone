@@ -1,23 +1,163 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🏆 Futone - Sistema de Gerenciamento de Partidas
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Futone é uma plataforma web moderna para gerenciamento de partidas de futebol/futsal. O sistema permite criar, organizar e acompanhar partidas, equipes e resultados de forma simples e intuitiva.
 
-## About Laravel
+## 📋 Características Principais
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- 👥 **Autenticação de Usuários**: Sistema completo de login, registro e gerenciamento de perfil
+- ⚽ **Gerenciamento de Partidas**: Criar, editar e acompanhar partidas em tempo real
+- 👨‍👩‍👧‍👦 **Gerenciamento de Equipes**: Organizar e gerenciar equipes e seus integrantes
+- 📊 **Motor de Matchmaking**: Sistema inteligente para definir partidas equilibradas
+- 🔐 **Sistema Seguro**: Autenticação com tokens e autorização por papel de usuário
+- 📱 **Interface Responsiva**: Design moderno com Tailwind CSS
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🛠️ Stack Tecnológico
+
+- **Backend**: Laravel 11.x
+- **Frontend**: Blade Templates + Alpine.js
+- **Styling**: Tailwind CSS
+- **Database**: SQLite (desenvolvimento)
+- **Testing**: Pest Framework
+- **Build Tool**: Vite
+
+## 🚀 Começando
+
+### Requisitos
+- PHP 8.2+
+- Composer
+- Node.js 18+
+- npm
+
+### Instalação
+
+1. **Clone o repositório**
+```bash
+git clone <seu-repositorio>
+cd futone
+```
+
+2. **Instale as dependências PHP**
+```bash
+composer install
+```
+
+3. **Configure o arquivo .env**
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+4. **Instale as dependências Node.js**
+```bash
+npm install
+```
+
+5. **Compile os assets**
+```bash
+npm run build
+```
+
+6. **Execute as migrações**
+```bash
+php artisan migrate
+```
+
+7. **Inicie o servidor de desenvolvimento**
+```bash
+php artisan serve
+```
+
+A aplicação estará disponível em `http://localhost:8000`
+
+## 📁 Estrutura do Projeto
+
+```
+futone/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/        # Controladores da aplicação
+│   │   └── Controllers/Auth/   # Controladores de autenticação
+│   ├── Models/                 # Modelos Eloquent
+│   └── Services/               # Serviços de negócio
+├── resources/
+│   ├── views/                  # Templates Blade
+│   ├── css/                    # Estilos Tailwind
+│   └── js/                     # JavaScript Alpine.js
+├── routes/
+│   ├── web.php                 # Rotas web
+│   ├── api.php                 # Rotas API
+│   └── auth.php                # Rotas de autenticação
+├── database/
+│   ├── migrations/             # Migrações do banco
+│   ├── factories/              # Model factories para testes
+│   └── seeders/                # Seeders do banco
+└── tests/                      # Testes da aplicação
+```
+
+## 🔑 Funcionalidades Principais
+
+### Autenticação
+- Registro de novos usuários
+- Login seguro
+- Recuperação de senha
+- Perfil de usuário customizável
+
+### Gerenciamento de Partidas
+- Criar novas partidas com data, hora e local
+- Definir equipes participantes
+- Registrar placar e resultado
+- Histórico completo de partidas
+
+### Gerenciamento de Equipes
+- Criar e gerenciar equipes
+- Adicionar/remover jogadores
+- Visualizar estatísticas da equipe
+- Histórico de participações
+
+### Motor de Matchmaking
+- Sugestão automática de equipes equilibradas
+- Análise de histórico de desempenho
+- Previsão de resultados
+
+## 📝 Rotas Principais
+
+| Rota | Descrição |
+|------|-----------|
+| `/` | Página inicial |
+| `/login` | Login |
+| `/register` | Registro de novo usuário |
+| `/dashboard` | Dashboard do usuário (autenticado) |
+| `/profile` | Perfil do usuário |
+| `/matches` | Listagem de partidas |
+| `/teams` | Listagem de equipes |
+
+## 🧪 Testing
+
+Execute os testes com:
+
+```bash
+./vendor/bin/pest
+```
+
+## 🔄 Build para Produção
+
+```bash
+npm run build
+php artisan config:cache
+php artisan route:cache
+```
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT.
+
+## 👥 Contribuidores
+
+Desenvolvido por **Lucilene de Jesus**
+
+## 📧 Suporte
+
+Para dúvidas ou sugestões, entre em contato através do dashboard da aplicação.
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
