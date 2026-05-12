@@ -4,7 +4,7 @@
         <div class="w-full max-w-md">
             <div class="bg-white shadow-md rounded-lg p-8">
                 <div class="text-center mb-8">
-                    <h1 class="text-3xl font-bold text-gray-800">Futone</h1>
+                    <h1 class="text-3xl font-bold text-gray-800">Futone v1</h1>
                     <p class="text-gray-600 mt-2">Bem-vindo ao Futone</p>
                 </div>
 
