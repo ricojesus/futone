@@ -20,16 +20,17 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          port: ${{ secrets.SSH_PORT }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          port: ${{ secrets.SERVER_PORT }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd ${{ secrets.PROJECT_PATH }}
-
+            cd /home2/rica4975/public_html/futone
             git pull origin main
 
             composer install --no-dev --optimize-autoloader
+
+            php artisan migrate --force
 
             php artisan optimize:clear
             php artisan config:cache
