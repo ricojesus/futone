@@ -29,8 +29,6 @@ jobs:
             cd /home2/rica4975/public_html/futone
             git pull origin main
 
-            composer install --no-dev --optimize-autoloader
-
             php artisan migrate --force
 
             php artisan optimize:clear
