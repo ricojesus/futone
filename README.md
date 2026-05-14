@@ -19,10 +19,26 @@ O principal diferencial e a criacao de ligas online com partidas multiplayer em 
 ## Funcionalidades Principais
 
 - Autenticacao completa de usuarios (registro, login e perfil).
+- Controle de acesso por perfil de usuario (Jogador e Administrador).
 - Gestao de times, elencos e desempenho por competicao.
 - Organizacao de calendario, confrontos e classificacao da liga.
 - Simulacao e processamento de partidas em tempo real.
 - Infraestrutura para partidas PvP (humano vs humano) e PvE (humano vs CPU).
+
+## Perfis de Usuario
+
+### Jogador
+
+- Criar ligas online.
+- Entrar em ligas existentes.
+- Jogar partidas da liga em tempo real.
+
+### Administrador
+
+- Adicionar e gerenciar jogadores do sistema.
+- Adicionar e gerenciar times.
+- Adicionar e gerenciar paises.
+- Manter outros cadastros administrativos da plataforma.
 
 ## Stack Tecnologico
 
