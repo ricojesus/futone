@@ -15,6 +15,18 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    @if(Auth::user()->isAdmin())
+                        <x-nav-link :href="route('admin.usuarios')" :active="request()->routeIs('admin.usuarios')">
+                            {{ __('Usuários') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.times')" :active="request()->routeIs('admin.times')">
+                            {{ __('Times') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.paises')" :active="request()->routeIs('admin.paises')">
+                            {{ __('Países') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -70,6 +82,18 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            @if(Auth::user()->isAdmin())
+                <x-responsive-nav-link :href="route('admin.usuarios')" :active="request()->routeIs('admin.usuarios')">
+                    {{ __('Usuários') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.times')" :active="request()->routeIs('admin.times')">
+                    {{ __('Times') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.paises')" :active="request()->routeIs('admin.paises')">
+                    {{ __('Países') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->
