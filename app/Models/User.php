@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -27,6 +28,16 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->type === 'administrador';
+    }
+
+    public function ownedLeagues(): HasMany
+    {
+        return $this->hasMany(\App\Models\League::class, 'owner_id');
+    }
+
+    public function leagueTeams(): HasMany
+    {
+        return $this->hasMany(\App\Models\LeagueTeam::class, 'user_id');
     }
 
     /**

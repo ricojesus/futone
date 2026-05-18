@@ -15,7 +15,6 @@ class League extends Model
         'name',
         'slug',
         'owner_id',
-        'city_id',
         'state_id',
         'type',
         'invite_code',

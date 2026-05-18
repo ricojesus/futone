@@ -8,16 +8,38 @@ use App\Http\Controllers\Admin\PlayerController;
 use App\Http\Controllers\Admin\StateController;
 use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\LeagueController;
+use App\Http\Controllers\LeagueJoinController;
+use App\Http\Controllers\LeagueTeamController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserDashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [UserDashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
+
+// ── Ligas (área do jogador) ──────────────────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::get('/ligas',          [LeagueController::class, 'index'])->name('leagues.index');
+    Route::get('/ligas/criar',    [LeagueController::class, 'create'])->name('leagues.create');
+    Route::post('/ligas',         [LeagueController::class, 'store'])->name('leagues.store');
+
+    // Entrar por código ou listar públicas — ANTES de {league} para evitar colisão
+    Route::get('/ligas/entrar',   [LeagueJoinController::class, 'create'])->name('leagues.join');
+    Route::post('/ligas/entrar',  [LeagueJoinController::class, 'store'])->name('leagues.join.store');
+
+    Route::get('/ligas/{league}',         [LeagueController::class, 'show'])->name('leagues.show');
+    Route::post('/ligas/{league}/iniciar',[LeagueController::class, 'start'])->name('leagues.start');
+
+    // Inscrição com time
+    Route::get('/ligas/{league}/entrar',  [LeagueTeamController::class, 'create'])->name('leagues.teams.create');
+    Route::post('/ligas/{league}/times',  [LeagueTeamController::class, 'store'])->name('leagues.teams.store');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

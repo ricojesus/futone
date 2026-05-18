@@ -15,6 +15,12 @@
                     Dashboard
                 </a>
 
+                <a href="{{ route('leagues.index') }}"
+                    class="px-4 py-2 rounded-lg text-sm font-medium transition
+                        {{ request()->routeIs('leagues.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                    Minhas Ligas
+                </a>
+
                 @if(Auth::user()->isAdmin())
                     <a href="{{ route('admin.dashboard') }}"
                         class="px-4 py-2 rounded-lg text-sm font-medium transition
@@ -111,6 +117,11 @@
             class="block px-3 py-2 rounded-lg text-sm font-medium
                 {{ request()->routeIs('dashboard') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
             Dashboard
+        </a>
+        <a href="{{ route('leagues.index') }}"
+            class="block px-3 py-2 rounded-lg text-sm font-medium
+                {{ request()->routeIs('leagues.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
+            Minhas Ligas
         </a>
 
         @if(Auth::user()->isAdmin())
