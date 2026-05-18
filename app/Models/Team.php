@@ -13,7 +13,7 @@ class Team extends Model
     protected $fillable = [
         'name',
         'country_id',
-        'city_id',
+        'state_id',
         'badge',
         'tolerance',
     ];
@@ -23,8 +23,8 @@ class Team extends Model
         return $this->belongsTo(Country::class, 'country_id');
     }
 
-    public function city(): BelongsTo
+    public function state(): BelongsTo
     {
-        return $this->belongsTo(City::class, 'city_id');
+        return $this->belongsTo(State::class, 'state_id');
     }
 }

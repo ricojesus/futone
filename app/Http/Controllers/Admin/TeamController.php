@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\City;
 use App\Models\Country;
+use App\Models\State;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +14,7 @@ class TeamController extends Controller
 {
     public function index(): View
     {
-        $teams = Team::with(['country', 'city'])->orderBy('name')->paginate(20);
+        $teams = Team::with(['country', 'state'])->orderBy('name')->paginate(20);
 
         return view('admin.teams.index', compact('teams'));
     }
@@ -23,7 +23,7 @@ class TeamController extends Controller
     {
         return view('admin.teams.create', [
             'countries' => Country::orderBy('name')->get(),
-            'cities'    => City::orderBy('state')->orderBy('name')->get(),
+            'cities'    => State::orderBy('country_id')->orderBy('code')->get(),
         ]);
     }
 
@@ -32,7 +32,7 @@ class TeamController extends Controller
         $data = $request->validate([
             'name'       => ['required', 'string', 'max:100'],
             'country_id' => ['nullable', 'uuid', 'exists:countries,id'],
-            'city_id'    => ['nullable', 'uuid', 'exists:cities,id'],
+            'state_id'   => ['nullable', 'uuid', 'exists:states,id'],
             'tolerance'  => ['required', 'integer', 'min:1', 'max:100'],
             'badge'      => ['nullable', 'image', 'max:2048'],
         ]);
@@ -51,7 +51,7 @@ class TeamController extends Controller
         return view('admin.teams.edit', [
             'team'      => $team,
             'countries' => Country::orderBy('name')->get(),
-            'cities'    => City::orderBy('state')->orderBy('name')->get(),
+            'cities'    => State::orderBy('country_id')->orderBy('code')->get(),
         ]);
     }
 
@@ -60,7 +60,7 @@ class TeamController extends Controller
         $data = $request->validate([
             'name'       => ['required', 'string', 'max:100'],
             'country_id' => ['nullable', 'uuid', 'exists:countries,id'],
-            'city_id'    => ['nullable', 'uuid', 'exists:cities,id'],
+            'state_id'   => ['nullable', 'uuid', 'exists:states,id'],
             'tolerance'  => ['required', 'integer', 'min:1', 'max:100'],
             'badge'      => ['nullable', 'image', 'max:2048'],
         ]);
@@ -86,12 +86,10 @@ class TeamController extends Controller
         $lines  = array_map('str_getcsv', file($request->file('file')->getRealPath()));
         $header = array_map('strtolower', array_map('trim', array_shift($lines)));
 
-        // Indexa países e cidades por lookup rápido
+        // Indexa países e estados por lookup rápido
         $countryIndex = Country::pluck('id', 'code')->map(fn($id) => (string) $id)->toArray();
-        // Indexa cidades por "nome|state" (ex: "São Paulo|SP")
-        $cityIndex = City::all()->mapWithKeys(
-            fn($c) => [strtolower($c->name) . '|' . strtolower($c->state ?? '') => (string) $c->id]
-        )->toArray();
+        // Indexa estados por sigla (ex: "SP")
+        $stateIndex = State::pluck('id', 'code')->map(fn($id) => (string) $id)->toArray();
 
         $imported = 0;
         $errors   = [];
@@ -117,13 +115,12 @@ class TeamController extends Controller
             $countryCode = strtoupper(trim($row['country_code'] ?? ''));
             $countryId   = $countryIndex[$countryCode] ?? null;
 
-            $cityName  = strtolower(trim($row['city'] ?? ''));
-            $cityState = strtolower(trim($row['state'] ?? ''));
-            $cityId    = $cityIndex["{$cityName}|{$cityState}"] ?? ($cityIndex["{$cityName}|"] ?? null);
+            $stateCode = strtoupper(trim($row['state'] ?? ''));
+            $stateId   = $stateIndex[$stateCode] ?? null;
 
             Team::create([
                 'name'       => $name,
-                'city_id'    => $cityId,
+                'state_id'   => $stateId,
                 'country_id' => $countryId,
                 'tolerance'  => $tolerance,
             ]);

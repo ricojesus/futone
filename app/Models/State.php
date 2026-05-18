@@ -7,13 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class City extends Model
+class State extends Model
 {
     use HasUuids;
 
     protected $fillable = [
         'name',
-        'state',
+        'code',
         'country_id',
     ];
 
@@ -24,11 +24,11 @@ class City extends Model
 
     public function teams(): HasMany
     {
-        return $this->hasMany(Team::class, 'city_id');
+        return $this->hasMany(Team::class, 'state_id');
     }
 
     public function fullName(): string
     {
-        return $this->state ? "{$this->name} – {$this->state}" : $this->name;
+        return "{$this->name} ({$this->code})";
     }
 }

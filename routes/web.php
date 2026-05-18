@@ -1,10 +1,10 @@
 <?php
 
-use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\CoachController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PlayerController;
+use App\Http\Controllers\Admin\StateController;
 use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
@@ -38,13 +38,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/teams/{team}', [TeamController::class, 'update'])->name('teams.update');
     Route::delete('/teams/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');
 
-    Route::get('/cities', [CityController::class, 'index'])->name('cities');
-    Route::get('/cities/create', [CityController::class, 'create'])->name('cities.create');
-    Route::post('/cities', [CityController::class, 'store'])->name('cities.store');
-    Route::post('/cities/upload', [CityController::class, 'upload'])->name('cities.upload');
-    Route::get('/cities/{city}/edit', [CityController::class, 'edit'])->name('cities.edit');
-    Route::patch('/cities/{city}', [CityController::class, 'update'])->name('cities.update');
-    Route::delete('/cities/{city}', [CityController::class, 'destroy'])->name('cities.destroy');
+    Route::get('/states', [StateController::class, 'index'])->name('states');
+    Route::get('/states/create', [StateController::class, 'create'])->name('states.create');
+    Route::post('/states', [StateController::class, 'store'])->name('states.store');
+    Route::post('/states/upload', [StateController::class, 'upload'])->name('states.upload');
+    Route::get('/states/{state}/edit', [StateController::class, 'edit'])->name('states.edit');
+    Route::patch('/states/{state}', [StateController::class, 'update'])->name('states.update');
+    Route::delete('/states/{state}', [StateController::class, 'destroy'])->name('states.destroy');
 
     Route::get('/countries', [CountryController::class, 'index'])->name('countries');
     Route::get('/countries/create', [CountryController::class, 'create'])->name('countries.create');

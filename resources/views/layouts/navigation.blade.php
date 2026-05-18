@@ -36,10 +36,10 @@
                             {{ request()->routeIs('admin.teams*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                         Times
                     </a>
-                    <a href="{{ route('admin.cities') }}"
+                    <a href="{{ route('admin.states') }}"
                         class="px-4 py-2 rounded-lg text-sm font-medium transition
-                            {{ request()->routeIs('admin.cities*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
-                        Cidades
+                            {{ request()->routeIs('admin.states*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                        Estados
                     </a>
                     <a href="{{ route('admin.countries') }}"
                         class="px-4 py-2 rounded-lg text-sm font-medium transition
@@ -113,7 +113,7 @@
             <a href="{{ route('admin.users') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Usuários</a>
             <a href="{{ route('admin.players') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Jogadores</a>
             <a href="{{ route('admin.teams') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Times</a>
-            <a href="{{ route('admin.cities') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Cidades</a>
+            <a href="{{ route('admin.states') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Estados</a>
             <a href="{{ route('admin.countries') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Países</a>
             <a href="{{ route('admin.coaches') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Treinadores</a>
         @endif

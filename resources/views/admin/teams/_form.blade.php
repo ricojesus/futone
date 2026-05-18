@@ -11,23 +11,23 @@
     @enderror
 </div>
 
-{{-- City + Country --}}
+{{-- State + Country --}}
 <div class="grid gap-4 sm:grid-cols-2">
     <div>
-        <label for="city_id" class="block text-sm font-medium text-slate-300">Cidade</label>
-        <select id="city_id" name="city_id"
+        <label for="state_id" class="block text-sm font-medium text-slate-300">Estado</label>
+        <select id="state_id" name="state_id"
             class="mt-1.5 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white
                    focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500
-                   @error('city_id') border-rose-500 @enderror">
-            <option value="">— Sem cidade —</option>
-            @foreach($cities as $city)
-                <option value="{{ $city->id }}"
-                    {{ old('city_id', $team->city_id ?? '') === $city->id ? 'selected' : '' }}>
-                    {{ $city->name }}{{ $city->state ? ' – ' . $city->state : '' }}
+                   @error('state_id') border-rose-500 @enderror">
+            <option value="">— Sem estado —</option>
+            @foreach($states as $state)
+                <option value="{{ $state->id }}"
+                    {{ old('state_id', $team->state_id ?? '') === $state->id ? 'selected' : '' }}>
+                    {{ $state->name }} ({{ $state->code }})
                 </option>
             @endforeach
         </select>
-        @error('city_id')
+        @error('state_id')
             <p class="mt-1 text-xs text-rose-400">{{ $message }}</p>
         @enderror
     </div>

@@ -3,24 +3,24 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\City;
 use App\Models\Country;
+use App\Models\State;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-class CityController extends Controller
+class StateController extends Controller
 {
     public function index(): View
     {
-        $cities = City::with('country')->orderBy('state')->orderBy('name')->paginate(30);
+        $states = State::with('country')->orderBy('country_id')->orderBy('code')->paginate(50);
 
-        return view('admin.cities.index', compact('cities'));
+        return view('admin.states.index', compact('states'));
     }
 
     public function create(): View
     {
-        return view('admin.cities.create', [
+        return view('admin.states.create', [
             'countries' => Country::orderBy('name')->get(),
         ]);
     }
@@ -29,45 +29,49 @@ class CityController extends Controller
     {
         $data = $request->validate([
             'name'       => ['required', 'string', 'max:100'],
-            'state'      => ['nullable', 'string', 'max:10'],
+            'code'       => ['required', 'string', 'max:10'],
             'country_id' => ['nullable', 'uuid', 'exists:countries,id'],
         ]);
 
-        City::create($data);
+        $data['code'] = strtoupper($data['code']);
 
-        return redirect()->route('admin.cities')->with('success', 'Cidade criada com sucesso.');
+        State::create($data);
+
+        return redirect()->route('admin.states')->with('success', 'Estado criado com sucesso.');
     }
 
-    public function edit(City $city): View
+    public function edit(State $state): View
     {
-        return view('admin.cities.edit', [
-            'city'      => $city,
+        return view('admin.states.edit', [
+            'state'     => $state,
             'countries' => Country::orderBy('name')->get(),
         ]);
     }
 
-    public function update(Request $request, City $city): RedirectResponse
+    public function update(Request $request, State $state): RedirectResponse
     {
         $data = $request->validate([
             'name'       => ['required', 'string', 'max:100'],
-            'state'      => ['nullable', 'string', 'max:10'],
+            'code'       => ['required', 'string', 'max:10'],
             'country_id' => ['nullable', 'uuid', 'exists:countries,id'],
         ]);
 
-        $city->update($data);
+        $data['code'] = strtoupper($data['code']);
 
-        return redirect()->route('admin.cities')->with('success', 'Cidade atualizada com sucesso.');
+        $state->update($data);
+
+        return redirect()->route('admin.states')->with('success', 'Estado atualizado com sucesso.');
     }
 
-    public function destroy(City $city): RedirectResponse
+    public function destroy(State $state): RedirectResponse
     {
-        if ($city->teams()->exists()) {
-            return back()->with('error', "Não é possível remover: {$city->name} possui times vinculados.");
+        if ($state->teams()->exists()) {
+            return back()->with('error', "Não é possível remover: {$state->name} possui times vinculados.");
         }
 
-        $city->delete();
+        $state->delete();
 
-        return redirect()->route('admin.cities')->with('success', 'Cidade removida.');
+        return redirect()->route('admin.states')->with('success', 'Estado removido.');
     }
 
     public function upload(Request $request): RedirectResponse
@@ -91,43 +95,36 @@ class CityController extends Controller
                 continue;
             }
 
-            $row = array_combine($header, $line);
+            $row  = array_combine($header, $line);
+            $name = trim($row['name'] ?? '');
+            $code = strtoupper(trim($row['code'] ?? ''));
 
-            $name  = trim($row['name'] ?? '');
-            $state = strtoupper(trim($row['state'] ?? '')) ?: null;
-
-            if ($name === '') {
-                $errors[] = "Linha " . ($i + 2) . ": name é obrigatório.";
+            if ($name === '' || $code === '') {
+                $errors[] = "Linha " . ($i + 2) . ": name e code são obrigatórios.";
                 continue;
             }
 
             $countryCode = strtoupper(trim($row['country_code'] ?? ''));
             $countryId   = $countryIndex[$countryCode] ?? null;
 
-            // Evita duplicatas silenciosamente
-            $exists = City::where('name', $name)
-                ->where('state', $state)
-                ->where('country_id', $countryId)
-                ->exists();
-
-            if ($exists) {
+            if (State::where('code', $code)->where('country_id', $countryId)->exists()) {
                 $skipped++;
                 continue;
             }
 
-            City::create([
+            State::create([
                 'name'       => $name,
-                'state'      => $state,
+                'code'       => $code,
                 'country_id' => $countryId,
             ]);
 
             $imported++;
         }
 
-        $message = "{$imported} cidade(s) importada(s).";
-        if ($skipped)  $message .= " {$skipped} duplicata(s) ignorada(s).";
-        if ($errors)   $message .= ' Erros: ' . implode(' | ', $errors);
+        $message = "{$imported} estado(s) importado(s).";
+        if ($skipped) $message .= " {$skipped} duplicata(s) ignorada(s).";
+        if ($errors)  $message .= ' Erros: ' . implode(' | ', $errors);
 
-        return redirect()->route('admin.cities')->with('success', $message);
+        return redirect()->route('admin.states')->with('success', $message);
     }
 }

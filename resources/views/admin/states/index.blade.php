@@ -4,14 +4,14 @@
         <div class="mb-8 flex items-center justify-between">
             <div>
                 <p class="text-xs font-semibold uppercase tracking-widest text-slate-500">Administração</p>
-                <h1 class="text-2xl font-extrabold text-white">Cidades</h1>
+                <h1 class="text-2xl font-extrabold text-white">Estados</h1>
             </div>
-            <a href="{{ route('admin.cities.create') }}"
+            <a href="{{ route('admin.states.create') }}"
                 class="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
-                Nova cidade
+                Novo estado
             </a>
         </div>
 
@@ -20,7 +20,6 @@
                 {{ session('success') }}
             </div>
         @endif
-
         @if(session('error'))
             <div class="mb-6 rounded-xl border border-rose-500/30 bg-rose-500/10 px-5 py-4 text-sm text-rose-400">
                 {{ session('error') }}
@@ -31,12 +30,10 @@
         <div class="mb-6 rounded-2xl border border-slate-700 bg-slate-900 p-5">
             <h2 class="mb-1 text-sm font-semibold text-slate-300">Importar via planilha</h2>
             <p class="mb-4 text-xs text-slate-500">
-                Colunas: <code class="text-emerald-400">name</code> (obrigatório),
-                <code class="text-emerald-400">state</code> (ex: SP),
-                <code class="text-emerald-400">country_code</code> (ex: BRA).
-                Duplicatas são ignoradas automaticamente.
+                Colunas: <code class="text-emerald-400">name</code>, <code class="text-emerald-400">code</code> (obrigatórios),
+                <code class="text-emerald-400">country_code</code> (ex: BRA). Duplicatas por código + país são ignoradas.
             </p>
-            <form method="POST" action="{{ route('admin.cities.upload') }}" enctype="multipart/form-data"
+            <form method="POST" action="{{ route('admin.states.upload') }}" enctype="multipart/form-data"
                 class="flex flex-col gap-3 sm:flex-row sm:items-end">
                 @csrf
                 <div class="flex-1">
@@ -57,34 +54,31 @@
             </form>
         </div>
 
-        {{-- Tabela --}}
         <div class="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden">
             <table class="min-w-full divide-y divide-slate-800">
                 <thead class="bg-slate-800/50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Cidade</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Estado</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Sigla</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">País</th>
                         <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Ações</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800">
-                    @forelse($cities as $city)
+                    @forelse($states as $state)
                         <tr class="transition hover:bg-slate-800/40">
-                            <td class="px-6 py-4 text-sm font-semibold text-white">{{ $city->name }}</td>
+                            <td class="px-6 py-4 text-sm font-semibold text-white">{{ $state->name }}</td>
                             <td class="px-6 py-4">
-                                @if($city->state)
-                                    <span class="rounded-md bg-slate-700 px-2 py-0.5 text-xs font-mono font-semibold text-slate-300">
-                                        {{ $city->state }}
-                                    </span>
-                                @else
-                                    <span class="text-sm text-slate-600">—</span>
-                                @endif
+                                <span class="rounded-md bg-slate-700 px-2 py-0.5 text-xs font-mono font-semibold text-slate-300">
+                                    {{ $state->code }}
+                                </span>
                             </td>
-                            <td class="px-6 py-4 text-sm text-slate-400">{{ $city->country?->name ?? '—' }}</td>
+                            <td class="px-6 py-4 text-sm text-slate-400">
+                                {{ $state->country?->flag }} {{ $state->country?->name ?? '—' }}
+                            </td>
                             <td class="px-6 py-4 text-right">
-                                <a href="{{ route('admin.cities.edit', $city) }}"
-                                    class="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-slate-500 hover:text-white">
+                                <a href="{{ route('admin.states.edit', $state) }}"
+                                    class="inline-flex items-center rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-slate-500 hover:text-white">
                                     Editar
                                 </a>
                             </td>
@@ -92,14 +86,14 @@
                     @empty
                         <tr>
                             <td colspan="4" class="px-6 py-10 text-center text-sm text-slate-500">
-                                Nenhuma cidade cadastrada.
+                                Nenhum estado cadastrado.
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
             <div class="border-t border-slate-800 px-6 py-4">
-                {{ $cities->links() }}
+                {{ $states->links() }}
             </div>
         </div>
 

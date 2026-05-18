@@ -1,11 +1,9 @@
 <x-app-layout>
     <div class="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
-
         <div class="mb-8">
-            <p class="text-xs font-semibold uppercase tracking-widest text-slate-500">Administração · Cidades</p>
-            <h1 class="text-2xl font-extrabold text-white">Editar Cidade</h1>
+            <p class="text-xs font-semibold uppercase tracking-widest text-slate-500">Administração · Estados</p>
+            <h1 class="text-2xl font-extrabold text-white">Editar Estado</h1>
         </div>
-
         @if($errors->any())
             <div class="mb-6 rounded-xl border border-rose-500/30 bg-rose-500/10 px-5 py-4 text-sm text-rose-400">
                 <ul class="list-inside list-disc space-y-1">
@@ -13,15 +11,14 @@
                 </ul>
             </div>
         @endif
-
         <div class="rounded-2xl border border-slate-700 bg-slate-900 p-6">
-            <form method="POST" action="{{ route('admin.cities.update', $city) }}" class="space-y-6">
+            <form method="POST" action="{{ route('admin.states.update', $state) }}" class="space-y-6">
                 @csrf
                 @method('PATCH')
-                @include('admin.cities._form')
+                @include('admin.states._form')
                 <div class="flex items-center justify-between border-t border-slate-800 pt-6">
-                    <form method="POST" action="{{ route('admin.cities.destroy', $city) }}"
-                        onsubmit="return confirm('Remover {{ $city->name }}?')">
+                    <form method="POST" action="{{ route('admin.states.destroy', $state) }}"
+                        onsubmit="return confirm('Remover {{ $state->name }}?')">
                         @csrf
                         @method('DELETE')
                         <button type="submit"
@@ -30,7 +27,7 @@
                         </button>
                     </form>
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('admin.cities') }}"
+                        <a href="{{ route('admin.states') }}"
                             class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white">
                             Cancelar
                         </a>
@@ -42,6 +39,5 @@
                 </div>
             </form>
         </div>
-
     </div>
 </x-app-layout>
