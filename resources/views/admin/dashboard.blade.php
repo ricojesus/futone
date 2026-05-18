@@ -44,7 +44,7 @@
             </a>
 
             {{-- Países --}}
-            <a href="{{ route('admin.paises') }}"
+            <a href="{{ route('admin.countries') }}"
                 class="flex items-center gap-5 rounded-2xl border border-slate-700 bg-slate-900 p-5 transition hover:border-amber-500/50 hover:bg-slate-800/60 sm:col-span-2 lg:col-span-1">
                 <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/30">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -87,7 +87,7 @@
                 Gerenciar times
             </a>
 
-            <a href="{{ route('admin.paises') }}"
+            <a href="{{ route('admin.countries') }}"
                 class="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3.5 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253M3 12a8.96 8.96 0 0 0 .284 2.253" />

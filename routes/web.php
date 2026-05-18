@@ -1,7 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\PaisController;
 use App\Http\Controllers\Admin\PlayerController;
 use App\Http\Controllers\Admin\TimeController;
 use App\Http\Controllers\Admin\UsuarioController;
@@ -30,7 +30,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/times', [TimeController::class, 'index'])->name('times');
 
-    Route::get('/paises', [PaisController::class, 'index'])->name('paises');
+    Route::get('/countries', [CountryController::class, 'index'])->name('countries');
+    Route::get('/countries/create', [CountryController::class, 'create'])->name('countries.create');
+    Route::post('/countries', [CountryController::class, 'store'])->name('countries.store');
+    Route::get('/countries/{country}/edit', [CountryController::class, 'edit'])->name('countries.edit');
+    Route::patch('/countries/{country}', [CountryController::class, 'update'])->name('countries.update');
+    Route::delete('/countries/{country}', [CountryController::class, 'destroy'])->name('countries.destroy');
 
     Route::get('/players', [PlayerController::class, 'index'])->name('players');
     Route::get('/players/create', [PlayerController::class, 'create'])->name('players.create');
