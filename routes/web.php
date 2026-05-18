@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PaisController;
 use App\Http\Controllers\Admin\PlayerController;
 use App\Http\Controllers\Admin\TimeController;
@@ -22,6 +23,8 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
     Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios');
     Route::patch('/usuarios/{usuario}', [UsuarioController::class, 'update'])->name('usuarios.update');
 
