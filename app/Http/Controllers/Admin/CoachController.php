@@ -30,12 +30,7 @@ class CoachController extends Controller
         $data = $request->validate([
             'name'       => ['required', 'string', 'max:100'],
             'country_id' => ['nullable', 'uuid', 'exists:countries,id'],
-            'photo'      => ['nullable', 'image', 'max:2048'],
         ]);
-
-        if ($request->hasFile('photo')) {
-            $data['photo'] = $request->file('photo')->store('coaches', 'public');
-        }
 
         Coach::create($data);
 
@@ -55,12 +50,7 @@ class CoachController extends Controller
         $data = $request->validate([
             'name'       => ['required', 'string', 'max:100'],
             'country_id' => ['nullable', 'uuid', 'exists:countries,id'],
-            'photo'      => ['nullable', 'image', 'max:2048'],
         ]);
-
-        if ($request->hasFile('photo')) {
-            $data['photo'] = $request->file('photo')->store('coaches', 'public');
-        }
 
         $coach->update($data);
 
@@ -69,10 +59,6 @@ class CoachController extends Controller
 
     public function destroy(Coach $coach): RedirectResponse
     {
-        if ($coach->photo) {
-            \Storage::disk('public')->delete($coach->photo);
-        }
-
         $coach->delete();
 
         return redirect()->route('admin.coaches')->with('success', 'Treinador removido.');

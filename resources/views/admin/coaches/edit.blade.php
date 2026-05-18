@@ -18,7 +18,7 @@
         @endif
 
         <div class="rounded-2xl border border-slate-700 bg-slate-900 p-6">
-            <form method="POST" action="{{ route('admin.coaches.update', $coach) }}" enctype="multipart/form-data"
+            <form method="POST" action="{{ route('admin.coaches.update', $coach) }}"
                 class="space-y-6">
                 @csrf
                 @method('PATCH')

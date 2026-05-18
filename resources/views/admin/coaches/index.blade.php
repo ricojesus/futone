@@ -36,14 +36,9 @@
                         <tr class="transition hover:bg-slate-800/40">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    @if($coach->photo)
-                                        <img src="{{ Storage::url($coach->photo) }}" alt="{{ $coach->name }}"
-                                            class="h-9 w-9 rounded-full object-cover ring-1 ring-slate-700">
-                                    @else
-                                        <span class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-sm font-bold text-slate-300">
-                                            {{ substr($coach->name, 0, 1) }}
-                                        </span>
-                                    @endif
+                                    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-sm font-bold text-slate-300">
+                                        {{ substr($coach->name, 0, 1) }}
+                                    </span>
                                     <span class="text-sm font-semibold text-white">{{ $coach->name }}</span>
                                 </div>
                             </td>

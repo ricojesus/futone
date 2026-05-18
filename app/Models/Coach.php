@@ -13,7 +13,6 @@ class Coach extends Model
     protected $fillable = [
         'name',
         'country_id',
-        'photo',
     ];
 
     public function country(): BelongsTo
