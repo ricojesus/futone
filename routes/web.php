@@ -49,6 +49,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/countries', [CountryController::class, 'index'])->name('countries');
     Route::get('/countries/create', [CountryController::class, 'create'])->name('countries.create');
     Route::post('/countries', [CountryController::class, 'store'])->name('countries.store');
+    Route::post('/countries/upload', [CountryController::class, 'upload'])->name('countries.upload');
     Route::get('/countries/{country}/edit', [CountryController::class, 'edit'])->name('countries.edit');
     Route::patch('/countries/{country}', [CountryController::class, 'update'])->name('countries.update');
     Route::delete('/countries/{country}', [CountryController::class, 'destroy'])->name('countries.destroy');

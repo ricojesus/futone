@@ -59,4 +59,53 @@ class CountryController extends Controller
 
         return redirect()->route('admin.countries')->with('success', 'País removido.');
     }
+
+    public function upload(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+        ]);
+
+        $lines  = array_map('str_getcsv', file($request->file('file')->getRealPath()));
+        $header = array_map('strtolower', array_map('trim', array_shift($lines)));
+
+        $imported = 0;
+        $skipped  = 0;
+        $errors   = [];
+
+        foreach ($lines as $i => $line) {
+            if (count($line) !== count($header)) {
+                $errors[] = "Linha " . ($i + 2) . ": número de colunas inválido.";
+                continue;
+            }
+
+            $row  = array_combine($header, $line);
+            $name = trim($row['name'] ?? '');
+            $code = strtoupper(trim($row['code'] ?? ''));
+
+            if ($name === '' || $code === '') {
+                $errors[] = "Linha " . ($i + 2) . ": name e code são obrigatórios.";
+                continue;
+            }
+
+            if (Country::where('code', $code)->exists()) {
+                $skipped++;
+                continue;
+            }
+
+            Country::create([
+                'name' => $name,
+                'code' => $code,
+                'flag' => trim($row['flag'] ?? '') ?: null,
+            ]);
+
+            $imported++;
+        }
+
+        $message = "{$imported} país(es) importado(s).";
+        if ($skipped) $message .= " {$skipped} já existente(s) ignorado(s).";
+        if ($errors)  $message .= ' Erros: ' . implode(' | ', $errors);
+
+        return redirect()->route('admin.countries')->with('success', $message);
+    }
 }
