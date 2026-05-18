@@ -25,20 +25,20 @@ Route::get('/dashboard', [UserDashboardController::class, 'index'])
 
 // ── Ligas (área do jogador) ──────────────────────────────────────────
 Route::middleware('auth')->group(function () {
-    Route::get('/ligas',          [LeagueController::class, 'index'])->name('leagues.index');
-    Route::get('/ligas/criar',    [LeagueController::class, 'create'])->name('leagues.create');
-    Route::post('/ligas',         [LeagueController::class, 'store'])->name('leagues.store');
+    Route::get('/leagues',         [LeagueController::class, 'index'])->name('leagues.index');
+    Route::get('/leagues/create',  [LeagueController::class, 'create'])->name('leagues.create');
+    Route::post('/leagues',        [LeagueController::class, 'store'])->name('leagues.store');
 
-    // Entrar por código ou listar públicas — ANTES de {league} para evitar colisão
-    Route::get('/ligas/entrar',   [LeagueJoinController::class, 'create'])->name('leagues.join');
-    Route::post('/ligas/entrar',  [LeagueJoinController::class, 'store'])->name('leagues.join.store');
+    // Static segments before {league} to avoid collision
+    Route::get('/leagues/join',    [LeagueJoinController::class, 'create'])->name('leagues.join');
+    Route::post('/leagues/join',   [LeagueJoinController::class, 'store'])->name('leagues.join.store');
 
-    Route::get('/ligas/{league}',         [LeagueController::class, 'show'])->name('leagues.show');
-    Route::post('/ligas/{league}/iniciar',[LeagueController::class, 'start'])->name('leagues.start');
+    Route::get('/leagues/{league}',        [LeagueController::class, 'show'])->name('leagues.show');
+    Route::post('/leagues/{league}/start', [LeagueController::class, 'start'])->name('leagues.start');
 
-    // Inscrição com time
-    Route::get('/ligas/{league}/entrar',  [LeagueTeamController::class, 'create'])->name('leagues.teams.create');
-    Route::post('/ligas/{league}/times',  [LeagueTeamController::class, 'store'])->name('leagues.teams.store');
+    // Team enrollment
+    Route::get('/leagues/{league}/join',   [LeagueTeamController::class, 'create'])->name('leagues.teams.create');
+    Route::post('/leagues/{league}/teams', [LeagueTeamController::class, 'store'])->name('leagues.teams.store');
 });
 
 Route::middleware('auth')->group(function () {
