@@ -14,38 +14,51 @@
     </head>
     <body class="antialiased" style="font-family: 'Outfit', sans-serif;">
         <main class="relative min-h-screen overflow-hidden">
+            {{-- Background --}}
             <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ asset('images/backgrounds/background_stadium.png') }}');"></div>
             <div class="absolute inset-0 bg-slate-950/60"></div>
-            <div class="absolute inset-0 bg-[linear-gradient(120deg,rgba(2,6,23,0.9),rgba(2,132,199,0.28))]"></div>
+            <div class="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(2,6,23,0.3)_0%,rgba(2,6,23,0.75)_55%,rgba(2,6,23,0.95)_100%)]"></div>
 
-            <div class="relative mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-8 sm:px-6 lg:px-8">
-                <div class="w-full max-w-4xl rounded-3xl border border-slate-700 bg-slate-950/95 p-6 shadow-2xl sm:p-10 lg:p-12">
-                    <div class="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-5">
-                        <img src="{{ asset('images/logos/futone.png') }}" width="1000" alt="Logo Futone" class="h-20 w-20 shrink-0 rounded-md bg-white/85 p-1 shadow" />
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-200">Futone</p>
-                            <h1 class="text-3xl font-bold text-white sm:text-4xl">Gerencie, dispute e conquiste sua liga.</h1>
-                        </div>
-                    </div>
+            {{-- Content --}}
+            <div class="relative flex min-h-screen flex-col items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
 
-                    <div class="rounded-2xl border border-slate-700 bg-slate-900 p-5 sm:p-6">
-                        <p class="text-sm leading-relaxed text-slate-100 sm:text-base">
-                            Futone e um jogo no estilo futmanager com criacao de ligas online, partidas multiplayer em tempo real contra outros jogadores e confrontos contra times controlados pelo computador.
-                        </p>
-                    </div>
+                {{-- Logo --}}
+                <img
+                    src="{{ asset('images/logos/futone_grande.png') }}"
+                    alt="Logo Futone"
+                    class="mb-6 h-28 w-auto drop-shadow-2xl sm:h-36 lg:h-44"
+                />
 
-                    <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <a href="{{ route('login') }}" class="inline-flex w-full items-center justify-center rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-400 sm:w-auto">
-                            Entrar no Futone
-                        </a>
-
-                        @auth
-                            <a href="{{ url('/dashboard') }}" class="inline-flex w-full items-center justify-center rounded-xl border border-white/40 px-6 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/10 sm:w-auto">
-                                Acessar dashboard
-                            </a>
-                        @endauth
-                    </div>
+                {{-- Headline + Subtitle --}}
+                <div class="mb-10 max-w-2xl rounded-2xl bg-slate-950/70 px-6 py-8 text-center backdrop-blur-sm sm:px-10">
+                    <h1 class="mb-4 text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
+                        Gerencie, dispute e conquiste sua liga.
+                    </h1>
+                    <p class="text-base font-medium leading-relaxed text-white/90 sm:text-lg">
+                        Futone é um jogo no estilo futmanager com criação de ligas online,
+                        partidas multiplayer em tempo real e confrontos contra times controlados pelo computador.
+                    </p>
                 </div>
+
+                {{-- Actions --}}
+                <div class="flex flex-col items-center gap-3 sm:flex-row">
+                    @auth
+                        <a href="{{ url('/dashboard') }}"
+                            class="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-8 py-3.5 text-sm font-bold uppercase tracking-widest text-white shadow-lg transition hover:bg-emerald-400 active:scale-95">
+                            Acessar dashboard
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}"
+                            class="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-8 py-3.5 text-sm font-bold uppercase tracking-widest text-white shadow-lg transition hover:bg-emerald-400 active:scale-95">
+                            Entrar
+                        </a>
+                        <a href="{{ route('register') }}"
+                            class="inline-flex items-center justify-center rounded-xl border border-white/30 px-8 py-3.5 text-sm font-bold uppercase tracking-widest text-white shadow-lg backdrop-blur-sm transition hover:bg-white/10 active:scale-95">
+                            Criar conta
+                        </a>
+                    @endauth
+                </div>
+
             </div>
         </main>
     </body>
