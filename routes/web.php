@@ -32,6 +32,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/teams', [TeamController::class, 'index'])->name('teams');
     Route::get('/teams/create', [TeamController::class, 'create'])->name('teams.create');
     Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
+    Route::post('/teams/upload', [TeamController::class, 'upload'])->name('teams.upload');
     Route::get('/teams/{team}/edit', [TeamController::class, 'edit'])->name('teams.edit');
     Route::patch('/teams/{team}', [TeamController::class, 'update'])->name('teams.update');
     Route::delete('/teams/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');

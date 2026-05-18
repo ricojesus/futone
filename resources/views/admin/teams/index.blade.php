@@ -21,6 +21,39 @@
             </div>
         @endif
 
+        {{-- Import CSV --}}
+        <div class="mb-6 rounded-2xl border border-slate-700 bg-slate-900 p-5">
+            <h2 class="mb-1 text-sm font-semibold text-slate-300">Importar via planilha</h2>
+            <p class="mb-4 text-xs text-slate-500">
+                Arquivo <code class="text-emerald-400">.csv</code> com cabeçalho.
+                Colunas esperadas:
+                <code class="text-emerald-400">name</code>,
+                <code class="text-emerald-400">city</code>,
+                <code class="text-emerald-400">country_code</code> (ex: BRA),
+                <code class="text-emerald-400">tolerance</code> (1–100, padrão 50).
+                Apenas <code class="text-emerald-400">name</code> é obrigatório.
+            </p>
+            <form method="POST" action="{{ route('admin.teams.upload') }}" enctype="multipart/form-data"
+                class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                @csrf
+                <div class="flex-1">
+                    <input type="file" name="file" accept=".csv,.txt" required
+                        class="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-300
+                               file:mr-3 file:rounded-lg file:border-0 file:bg-slate-700 file:px-3 file:py-1 file:text-xs file:text-white file:cursor-pointer">
+                    @error('file')
+                        <p class="mt-1 text-xs text-rose-400">{{ $message }}</p>
+                    @enderror
+                </div>
+                <button type="submit"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-600 px-5 py-2.5 text-sm font-semibold text-slate-300 transition hover:bg-slate-800 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                    </svg>
+                    Importar
+                </button>
+            </form>
+        </div>
+
         <div class="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden">
             <table class="min-w-full divide-y divide-slate-800">
                 <thead class="bg-slate-800/50">

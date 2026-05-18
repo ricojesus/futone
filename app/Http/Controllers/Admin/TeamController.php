@@ -74,6 +74,60 @@ class TeamController extends Controller
         return redirect()->route('admin.teams')->with('success', 'Time atualizado com sucesso.');
     }
 
+    public function upload(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:5120'],
+        ]);
+
+        $lines  = array_map('str_getcsv', file($request->file('file')->getRealPath()));
+        $header = array_map('strtolower', array_map('trim', array_shift($lines)));
+
+        // Indexa países por code para lookup rápido
+        $countryIndex = Country::pluck('id', 'code')->map(fn($id) => (string) $id)->toArray();
+
+        $imported = 0;
+        $errors   = [];
+
+        foreach ($lines as $i => $line) {
+            if (count($line) !== count($header)) {
+                $errors[] = "Linha " . ($i + 2) . ": número de colunas inválido.";
+                continue;
+            }
+
+            $row = array_combine($header, $line);
+
+            $name = trim($row['name'] ?? '');
+            if ($name === '') {
+                $errors[] = "Linha " . ($i + 2) . ": name é obrigatório.";
+                continue;
+            }
+
+            $tolerance = isset($row['tolerance']) && is_numeric(trim($row['tolerance']))
+                ? max(1, min(100, (int) trim($row['tolerance'])))
+                : 50;
+
+            $countryCode = strtoupper(trim($row['country_code'] ?? ''));
+            $countryId   = $countryIndex[$countryCode] ?? null;
+
+            Team::create([
+                'name'       => $name,
+                'city'       => trim($row['city'] ?? '') ?: null,
+                'country_id' => $countryId,
+                'tolerance'  => $tolerance,
+            ]);
+
+            $imported++;
+        }
+
+        $message = "{$imported} time(s) importado(s) com sucesso.";
+        if ($errors) {
+            $message .= ' Erros: ' . implode(' | ', $errors);
+        }
+
+        return redirect()->route('admin.teams')->with('success', $message);
+    }
+
     public function destroy(Team $team): RedirectResponse
     {
         if ($team->badge) {
