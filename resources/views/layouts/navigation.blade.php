@@ -21,9 +21,9 @@
                             {{ request()->routeIs('admin.*') ? 'bg-violet-500/20 text-violet-300' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                         Admin
                     </a>
-                    <a href="{{ route('admin.usuarios') }}"
+                    <a href="{{ route('admin.users') }}"
                         class="px-4 py-2 rounded-lg text-sm font-medium transition
-                            {{ request()->routeIs('admin.usuarios') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                            {{ request()->routeIs('admin.users') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                         Usuários
                     </a>
                     <a href="{{ route('admin.players') }}"
@@ -100,7 +100,7 @@
 
         @if(Auth::user()->isAdmin())
             <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-violet-300 hover:text-white hover:bg-slate-800">Admin</a>
-            <a href="{{ route('admin.usuarios') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Usuários</a>
+            <a href="{{ route('admin.users') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Usuários</a>
             <a href="{{ route('admin.players') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Jogadores</a>
             <a href="{{ route('admin.times') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Times</a>
             <a href="{{ route('admin.countries') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Países</a>

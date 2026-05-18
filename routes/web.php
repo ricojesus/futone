@@ -4,7 +4,7 @@ use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PlayerController;
 use App\Http\Controllers\Admin\TimeController;
-use App\Http\Controllers\Admin\UsuarioController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,8 +25,8 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios');
-    Route::patch('/usuarios/{usuario}', [UsuarioController::class, 'update'])->name('usuarios.update');
+    Route::get('/users', [UserController::class, 'index'])->name('users');
+    Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
 
     Route::get('/times', [TimeController::class, 'index'])->name('times');
 
