@@ -65,15 +65,21 @@
                 @error('stamina') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
             </div>
 
-            {{-- Nacionalidade + Idade --}}
+            {{-- País + Idade --}}
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="mb-1.5 block text-sm font-medium text-slate-300">Nacionalidade</label>
-                    <input type="text" name="nationality" value="{{ old('nationality') }}"
-                        class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500
-                               focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                        placeholder="Ex: Brasileira" />
-                    @error('nationality') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                    <label class="mb-1.5 block text-sm font-medium text-slate-300">País</label>
+                    <select name="country_id"
+                        class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white
+                               focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        <option value="">Selecione...</option>
+                        @foreach($countries as $country)
+                            <option value="{{ $country->id }}" {{ old('country_id') === $country->id ? 'selected' : '' }}>
+                                {{ $country->flag }} {{ $country->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('country_id') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
                 </div>
 
                 <div>

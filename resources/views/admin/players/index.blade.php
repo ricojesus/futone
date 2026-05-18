@@ -26,7 +26,7 @@
         <div class="mb-6 rounded-2xl border border-slate-700 bg-slate-900 p-5">
             <h2 class="mb-1 text-sm font-semibold text-slate-300">Importar via CSV</h2>
             <p class="mb-4 text-xs text-slate-500">
-                Colunas esperadas: <code class="text-emerald-400">name, position, nationality, age, strength, stamina</code>.
+                Colunas esperadas: <code class="text-emerald-400">name, position, country_code, age, strength, stamina</code>.
                 Position: <code class="text-emerald-400">goalkeeper</code>, <code class="text-emerald-400">defender</code>, <code class="text-emerald-400">midfielder</code>, <code class="text-emerald-400">forward</code>.
             </p>
             <form method="POST" action="{{ route('admin.players.upload') }}" enctype="multipart/form-data"
@@ -64,7 +64,7 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Jogador</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Posição</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Nacionalidade</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">País</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Idade</th>
                             <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">Força</th>
                             <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">Stamina</th>
@@ -96,7 +96,9 @@
                                         {{ $player->positionLabel() }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-slate-400">{{ $player->nationality ?? '—' }}</td>
+                                <td class="px-6 py-4 text-sm text-slate-400">
+                                    {{ $player->country?->flag }} {{ $player->country?->name ?? '—' }}
+                                </td>
                                 <td class="px-6 py-4 text-sm text-slate-400">{{ $player->age ?? '—' }}</td>
                                 <td class="px-6 py-4 text-center">
                                     <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg font-bold text-sm

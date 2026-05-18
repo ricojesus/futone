@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Player extends Model
 {
@@ -12,12 +13,17 @@ class Player extends Model
     protected $fillable = [
         'name',
         'position',
-        'nationality',
+        'country_id',
         'age',
         'strength',
         'stamina',
         'photo',
     ];
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'country_id');
+    }
 
     public static array $positions = [
         'goalkeeper' => 'Goleiro',

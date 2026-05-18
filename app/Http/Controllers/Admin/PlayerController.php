@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Country;
 use App\Models\Player;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ class PlayerController extends Controller
 {
     public function index(): View
     {
-        $players = Player::orderBy('name')->paginate(20);
+        $players = Player::with('country')->orderBy('name')->paginate(20);
 
         return view('admin.players.index', compact('players'));
     }
@@ -21,19 +22,20 @@ class PlayerController extends Controller
     {
         return view('admin.players.create', [
             'positions' => Player::$positions,
+            'countries' => Country::orderBy('name')->get(),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name'        => ['required', 'string', 'max:100'],
-            'position'    => ['required', 'in:goalkeeper,defender,midfielder,forward'],
-            'nationality' => ['nullable', 'string', 'max:60'],
-            'age'         => ['nullable', 'integer', 'min:15', 'max:50'],
-            'strength'    => ['required', 'integer', 'min:1', 'max:99'],
-            'stamina'     => ['required', 'integer', 'min:1', 'max:100'],
-            'photo'       => ['nullable', 'image', 'max:2048'],
+            'name'       => ['required', 'string', 'max:100'],
+            'position'   => ['required', 'in:goalkeeper,defender,midfielder,forward'],
+            'country_id' => ['nullable', 'uuid', 'exists:countries,id'],
+            'age'        => ['nullable', 'integer', 'min:15', 'max:50'],
+            'strength'   => ['required', 'integer', 'min:1', 'max:99'],
+            'stamina'    => ['required', 'integer', 'min:1', 'max:100'],
+            'photo'      => ['nullable', 'image', 'max:2048'],
         ]);
 
         if ($request->hasFile('photo')) {
@@ -51,12 +53,15 @@ class PlayerController extends Controller
             'file' => ['required', 'file', 'mimes:csv,txt', 'max:5120'],
         ]);
 
-        $lines = array_map('str_getcsv', file($request->file('file')->getRealPath()));
+        $lines  = array_map('str_getcsv', file($request->file('file')->getRealPath()));
         $header = array_map('strtolower', array_map('trim', array_shift($lines)));
 
-        $fields = ['name', 'position', 'nationality', 'age', 'strength', 'stamina'];
+        // Indexa países por code para lookup rápido no CSV
+        $countryIndex = Country::pluck('id', 'code')->map(fn($id) => (string) $id)->toArray();
+
+        $fields   = ['name', 'position', 'country_code', 'age', 'strength', 'stamina'];
         $imported = 0;
-        $errors = [];
+        $errors   = [];
 
         foreach ($lines as $i => $line) {
             $row = array_combine($header, $line);
@@ -78,13 +83,16 @@ class PlayerController extends Controller
                 continue;
             }
 
+            $countryCode = strtoupper(trim($data['country_code'] ?? ''));
+            $countryId   = $countryIndex[$countryCode] ?? null;
+
             Player::create([
-                'name'        => trim($data['name']),
-                'position'    => trim($data['position']),
-                'nationality' => trim($data['nationality'] ?? ''),
-                'age'         => is_numeric($data['age'] ?? null) ? (int) $data['age'] : null,
-                'strength'    => is_numeric($data['strength'] ?? null) ? (int) $data['strength'] : 50,
-                'stamina'     => is_numeric($data['stamina'] ?? null) ? (int) $data['stamina'] : 100,
+                'name'       => trim($data['name']),
+                'position'   => trim($data['position']),
+                'country_id' => $countryId,
+                'age'        => is_numeric($data['age'] ?? null) ? (int) $data['age'] : null,
+                'strength'   => is_numeric($data['strength'] ?? null) ? (int) $data['strength'] : 50,
+                'stamina'    => is_numeric($data['stamina'] ?? null) ? (int) $data['stamina'] : 100,
             ]);
 
             $imported++;
