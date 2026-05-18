@@ -31,9 +31,9 @@
                             {{ request()->routeIs('admin.players*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                         Jogadores
                     </a>
-                    <a href="{{ route('admin.times') }}"
+                    <a href="{{ route('admin.teams') }}"
                         class="px-4 py-2 rounded-lg text-sm font-medium transition
-                            {{ request()->routeIs('admin.times') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                            {{ request()->routeIs('admin.teams*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                         Times
                     </a>
                     <a href="{{ route('admin.countries') }}"
@@ -107,7 +107,7 @@
             <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-violet-300 hover:text-white hover:bg-slate-800">Admin</a>
             <a href="{{ route('admin.users') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Usuários</a>
             <a href="{{ route('admin.players') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Jogadores</a>
-            <a href="{{ route('admin.times') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Times</a>
+            <a href="{{ route('admin.teams') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Times</a>
             <a href="{{ route('admin.countries') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Países</a>
             <a href="{{ route('admin.coaches') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Treinadores</a>
         @endif

@@ -4,7 +4,7 @@ use App\Http\Controllers\Admin\CoachController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PlayerController;
-use App\Http\Controllers\Admin\TimeController;
+use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -29,7 +29,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/users', [UserController::class, 'index'])->name('users');
     Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
 
-    Route::get('/times', [TimeController::class, 'index'])->name('times');
+    Route::get('/teams', [TeamController::class, 'index'])->name('teams');
+    Route::get('/teams/create', [TeamController::class, 'create'])->name('teams.create');
+    Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
+    Route::get('/teams/{team}/edit', [TeamController::class, 'edit'])->name('teams.edit');
+    Route::patch('/teams/{team}', [TeamController::class, 'update'])->name('teams.update');
+    Route::delete('/teams/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');
 
     Route::get('/countries', [CountryController::class, 'index'])->name('countries');
     Route::get('/countries/create', [CountryController::class, 'create'])->name('countries.create');

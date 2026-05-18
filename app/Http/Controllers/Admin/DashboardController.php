@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Coach;
 use App\Models\Country;
 use App\Models\Player;
+use App\Models\Team;
 use App\Models\User;
 use Illuminate\View\View;
 
@@ -15,6 +16,7 @@ class DashboardController extends Controller
     {
         $stats = [
             'users'     => User::count(),
+            'teams'     => Team::count(),
             'players'   => Player::count(),
             'countries' => Country::count(),
             'coaches'   => Coach::count(),

@@ -13,7 +13,7 @@
         {{-- Cards de resumo --}}
         <h2 class="mb-6 text-xs font-semibold uppercase tracking-widest text-slate-500">Totais cadastrados</h2>
 
-        <div class="mb-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="mb-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
 
             {{-- Usuários --}}
             <a href="{{ route('admin.users') }}"
@@ -26,6 +26,20 @@
                 <div>
                     <p class="text-3xl font-extrabold text-white">{{ $stats['users'] }}</p>
                     <p class="text-sm text-slate-400">Usuários</p>
+                </div>
+            </a>
+
+            {{-- Times --}}
+            <a href="{{ route('admin.teams') }}"
+                class="flex items-center gap-5 rounded-2xl border border-slate-700 bg-slate-900 p-5 transition hover:border-violet-500/50 hover:bg-slate-800/60">
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-400 ring-1 ring-violet-500/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-3xl font-extrabold text-white">{{ $stats['teams'] }}</p>
+                    <p class="text-sm text-slate-400">Times</p>
                 </div>
             </a>
 
@@ -76,7 +90,7 @@
         {{-- Atalhos rápidos --}}
         <h2 class="mb-6 text-xs font-semibold uppercase tracking-widest text-slate-500">Ações rápidas</h2>
 
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <a href="{{ route('admin.users') }}"
                 class="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3.5 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-sky-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -93,12 +107,20 @@
                 Novo jogador
             </a>
 
-            <a href="{{ route('admin.times') }}"
+            <a href="{{ route('admin.teams') }}"
                 class="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3.5 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5" />
                 </svg>
                 Gerenciar times
+            </a>
+
+            <a href="{{ route('admin.teams.create') }}"
+                class="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3.5 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                Novo time
             </a>
 
             <a href="{{ route('admin.countries') }}"
