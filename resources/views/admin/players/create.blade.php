@@ -1,9 +1,8 @@
 <x-app-layout>
     <div class="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
 
-        {{-- Cabeçalho --}}
         <div class="mb-8">
-            <a href="{{ route('admin.jogadores') }}"
+            <a href="{{ route('admin.players') }}"
                 class="mb-4 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-300 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
@@ -14,79 +13,91 @@
             <h1 class="text-2xl font-extrabold text-white">Novo Jogador</h1>
         </div>
 
-        <form method="POST" action="{{ route('admin.jogadores.store') }}" enctype="multipart/form-data"
+        <form method="POST" action="{{ route('admin.players.store') }}" enctype="multipart/form-data"
             class="rounded-2xl border border-slate-700 bg-slate-900 p-6 space-y-5">
             @csrf
 
             {{-- Nome --}}
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-slate-300">Nome <span class="text-red-400">*</span></label>
-                <input type="text" name="nome" value="{{ old('nome') }}" required
+                <input type="text" name="name" value="{{ old('name') }}" required
                     class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500
                            focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     placeholder="Ex: Vinicius Júnior" />
-                @error('nome') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                @error('name') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
             </div>
 
             {{-- Posição + Força --}}
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-slate-300">Posição <span class="text-red-400">*</span></label>
-                    <select name="posicao" required
+                    <select name="position" required
                         class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white
                                focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                         <option value="">Selecione...</option>
-                        @foreach($posicoes as $valor => $label)
-                            <option value="{{ $valor }}" {{ old('posicao') === $valor ? 'selected' : '' }}>
+                        @foreach($positions as $value => $label)
+                            <option value="{{ $value }}" {{ old('position') === $value ? 'selected' : '' }}>
                                 {{ $label }}
                             </option>
                         @endforeach
                     </select>
-                    @error('posicao') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                    @error('position') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-slate-300">Força (1–99) <span class="text-red-400">*</span></label>
-                    <input type="number" name="forca" value="{{ old('forca', 70) }}" min="1" max="99" required
+                    <input type="number" name="strength" value="{{ old('strength', 70) }}" min="1" max="99" required
                         class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white
                                focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
-                    @error('forca') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                    @error('strength') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
                 </div>
+            </div>
+
+            {{-- Stamina --}}
+            <div>
+                <label class="mb-1.5 block text-sm font-medium text-slate-300">
+                    Stamina (1–100) <span class="text-red-400">*</span>
+                    <span class="ml-1 text-xs font-normal text-slate-500">— resistência física do jogador durante a partida</span>
+                </label>
+                <input type="number" name="stamina" value="{{ old('stamina', 100) }}" min="1" max="100" required
+                    class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white
+                           focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                @error('stamina') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
             </div>
 
             {{-- Nacionalidade + Idade --}}
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-slate-300">Nacionalidade</label>
-                    <input type="text" name="nacionalidade" value="{{ old('nacionalidade') }}"
+                    <input type="text" name="nationality" value="{{ old('nationality') }}"
                         class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500
                                focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                         placeholder="Ex: Brasileira" />
-                    @error('nacionalidade') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                    @error('nationality') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-slate-300">Idade</label>
-                    <input type="number" name="idade" value="{{ old('idade') }}" min="15" max="50"
+                    <input type="number" name="age" value="{{ old('age') }}" min="15" max="50"
                         class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white
                                focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
-                    @error('idade') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                    @error('age') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
                 </div>
             </div>
 
             {{-- Foto --}}
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-slate-300">Foto do jogador</label>
-                <input type="file" name="foto" accept="image/*"
+                <input type="file" name="photo" accept="image/*"
                     class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-300
                            file:mr-3 file:rounded-lg file:border-0 file:bg-slate-700 file:px-3 file:py-1 file:text-xs file:text-white file:cursor-pointer" />
                 <p class="mt-1 text-xs text-slate-500">PNG, JPG ou WEBP. Máximo 2MB.</p>
-                @error('foto') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                @error('photo') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
             </div>
 
             {{-- Ações --}}
             <div class="flex items-center justify-end gap-3 border-t border-slate-800 pt-5">
-                <a href="{{ route('admin.jogadores') }}"
+                <a href="{{ route('admin.players') }}"
                     class="rounded-xl border border-slate-700 px-5 py-2.5 text-sm font-medium text-slate-400 transition hover:bg-slate-800 hover:text-white">
                     Cancelar
                 </a>

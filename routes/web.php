@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Admin\JogadorController;
 use App\Http\Controllers\Admin\PaisController;
+use App\Http\Controllers\Admin\PlayerController;
 use App\Http\Controllers\Admin\TimeController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\ProfileController;
@@ -29,10 +29,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/paises', [PaisController::class, 'index'])->name('paises');
 
-    Route::get('/jogadores', [JogadorController::class, 'index'])->name('jogadores');
-    Route::get('/jogadores/criar', [JogadorController::class, 'create'])->name('jogadores.create');
-    Route::post('/jogadores', [JogadorController::class, 'store'])->name('jogadores.store');
-    Route::post('/jogadores/upload', [JogadorController::class, 'upload'])->name('jogadores.upload');
+    Route::get('/players', [PlayerController::class, 'index'])->name('players');
+    Route::get('/players/create', [PlayerController::class, 'create'])->name('players.create');
+    Route::post('/players', [PlayerController::class, 'store'])->name('players.store');
+    Route::post('/players/upload', [PlayerController::class, 'upload'])->name('players.upload');
 });
 
 require __DIR__.'/auth.php';
