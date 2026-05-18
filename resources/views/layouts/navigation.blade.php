@@ -41,6 +41,11 @@
                             {{ request()->routeIs('admin.countries*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                         Países
                     </a>
+                    <a href="{{ route('admin.coaches') }}"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition
+                            {{ request()->routeIs('admin.coaches*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                        Treinadores
+                    </a>
                 @endif
             </nav>
 
@@ -104,6 +109,7 @@
             <a href="{{ route('admin.players') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Jogadores</a>
             <a href="{{ route('admin.times') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Times</a>
             <a href="{{ route('admin.countries') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Países</a>
+            <a href="{{ route('admin.coaches') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Treinadores</a>
         @endif
 
         <div class="border-t border-slate-800 pt-3 mt-3">

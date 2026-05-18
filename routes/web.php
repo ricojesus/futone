@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CoachController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PlayerController;
@@ -41,6 +42,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/players/create', [PlayerController::class, 'create'])->name('players.create');
     Route::post('/players', [PlayerController::class, 'store'])->name('players.store');
     Route::post('/players/upload', [PlayerController::class, 'upload'])->name('players.upload');
+
+    Route::get('/coaches', [CoachController::class, 'index'])->name('coaches');
+    Route::get('/coaches/create', [CoachController::class, 'create'])->name('coaches.create');
+    Route::post('/coaches', [CoachController::class, 'store'])->name('coaches.store');
+    Route::get('/coaches/{coach}/edit', [CoachController::class, 'edit'])->name('coaches.edit');
+    Route::patch('/coaches/{coach}', [CoachController::class, 'update'])->name('coaches.update');
+    Route::delete('/coaches/{coach}', [CoachController::class, 'destroy'])->name('coaches.destroy');
 });
 
 require __DIR__.'/auth.php';
