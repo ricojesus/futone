@@ -14,13 +14,20 @@
 {{-- City + Country --}}
 <div class="grid gap-4 sm:grid-cols-2">
     <div>
-        <label for="city" class="block text-sm font-medium text-slate-300">Cidade</label>
-        <input type="text" id="city" name="city" value="{{ old('city', $team->city ?? '') }}"
-            class="mt-1.5 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-500
+        <label for="city_id" class="block text-sm font-medium text-slate-300">Cidade</label>
+        <select id="city_id" name="city_id"
+            class="mt-1.5 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white
                    focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500
-                   @error('city') border-rose-500 @enderror"
-            placeholder="Ex: Rio de Janeiro">
-        @error('city')
+                   @error('city_id') border-rose-500 @enderror">
+            <option value="">— Sem cidade —</option>
+            @foreach($cities as $city)
+                <option value="{{ $city->id }}"
+                    {{ old('city_id', $team->city_id ?? '') === $city->id ? 'selected' : '' }}>
+                    {{ $city->name }}{{ $city->state ? ' – ' . $city->state : '' }}
+                </option>
+            @endforeach
+        </select>
+        @error('city_id')
             <p class="mt-1 text-xs text-rose-400">{{ $message }}</p>
         @enderror
     </div>

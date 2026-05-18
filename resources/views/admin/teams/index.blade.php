@@ -84,7 +84,7 @@
 
                             {{-- Cidade / País --}}
                             <td class="px-6 py-4 text-sm text-slate-400">
-                                {{ collect([$team->city, $team->country?->name])->filter()->implode(' · ') ?: '—' }}
+                                {{ collect([$team->city?->fullName(), $team->country?->name])->filter()->implode(' · ') ?: '—' }}
                             </td>
 
                             {{-- Tolerância --}}
