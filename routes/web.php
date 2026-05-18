@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ChampionshipController;
 use App\Http\Controllers\Admin\CoachController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -37,6 +38,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/teams/{team}/edit', [TeamController::class, 'edit'])->name('teams.edit');
     Route::patch('/teams/{team}', [TeamController::class, 'update'])->name('teams.update');
     Route::delete('/teams/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');
+
+    Route::get('/championships', [ChampionshipController::class, 'index'])->name('championships');
+    Route::get('/championships/create', [ChampionshipController::class, 'create'])->name('championships.create');
+    Route::post('/championships', [ChampionshipController::class, 'store'])->name('championships.store');
+    Route::post('/championships/upload', [ChampionshipController::class, 'upload'])->name('championships.upload');
+    Route::get('/championships/{championship}/edit', [ChampionshipController::class, 'edit'])->name('championships.edit');
+    Route::patch('/championships/{championship}', [ChampionshipController::class, 'update'])->name('championships.update');
+    Route::delete('/championships/{championship}', [ChampionshipController::class, 'destroy'])->name('championships.destroy');
 
     Route::get('/states', [StateController::class, 'index'])->name('states');
     Route::get('/states/create', [StateController::class, 'create'])->name('states.create');

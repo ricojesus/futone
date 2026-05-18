@@ -1,0 +1,21 @@
+name,type,legs,teams_count,country_code,state_code,promotion_spots,relegation_spots
+Campeonato Brasileiro Série A,league,double,20,BRA,,4,4
+Campeonato Brasileiro Série B,league,double,20,BRA,,4,4
+Campeonato Brasileiro Série C,league,mixed,20,BRA,,4,4
+Campeonato Brasileiro Série D,league,mixed,64,BRA,,8,
+Copa do Brasil,cup,double,80,BRA,,,
+Supercopa do Brasil,cup,single,2,BRA,,,
+Copa Verde,cup,double,32,BRA,,,
+Campeonato Paulista,league,double,16,BRA,SP,2,4
+Copa Paulista,cup,double,32,BRA,SP,,
+Campeonato Carioca,league,double,12,BRA,RJ,2,2
+Campeonato Mineiro,league,double,12,BRA,MG,2,2
+Campeonato Gaúcho,league,double,12,BRA,RS,2,2
+Campeonato Paranaense,league,double,12,BRA,PR,2,2
+Campeonato Baiano,league,double,8,BRA,BA,2,2
+Campeonato Pernambucano,league,double,8,BRA,PE,2,2
+Campeonato Cearense,league,double,8,BRA,CE,2,2
+Campeonato Goiano,league,double,8,BRA,GO,2,2
+Campeonato Catarinense,league,double,8,BRA,SC,2,2
+Campeonato Capixaba,league,double,8,BRA,ES,2,2
+Campeonato Paraense,league,double,8,BRA,PA,2,2

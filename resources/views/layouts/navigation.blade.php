@@ -36,6 +36,11 @@
                             {{ request()->routeIs('admin.teams*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                         Times
                     </a>
+                    <a href="{{ route('admin.championships') }}"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition
+                            {{ request()->routeIs('admin.championships*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                        Campeonatos
+                    </a>
                     <a href="{{ route('admin.states') }}"
                         class="px-4 py-2 rounded-lg text-sm font-medium transition
                             {{ request()->routeIs('admin.states*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
@@ -113,6 +118,7 @@
             <a href="{{ route('admin.users') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Usuários</a>
             <a href="{{ route('admin.players') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Jogadores</a>
             <a href="{{ route('admin.teams') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Times</a>
+            <a href="{{ route('admin.championships') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Campeonatos</a>
             <a href="{{ route('admin.states') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Estados</a>
             <a href="{{ route('admin.countries') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Países</a>
             <a href="{{ route('admin.coaches') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">Treinadores</a>
