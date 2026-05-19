@@ -28,6 +28,8 @@ class LeaguePlayer extends Model
         'contract_until',
         'wage_expectation_factor',
         'form_factor',
+        'fitness',
+        'injured_until',
         'joined_at',
         'released_at',
     ];
@@ -76,6 +78,16 @@ class LeaguePlayer extends Model
     public function isFreeAgent(): bool
     {
         return $this->status === 'free_agent';
+    }
+
+    public function isInjured(): bool
+    {
+        return $this->status === 'injured';
+    }
+
+    public function canPlay(): bool
+    {
+        return $this->status === 'active';
     }
 
     public function isListedForSale(): bool
