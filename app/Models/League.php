@@ -20,6 +20,7 @@ class League extends Model
         'invite_code',
         'max_teams',
         'status',
+        'season',
         'started_at',
         'finished_at',
     ];

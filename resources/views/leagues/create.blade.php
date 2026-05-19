@@ -123,6 +123,20 @@
                         <p class="mt-1 text-xs text-slate-500">Times sem dono humano serão controlados pela IA.</p>
                     </div>
                 </div>
+
+                <div class="grid gap-5 sm:grid-cols-2 mt-5">
+                    {{-- Temporada inicial --}}
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">Temporada Inicial *</label>
+                        <input type="number" name="season"
+                            value="{{ old('season', date('Y')) }}"
+                            min="1900" max="2200"
+                            class="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            required />
+                        <p class="mt-1 text-xs text-slate-500">Ano em que a liga começa. Avança 1 a cada virada de ano.</p>
+                    </div>
+                    <div>{{-- placeholder para manter grid --}}</div>
+                </div>
             </div>
 
             {{-- Ações --}}

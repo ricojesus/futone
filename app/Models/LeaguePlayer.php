@@ -22,6 +22,7 @@ class LeaguePlayer extends Model
         'age',
         'strength',
         'stamina',
+        'potential',
         'status',
         'wage',
         'market_value',

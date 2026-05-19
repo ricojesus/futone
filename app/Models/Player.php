@@ -17,6 +17,7 @@ class Player extends Model
         'age',
         'strength',
         'stamina',
+        'potential',
         'photo',
     ];
 

@@ -44,6 +44,7 @@ class LeagueController extends Controller
             'championship_id' => 'required|uuid|exists:championships,id',
             'type'            => 'required|in:public,private',
             'max_teams'       => 'required|integer|min:2|max:' . $championship->teams_count,
+            'season'          => 'required|integer|min:1900|max:2200',
         ]);
 
         $league = DB::transaction(function () use ($validated, $championship) {
@@ -56,6 +57,7 @@ class LeagueController extends Controller
                 'invite_code' => Str::upper(Str::random(8)),
                 'max_teams'   => (int) $validated['max_teams'],
                 'status'      => 'waiting',
+                'season'      => (int) $validated['season'],
             ]);
 
             LeagueChampionship::create([
