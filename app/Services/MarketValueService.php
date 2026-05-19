@@ -28,11 +28,12 @@ class MarketValueService
      */
     public function calculate(LeaguePlayer $player): int
     {
-        $base         = (($player->strength + $player->stamina) / 2) * 10_000;
-        $ageFactor    = $this->ageFactor($player->age);
+        $base          = (($player->strength + $player->stamina) / 2) * 10_000;
+        $ageFactor     = $this->ageFactor($player->age);
         $posMultiplier = $this->positionMultipliers[$player->position] ?? 1.00;
+        $formFactor    = (float) ($player->form_factor ?? 1.00);
 
-        return (int) round($base * $ageFactor * $posMultiplier);
+        return (int) round($base * $ageFactor * $posMultiplier * $formFactor);
     }
 
     /**

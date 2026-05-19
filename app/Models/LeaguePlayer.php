@@ -27,6 +27,7 @@ class LeaguePlayer extends Model
         'market_value',
         'contract_until',
         'wage_expectation_factor',
+        'form_factor',
         'joined_at',
         'released_at',
     ];
@@ -95,5 +96,16 @@ class LeaguePlayer extends Model
     public function formattedMarketValue(): string
     {
         return 'R$ ' . number_format($this->market_value, 0, ',', '.');
+    }
+
+    /**
+     * Retorna o delta percentual de mercado causado pela forma.
+     * Ex: form_factor 1.08 → "+8%" | 0.91 → "-9%"
+     */
+    public function formImpact(): string
+    {
+        $delta = (float) $this->form_factor - 1.00;
+        $pct   = round($delta * 100);
+        return ($pct >= 0 ? '+' : '') . $pct . '%';
     }
 }
