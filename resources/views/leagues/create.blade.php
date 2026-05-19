@@ -137,6 +137,52 @@
                     </div>
                     <div>{{-- placeholder para manter grid --}}</div>
                 </div>
+
+                {{-- Atribuição de times --}}
+                <div class="mt-5">
+                    <label class="block text-sm font-medium text-slate-300 mb-3">Atribuição de Times</label>
+                    <div class="grid gap-3 sm:grid-cols-2">
+
+                        {{-- Escolha livre --}}
+                        <label class="cursor-pointer">
+                            <input type="radio" name="team_assignment" value="choice"
+                                   class="sr-only peer"
+                                   {{ old('team_assignment', 'choice') === 'choice' ? 'checked' : '' }} />
+                            <div class="rounded-xl border border-slate-600 bg-slate-800 p-4 transition
+                                        peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10">
+                                <div class="flex items-start gap-3">
+                                    <span class="text-2xl leading-none">🏟️</span>
+                                    <div>
+                                        <p class="text-sm font-semibold text-white">Escolha livre</p>
+                                        <p class="text-xs text-slate-400 mt-0.5">
+                                            Cada manager escolhe o time que quer gerenciar entre os disponíveis.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+
+                        {{-- Sorteio --}}
+                        <label class="cursor-pointer">
+                            <input type="radio" name="team_assignment" value="random"
+                                   class="sr-only peer"
+                                   {{ old('team_assignment') === 'random' ? 'checked' : '' }} />
+                            <div class="rounded-xl border border-slate-600 bg-slate-800 p-4 transition
+                                        peer-checked:border-violet-500 peer-checked:bg-violet-500/10">
+                                <div class="flex items-start gap-3">
+                                    <span class="text-2xl leading-none">🎲</span>
+                                    <div>
+                                        <p class="text-sm font-semibold text-white">Sorteio</p>
+                                        <p class="text-xs text-slate-400 mt-0.5">
+                                            O sistema sorteia um time aleatório para cada manager ao entrar.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+
+                    </div>
+                </div>
             </div>
 
             {{-- Ações --}}

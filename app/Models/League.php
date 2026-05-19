@@ -19,6 +19,7 @@ class League extends Model
         'type',
         'invite_code',
         'max_teams',
+        'team_assignment',
         'status',
         'season',
         'started_at',
@@ -58,4 +59,15 @@ class League extends Model
     public function isWaiting(): bool    { return $this->status === 'waiting'; }
     public function isInProgress(): bool { return $this->status === 'in_progress'; }
     public function isFinished(): bool   { return $this->status === 'finished'; }
+
+    public function usesRandomAssignment(): bool  { return $this->team_assignment === 'random'; }
+    public function usesChoiceAssignment(): bool  { return $this->team_assignment === 'choice'; }
+
+    public function teamAssignmentLabel(): string
+    {
+        return match ($this->team_assignment) {
+            'random' => 'Sorteio',
+            default  => 'Escolha livre',
+        };
+    }
 }

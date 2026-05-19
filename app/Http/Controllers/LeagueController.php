@@ -45,19 +45,21 @@ class LeagueController extends Controller
             'type'            => 'required|in:public,private',
             'max_teams'       => 'required|integer|min:2|max:' . $championship->teams_count,
             'season'          => 'required|integer|min:1900|max:2200',
+            'team_assignment' => 'required|in:choice,random',
         ]);
 
         $league = DB::transaction(function () use ($validated, $championship) {
             $league = League::create([
-                'name'        => $validated['name'],
-                'slug'        => Str::slug($validated['name']) . '-' . Str::lower(Str::random(5)),
-                'owner_id'    => auth()->id(),
-                'state_id'    => $championship->state_id,
-                'type'        => $validated['type'],
-                'invite_code' => Str::upper(Str::random(8)),
-                'max_teams'   => (int) $validated['max_teams'],
-                'status'      => 'waiting',
-                'season'      => (int) $validated['season'],
+                'name'            => $validated['name'],
+                'slug'            => Str::slug($validated['name']) . '-' . Str::lower(Str::random(5)),
+                'owner_id'        => auth()->id(),
+                'state_id'        => $championship->state_id,
+                'type'            => $validated['type'],
+                'invite_code'     => Str::upper(Str::random(8)),
+                'max_teams'       => (int) $validated['max_teams'],
+                'team_assignment' => $validated['team_assignment'],
+                'status'          => 'waiting',
+                'season'          => (int) $validated['season'],
             ]);
 
             LeagueChampionship::create([

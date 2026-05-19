@@ -191,6 +191,18 @@
                                     {{ \App\Models\Championship::$legs[$championship->legs] ?? $championship->legs }}
                                 </span>
                             </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-slate-400">Times</span>
+                                @if ($league->usesRandomAssignment())
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-violet-500/15 px-2 py-0.5 text-xs font-medium text-violet-400">
+                                        🎲 Sorteio
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-400">
+                                        🏟️ Escolha livre
+                                    </span>
+                                @endif
+                            </div>
                             @if ($championship->promotion_spots)
                                 <div class="flex items-center justify-between text-sm">
                                     <span class="text-slate-400">Promoção</span>
