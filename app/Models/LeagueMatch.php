@@ -23,11 +23,13 @@ class LeagueMatch extends Model
         'winner_team_id',
         'scheduled_at',
         'played_at',
+        'data',
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
         'played_at'    => 'datetime',
+        'data'         => 'array',
     ];
 
     // ── Relacionamentos ──────────────────────────────────────────────
