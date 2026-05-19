@@ -28,10 +28,22 @@ class MatchSimulator
         5 => ['goalkeeper' => 0.00, 'defender' => 0.00, 'midfielder' => 0.20, 'forward' => 1.50],
     ];
 
+    public function __construct(
+        private readonly MatchNarrator $narrator = new MatchNarrator(),
+    ) {}
+
     // ── API pública ──────────────────────────────────────────────────
 
     /**
      * Simula uma partida completa e retorna o resultado.
+     *
+     * O array de eventos contém entradas de dois tipos:
+     *
+     *   Tipo 'goal' | 'shot_saved' | 'shot_missed':
+     *     { type, team, play, narration }
+     *
+     *   Tipo 'narration' (momentos-chave sem gol):
+     *     { type: 'narration', team, play, situation, narration }
      *
      * @return array{
      *   home_score: int,
@@ -44,7 +56,7 @@ class MatchSimulator
      *   away_shots_on_target: int,
      *   home_formation: string,
      *   away_formation: string,
-     *   events: list<array{type:string, team:string, play:int}>
+     *   events: list<array>
      * }
      */
     public function simulate(LeagueMatch $match): array
@@ -52,14 +64,18 @@ class MatchSimulator
         $homeData = $this->loadLineup($match->homeTeam, $match->round ?? 0);
         $awayData = $this->loadLineup($match->awayTeam, $match->round ?? 0);
 
-        $home            = $homeData['players'];
-        $away            = $awayData['players'];
-        $homeFormation   = $homeData['formation'];
-        $awayFormation   = $awayData['formation'];
+        $home          = $homeData['players'];
+        $away          = $awayData['players'];
+        $homeFormation = $homeData['formation'];
+        $awayFormation = $awayData['formation'];
+
+        // Nomes dos times para narração
+        $homeTeamName = $match->homeTeam->name;
+        $awayTeamName = $match->awayTeam->name;
 
         // Estado inicial
-        $sector     = 3;                                   // começa no meio-campo
-        $possession = random_int(0, 1) ? 'home' : 'away'; // sorteio de posse
+        $sector     = 3;
+        $possession = random_int(0, 1) ? 'home' : 'away';
 
         $homeScore = 0;
         $awayScore = 0;
@@ -82,47 +98,68 @@ class MatchSimulator
                 ? $homeScore - $awayScore
                 : $awayScore - $homeScore;
 
-            // ── Decisão tática: avançar ou manter setor? ────────────
-            $advance = $this->shouldAdvance($scoreDiff, $playsLeft, $sector, $possession);
+            // Contexto de narração (atualizado a cada jogada)
+            $narratorCtx = $this->buildNarratorContext(
+                $possession, $homeTeamName, $awayTeamName, $play, $homeScore, $awayScore
+            );
 
-            // Calcula o setor alvo (sempre ±1 — progressão obrigatória)
+            // ── Decisão tática: avançar ou manter setor? ────────────
+            $advance      = $this->shouldAdvance($scoreDiff, $playsLeft, $sector, $possession);
             $targetSector = $advance
                 ? ($possession === 'home' ? $sector + 1 : $sector - 1)
                 : $sector;
 
             // ── Chegou à área: chute! ────────────────────────────────
-            // A bola nunca "pula" setores — chegar aqui exige ter
-            // disputado todos os setores intermediários anteriores.
             if ($advance && ($targetSector > 5 || $targetSector < 1)) {
                 $shot = $this->resolveShot($home, $away, $possession);
 
                 if ($possession === 'home') {
                     $homeShots++;
-                    if ($shot['on_target']) {
-                        $homeShotsOnTarget++;
-                    }
+                    if ($shot['on_target']) $homeShotsOnTarget++;
                 } else {
                     $awayShots++;
-                    if ($shot['on_target']) {
-                        $awayShotsOnTarget++;
-                    }
+                    if ($shot['on_target']) $awayShotsOnTarget++;
                 }
 
                 if ($shot['goal']) {
-                    if ($possession === 'home') {
-                        $homeScore++;
-                    } else {
-                        $awayScore++;
-                    }
+                    // Atualiza placar ANTES de narrar para mostrar o novo resultado
+                    if ($possession === 'home') $homeScore++;
+                    else $awayScore++;
 
-                    $events[] = ['type' => 'goal', 'team' => $possession, 'play' => $play];
+                    $events[] = [
+                        'type'      => 'goal',
+                        'team'      => $possession,
+                        'play'      => $play,
+                        'narration' => $this->narrator->narrate('goal', array_merge(
+                            $narratorCtx,
+                            ['home_score' => $homeScore, 'away_score' => $awayScore]
+                        )),
+                    ];
 
-                    // Reinicia no centro: quem sofreu o gol saca
                     $sector     = 3;
                     $possession = $possession === 'home' ? 'away' : 'home';
+
+                } elseif ($shot['on_target']) {
+                    // Chute no alvo mas defendido
+                    $events[] = [
+                        'type'      => 'shot_saved',
+                        'team'      => $possession,
+                        'play'      => $play,
+                        'narration' => $this->narrator->narrate('shot_saved', $narratorCtx),
+                    ];
+
+                    $sector     = $possession === 'home' ? 1 : 5;
+                    $possession = $possession === 'home' ? 'away' : 'home';
+
                 } else {
-                    // Goleiro segura → time defensor constrói do fundo
-                    // Novo possuidora precisa percorrer todos os setores
+                    // Chute para fora
+                    $events[] = [
+                        'type'      => 'shot_missed',
+                        'team'      => $possession,
+                        'play'      => $play,
+                        'narration' => $this->narrator->narrate('shot_missed', $narratorCtx),
+                    ];
+
                     $sector     = $possession === 'home' ? 1 : 5;
                     $possession = $possession === 'home' ? 'away' : 'home';
                 }
@@ -133,18 +170,41 @@ class MatchSimulator
             // ── Disputa de posse no setor alvo ──────────────────────
             $targetSector = max(1, min(5, $targetSector));
             $contest      = $this->resolveSector(
-                $home, $away,
-                $targetSector, $possession,
+                $home, $away, $targetSector, $possession,
                 $homeFormation, $awayFormation
             );
 
             $sector = $targetSector;
 
             if ($contest['possession_change']) {
+                $loser      = $possession;
                 $possession = $possession === 'home' ? 'away' : 'home';
-                // Nota: o setor permanece o mesmo após perda de bola.
-                // O novo time precisa avançar setor a setor até chegar ao gol,
-                // passando obrigatoriamente pelo meio-campo (setor 3).
+
+                // Perda perigosa de bola no ataque?
+                if ($this->narrator->isCounterAttack($sector, $possession)) {
+                    // Contra-ataque detectado
+                    $events[] = $this->narrateKeyMoment(
+                        'counter_attack', $possession, $play,
+                        $this->buildNarratorContext(
+                            $possession, $homeTeamName, $awayTeamName, $play, $homeScore, $awayScore
+                        )
+                    );
+                } elseif ($this->narrator->shouldNarrateLoss($sector, $loser)) {
+                    // Perda perigosa sem contra-ataque imediato
+                    $events[] = $this->narrateKeyMoment(
+                        'possession_lost_attack', $loser, $play, $narratorCtx
+                    );
+                }
+            } else {
+                // Posse mantida — narrar avanço ao ataque ou meio-campo
+                if ($advance) {
+                    if ($this->narrator->shouldNarrateAdvance($targetSector, $possession)) {
+                        $situation = $this->advanceSituation($targetSector, $possession, $playsLeft, $scoreDiff);
+                        if ($situation) {
+                            $events[] = $this->narrateKeyMoment($situation, $possession, $play, $narratorCtx);
+                        }
+                    }
+                }
             }
         }
 
@@ -216,7 +276,7 @@ class MatchSimulator
         $lineup = $team->lineups()
             ->where('status', 'active')
             ->whereIn('round', [$round, 0])
-            ->orderByDesc('round')   // override de rodada tem prioridade
+            ->orderByDesc('round')
             ->first();
 
         if ($lineup) {
@@ -234,7 +294,6 @@ class MatchSimulator
             return ['players' => $players, 'formation' => $lineup->formation];
         }
 
-        // Fallback: auto-seleção por força em 4-4-2
         return [
             'players'   => $this->autoSelectPlayers($team),
             'formation' => '4-4-2',
@@ -243,7 +302,6 @@ class MatchSimulator
 
     /**
      * Seleciona automaticamente os 11 melhores jogadores em 4-4-2.
-     * Usado como fallback quando o manager não escalou o time.
      */
     private function autoSelectPlayers(LeagueTeam $team): Collection
     {
@@ -274,25 +332,12 @@ class MatchSimulator
     // ── Modificador de formação ──────────────────────────────────────
 
     /**
-     * Calcula o multiplicador de poder de um time em um setor,
-     * dado o esquema tático (formação).
+     * Multiplicador de poder do time em um setor baseado na formação.
      *
-     * Baseline: 4-4-2  →  todos os setores = 1.00
-     *
-     * Impacto de formações alternativas:
-     *   4-3-3 → setores 4-5 +15 %, setor 3 -7 %
-     *   5-3-2 → setores 1-2 +7 %,  setor 5 estável
-     *   3-5-2 → setor  3   +7 %,  setores 1-2 -7 %
-     *
-     * Fórmula:
-     *   base = 0.70 (independente da formação)
-     *   flex = 0.30 × escalaGrupo
-     *
-     * Cada setor é influenciado principalmente pelo grupo posicional
-     * mais relevante naquele setor:
-     *   Setor 1-2 → defensores
-     *   Setor 3   → meios-campistas
-     *   Setor 4-5 → atacantes
+     * Baseline: 4-4-2 → 1.00 em todos os setores.
+     *   4-3-3 → setores 4-5 +15 %, setor 3 -8 %
+     *   5-3-2 → setores 1-2 +7 %,  setor 3 -8 %
+     *   3-5-2 → setor  3   +7 %,  setores 1-2 -8 %
      */
     private function formationModifier(string $formation, int $sector): float
     {
@@ -301,7 +346,6 @@ class MatchSimulator
         $fwd   = end($parts);
         $mid   = array_sum($parts) - $def - $fwd;
 
-        // Escala em relação à baseline 4-4-2
         $defScale = $def / 4.0;
         $midScale = $mid / 4.0;
         $fwdScale = $fwd / 2.0;
@@ -323,13 +367,10 @@ class MatchSimulator
     // ── Decisão tática ───────────────────────────────────────────────
 
     /**
-     * Define se o time com a posse deve avançar para o próximo setor
-     * ou manter e consolidar a bola onde está.
+     * Define se o time com a posse deve avançar para o próximo setor.
      *
-     * Probabilidade base de avançar: 60%
-     *   + ajuste por placar (perdendo → mais agressivo)
-     *   + ajuste por urgência nos últimos 15 minutos
-     *   + ajuste por setor (fundo do campo → mais propenso a avançar)
+     * Probabilidade base: 60%
+     *   + ajuste por placar / urgência / posição no campo
      */
     private function shouldAdvance(
         int    $scoreDiff,
@@ -339,25 +380,22 @@ class MatchSimulator
     ): bool {
         $prob = 0.60;
 
-        // Ajuste por placar
         $prob += match (true) {
-            $scoreDiff >= 2   => -0.20,  // vencendo fácil → segura
-            $scoreDiff === 1  => -0.10,  // vencendo por 1 → cauteloso
-            $scoreDiff === 0  =>  0.00,  // empate → neutro
-            $scoreDiff === -1 =>  0.15,  // perdendo → avança
-            default           =>  0.25,  // perdendo por 2+ → desesperado
+            $scoreDiff >= 2   => -0.20,
+            $scoreDiff === 1  => -0.10,
+            $scoreDiff === 0  =>  0.00,
+            $scoreDiff === -1 =>  0.15,
+            default           =>  0.25,
         };
 
-        // Urgência nos últimos 15 jogadas
         if ($playsLeft <= 15) {
             $prob += match (true) {
-                $scoreDiff < 0 =>  0.15,  // perdendo nos acréscimos → tudo ou nada
-                $scoreDiff > 0 => -0.10,  // ganhando nos acréscimos → perde tempo
+                $scoreDiff < 0 =>  0.15,
+                $scoreDiff > 0 => -0.10,
                 default        =>  0.05,
             };
         }
 
-        // Setor: time no próprio campo tende a querer sair
         $ownHalf = $possession === 'home' ? $sector <= 2 : $sector >= 4;
         if ($ownHalf) {
             $prob += 0.10;
@@ -373,11 +411,6 @@ class MatchSimulator
     /**
      * Calcula quem vence a disputa de posse em um setor,
      * levando em conta a formação de ambos os times.
-     *
-     * Poder efetivo por time:
-     *   Σ (força_jogador × peso_posição_no_setor) × modificador_formação × ruído_sorte
-     *
-     * Home usa peso[sector], Away usa peso[6 - sector] (espelho do campo).
      */
     private function resolveSector(
         Collection $home,
@@ -389,8 +422,8 @@ class MatchSimulator
     ): array {
         $awaySector = 6 - $sector;
 
-        $homePow = $this->sectorPower($home, $sector)      * $this->formationModifier($homeFormation, $sector);
-        $awayPow = $this->sectorPower($away, $awaySector)  * $this->formationModifier($awayFormation, $awaySector);
+        $homePow = $this->sectorPower($home, $sector)     * $this->formationModifier($homeFormation, $sector);
+        $awayPow = $this->sectorPower($away, $awaySector) * $this->formationModifier($awayFormation, $awaySector);
 
         $range   = max($homePow, $awayPow) * self::LUCK_SECTOR;
         $homePow = max(1, $homePow + $this->randomNoise($range));
@@ -406,22 +439,17 @@ class MatchSimulator
     // ── Finalização ──────────────────────────────────────────────────
 
     /**
-     * Resolve um chute a gol.
-     *
-     * Duas etapas:
+     * Resolve um chute a gol em duas etapas:
      *   1. Chute no alvo? (55 % base + bônus pela força do finalizador)
      *   2. Gol? (força do finalizador vs força do goleiro com ±20 % ruído)
-     *
-     * Finalizador = melhor atacante (fallback: jogador mais forte).
-     * Goleiro      = goalkeeper do time defensor (fallback: mais forte).
      */
     private function resolveShot(
         Collection $home,
         Collection $away,
         string     $attackingTeam,
     ): array {
-        $attackers = $attackingTeam === 'home' ? $home : $away;
-        $defenders = $attackingTeam === 'home' ? $away : $home;
+        $attackers  = $attackingTeam === 'home' ? $home : $away;
+        $defenders  = $attackingTeam === 'home' ? $away : $home;
 
         $shooter    = $attackers->where('position', 'forward')->sortByDesc('power')->first()
             ?? $attackers->sortByDesc('power')->first();
@@ -433,7 +461,6 @@ class MatchSimulator
             return ['on_target' => false, 'goal' => false];
         }
 
-        // Passo 1: chute no alvo
         $onTargetProb = min(0.90, 0.55 + ($shooter['power'] / 200));
         $onTarget     = (random_int(1, 1000) / 1000) <= $onTargetProb;
 
@@ -441,7 +468,6 @@ class MatchSimulator
             return ['on_target' => false, 'goal' => false];
         }
 
-        // Passo 2: gol ou defesa
         $shotPow  = $shooter['power']    + $this->randomNoise($shooter['power']    * self::LUCK_SHOT);
         $gkPow    = $goalkeeper['power'] + $this->randomNoise($goalkeeper['power'] * self::LUCK_SHOT);
 
@@ -452,12 +478,81 @@ class MatchSimulator
         return ['on_target' => true, 'goal' => $goal];
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────
+    // ── Helpers de narração ──────────────────────────────────────────
 
     /**
-     * Soma o poder efetivo dos jogadores de um time em um setor,
-     * ponderado pelos pesos de posição daquele setor.
+     * Monta o contexto de narração para o narrador a partir do estado atual.
      */
+    private function buildNarratorContext(
+        string $possession,
+        string $homeTeamName,
+        string $awayTeamName,
+        int    $play,
+        int    $homeScore,
+        int    $awayScore,
+    ): array {
+        return [
+            'team'       => $possession === 'home' ? $homeTeamName : $awayTeamName,
+            'opponent'   => $possession === 'home' ? $awayTeamName : $homeTeamName,
+            'minute'     => $play,
+            'home_score' => $homeScore,
+            'away_score' => $awayScore,
+        ];
+    }
+
+    /**
+     * Monta a entrada de narração para o array de eventos.
+     */
+    private function narrateKeyMoment(
+        string $situation,
+        string $team,
+        int    $play,
+        array  $context,
+    ): array {
+        return [
+            'type'      => 'narration',
+            'team'      => $team,
+            'play'      => $play,
+            'situation' => $situation,
+            'narration' => $this->narrator->narrate($situation, $context),
+        ];
+    }
+
+    /**
+     * Determina qual situação de narração corresponde ao avanço de setor.
+     * Leva em conta fase final e contexto do placar.
+     */
+    private function advanceSituation(
+        int    $sector,
+        string $possession,
+        int    $playsLeft,
+        int    $scoreDiff,
+    ): ?string {
+        $isAttackSector = $possession === 'home' ? $sector >= 4 : $sector <= 2;
+        $isMidfield     = $sector === 3;
+
+        if ($isAttackSector) {
+            // Últimos 15 minutos com placar diferente → narração contextual
+            if ($playsLeft <= 15 && $scoreDiff < 0) {
+                return 'late_pressure';
+            }
+
+            if ($playsLeft <= 15 && $scoreDiff > 0) {
+                return 'holding_lead';
+            }
+
+            return 'attack_approach';
+        }
+
+        if ($isMidfield) {
+            return 'midfield_battle';
+        }
+
+        return null;
+    }
+
+    // ── Helpers de simulação ─────────────────────────────────────────
+
     private function sectorPower(Collection $players, int $sector): float
     {
         $sector  = max(1, min(5, $sector));
