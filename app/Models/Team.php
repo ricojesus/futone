@@ -16,6 +16,8 @@ class Team extends Model
         'state_id',
         'badge',
         'tolerance',
+        'fans_base',
+        'stadium_capacity',
     ];
 
     public function country(): BelongsTo

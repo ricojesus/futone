@@ -20,6 +20,9 @@ class LeagueTeam extends Model
         'satisfaction',
         'tolerance',
         'budget',
+        'fans',
+        'stadium_capacity',
+        'ticket_price',
         'points',
         'wins',
         'draws',
@@ -51,6 +54,31 @@ class LeagueTeam extends Model
     public function players(): HasMany
     {
         return $this->hasMany(LeaguePlayer::class, 'league_team_id');
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(LeagueTransaction::class, 'league_team_id');
+    }
+
+    public function transferListings(): HasMany
+    {
+        return $this->hasMany(LeagueTransferListing::class, 'seller_team_id');
+    }
+
+    public function transferOffers(): HasMany
+    {
+        return $this->hasMany(LeagueTransferOffer::class, 'buyer_team_id');
+    }
+
+    public function transfersIn(): HasMany
+    {
+        return $this->hasMany(LeagueTransfer::class, 'to_team_id');
+    }
+
+    public function transfersOut(): HasMany
+    {
+        return $this->hasMany(LeagueTransfer::class, 'from_team_id');
     }
 
     public function isCpu(): bool

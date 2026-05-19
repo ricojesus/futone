@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class LeaguePlayer extends Model
 {
@@ -21,6 +23,10 @@ class LeaguePlayer extends Model
         'strength',
         'stamina',
         'status',
+        'wage',
+        'market_value',
+        'contract_until',
+        'wage_expectation_factor',
         'joined_at',
         'released_at',
     ];
@@ -50,13 +56,44 @@ class LeaguePlayer extends Model
         return $this->belongsTo(Country::class, 'country_id');
     }
 
+    public function activeTransferListing(): HasOne
+    {
+        return $this->hasOne(LeagueTransferListing::class, 'league_player_id')
+            ->where('status', 'open');
+    }
+
+    public function transfers(): HasMany
+    {
+        return $this->hasMany(LeagueTransfer::class, 'league_player_id');
+    }
+
     public function isAvailable(): bool
     {
         return $this->status === 'active';
     }
 
+    public function isFreeAgent(): bool
+    {
+        return $this->status === 'free_agent';
+    }
+
+    public function isListedForSale(): bool
+    {
+        return $this->activeTransferListing()->exists();
+    }
+
     public function positionLabel(): string
     {
         return Player::$positions[$this->position] ?? ucfirst($this->position);
+    }
+
+    public function formattedWage(): string
+    {
+        return 'R$ ' . number_format($this->wage, 0, ',', '.');
+    }
+
+    public function formattedMarketValue(): string
+    {
+        return 'R$ ' . number_format($this->market_value, 0, ',', '.');
     }
 }
