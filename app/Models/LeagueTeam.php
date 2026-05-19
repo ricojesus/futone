@@ -81,6 +81,24 @@ class LeagueTeam extends Model
         return $this->hasMany(LeagueTransfer::class, 'from_team_id');
     }
 
+    public function lineups(): HasMany
+    {
+        return $this->hasMany(LeagueLineup::class, 'league_team_id');
+    }
+
+    /**
+     * Escalação ativa para uma rodada específica.
+     * Retorna o override da rodada se existir, senão a escalação padrão (round=0).
+     */
+    public function activeLineup(int $round = 0): ?LeagueLineup
+    {
+        return $this->lineups()
+            ->where('status', 'active')
+            ->whereIn('round', [$round, 0])
+            ->orderByDesc('round')   // prefere override de rodada ao padrão
+            ->first();
+    }
+
     public function isCpu(): bool
     {
         return $this->user_id === null;

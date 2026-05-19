@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\LeagueController;
 use App\Http\Controllers\LeagueJoinController;
 use App\Http\Controllers\LeagueTeamController;
+use App\Http\Controllers\LineupController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserDashboardController;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +40,10 @@ Route::middleware('auth')->group(function () {
     // Team enrollment
     Route::get('/leagues/{league}/join',   [LeagueTeamController::class, 'create'])->name('leagues.teams.create');
     Route::post('/leagues/{league}/teams', [LeagueTeamController::class, 'store'])->name('leagues.teams.store');
+
+    // Lineup management
+    Route::get('/leagues/{league}/teams/{leagueTeam}/lineup',  [LineupController::class, 'edit'])->name('leagues.lineup.edit');
+    Route::put('/leagues/{league}/teams/{leagueTeam}/lineup',  [LineupController::class, 'update'])->name('leagues.lineup.update');
 });
 
 Route::middleware('auth')->group(function () {

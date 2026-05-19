@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\LeagueLineup;
 use App\Models\LeagueMatch;
 use App\Models\LeagueTeam;
 use Illuminate\Support\Collection;
@@ -10,9 +11,9 @@ class MatchSimulator
 {
     // ── Constantes de simulação ──────────────────────────────────────
 
-    private const PLAYS         = 90;
-    private const LUCK_SECTOR   = 0.15;   // ±15% de ruído na disputa de setor
-    private const LUCK_SHOT     = 0.20;   // ±20% de ruído na finalização
+    private const PLAYS       = 90;
+    private const LUCK_SECTOR = 0.15;   // ±15 % de ruído na disputa de setor
+    private const LUCK_SHOT   = 0.20;   // ±20 % de ruído na finalização
 
     /**
      * Pesos de contribuição por posição em cada setor.
@@ -41,27 +42,35 @@ class MatchSimulator
      *   away_shots: int,
      *   home_shots_on_target: int,
      *   away_shots_on_target: int,
+     *   home_formation: string,
+     *   away_formation: string,
      *   events: list<array{type:string, team:string, play:int}>
      * }
      */
     public function simulate(LeagueMatch $match): array
     {
-        $home = $this->loadPlayers($match->homeTeam);
-        $away = $this->loadPlayers($match->awayTeam);
+        $homeData = $this->loadLineup($match->homeTeam, $match->round ?? 0);
+        $awayData = $this->loadLineup($match->awayTeam, $match->round ?? 0);
+
+        $home            = $homeData['players'];
+        $away            = $awayData['players'];
+        $homeFormation   = $homeData['formation'];
+        $awayFormation   = $awayData['formation'];
 
         // Estado inicial
-        $sector     = 3;                                 // começa no meio-campo
+        $sector     = 3;                                   // começa no meio-campo
         $possession = random_int(0, 1) ? 'home' : 'away'; // sorteio de posse
-        $homeScore  = 0;
-        $awayScore  = 0;
+
+        $homeScore = 0;
+        $awayScore = 0;
 
         // Contadores de estatísticas
-        $homePossCount      = 0;
-        $homeShots          = 0;
-        $awayShots          = 0;
-        $homeShotsOnTarget  = 0;
-        $awayShotsOnTarget  = 0;
-        $events             = [];
+        $homePossCount     = 0;
+        $homeShots         = 0;
+        $awayShots         = 0;
+        $homeShotsOnTarget = 0;
+        $awayShotsOnTarget = 0;
+        $events            = [];
 
         for ($play = 1; $play <= self::PLAYS; $play++) {
             if ($possession === 'home') {
@@ -76,26 +85,35 @@ class MatchSimulator
             // ── Decisão tática: avançar ou manter setor? ────────────
             $advance = $this->shouldAdvance($scoreDiff, $playsLeft, $sector, $possession);
 
-            // Calcula o setor alvo
+            // Calcula o setor alvo (sempre ±1 — progressão obrigatória)
             $targetSector = $advance
                 ? ($possession === 'home' ? $sector + 1 : $sector - 1)
                 : $sector;
 
             // ── Chegou à área: chute! ────────────────────────────────
+            // A bola nunca "pula" setores — chegar aqui exige ter
+            // disputado todos os setores intermediários anteriores.
             if ($advance && ($targetSector > 5 || $targetSector < 1)) {
                 $shot = $this->resolveShot($home, $away, $possession);
 
                 if ($possession === 'home') {
                     $homeShots++;
-                    if ($shot['on_target']) $homeShotsOnTarget++;
+                    if ($shot['on_target']) {
+                        $homeShotsOnTarget++;
+                    }
                 } else {
                     $awayShots++;
-                    if ($shot['on_target']) $awayShotsOnTarget++;
+                    if ($shot['on_target']) {
+                        $awayShotsOnTarget++;
+                    }
                 }
 
                 if ($shot['goal']) {
-                    if ($possession === 'home') $homeScore++;
-                    else $awayScore++;
+                    if ($possession === 'home') {
+                        $homeScore++;
+                    } else {
+                        $awayScore++;
+                    }
 
                     $events[] = ['type' => 'goal', 'team' => $possession, 'play' => $play];
 
@@ -104,6 +122,7 @@ class MatchSimulator
                     $possession = $possession === 'home' ? 'away' : 'home';
                 } else {
                     // Goleiro segura → time defensor constrói do fundo
+                    // Novo possuidora precisa percorrer todos os setores
                     $sector     = $possession === 'home' ? 1 : 5;
                     $possession = $possession === 'home' ? 'away' : 'home';
                 }
@@ -113,25 +132,34 @@ class MatchSimulator
 
             // ── Disputa de posse no setor alvo ──────────────────────
             $targetSector = max(1, min(5, $targetSector));
-            $contest      = $this->resolveSector($home, $away, $targetSector, $possession);
+            $contest      = $this->resolveSector(
+                $home, $away,
+                $targetSector, $possession,
+                $homeFormation, $awayFormation
+            );
 
             $sector = $targetSector;
 
             if ($contest['possession_change']) {
                 $possession = $possession === 'home' ? 'away' : 'home';
+                // Nota: o setor permanece o mesmo após perda de bola.
+                // O novo time precisa avançar setor a setor até chegar ao gol,
+                // passando obrigatoriamente pelo meio-campo (setor 3).
             }
         }
 
         return [
-            'home_score'            => $homeScore,
-            'away_score'            => $awayScore,
-            'home_possession'       => (int) round($homePossCount / self::PLAYS * 100),
-            'away_possession'       => 100 - (int) round($homePossCount / self::PLAYS * 100),
-            'home_shots'            => $homeShots,
-            'away_shots'            => $awayShots,
-            'home_shots_on_target'  => $homeShotsOnTarget,
-            'away_shots_on_target'  => $awayShotsOnTarget,
-            'events'                => $events,
+            'home_score'           => $homeScore,
+            'away_score'           => $awayScore,
+            'home_possession'      => (int) round($homePossCount / self::PLAYS * 100),
+            'away_possession'      => 100 - (int) round($homePossCount / self::PLAYS * 100),
+            'home_shots'           => $homeShots,
+            'away_shots'           => $awayShots,
+            'home_shots_on_target' => $homeShotsOnTarget,
+            'away_shots_on_target' => $awayShotsOnTarget,
+            'home_formation'       => $homeFormation,
+            'away_formation'       => $awayFormation,
+            'events'               => $events,
         ];
     }
 
@@ -162,6 +190,8 @@ class MatchSimulator
                 'away_shots'           => $result['away_shots'],
                 'home_shots_on_target' => $result['home_shots_on_target'],
                 'away_shots_on_target' => $result['away_shots_on_target'],
+                'home_formation'       => $result['home_formation'],
+                'away_formation'       => $result['away_formation'],
                 'events'               => $result['events'],
             ],
         ]);
@@ -169,17 +199,132 @@ class MatchSimulator
         return $match->fresh();
     }
 
+    // ── Carregamento de escalação ────────────────────────────────────
+
+    /**
+     * Carrega a escalação ativa do time para a rodada informada.
+     *
+     * Prioridade:
+     *   1. Override específico da rodada (round = N)
+     *   2. Escalação padrão (round = 0)
+     *   3. Fallback automático: melhores jogadores em 4-4-2
+     *
+     * @return array{players: Collection, formation: string}
+     */
+    private function loadLineup(LeagueTeam $team, int $round): array
+    {
+        $lineup = $team->lineups()
+            ->where('status', 'active')
+            ->whereIn('round', [$round, 0])
+            ->orderByDesc('round')   // override de rodada tem prioridade
+            ->first();
+
+        if ($lineup) {
+            $players = $lineup->players()
+                ->where('league_lineup_players.is_starter', true)
+                ->get()
+                ->map(fn($p) => [
+                    'position' => $p->pivot->role,
+                    'power'    => round(
+                        $p->strength * ($p->fitness / 100) * (float) $p->form_factor,
+                        2
+                    ),
+                ]);
+
+            return ['players' => $players, 'formation' => $lineup->formation];
+        }
+
+        // Fallback: auto-seleção por força em 4-4-2
+        return [
+            'players'   => $this->autoSelectPlayers($team),
+            'formation' => '4-4-2',
+        ];
+    }
+
+    /**
+     * Seleciona automaticamente os 11 melhores jogadores em 4-4-2.
+     * Usado como fallback quando o manager não escalou o time.
+     */
+    private function autoSelectPlayers(LeagueTeam $team): Collection
+    {
+        $all = $team->players()
+            ->where('status', 'active')
+            ->get()
+            ->map(fn($p) => [
+                'position' => $p->position,
+                'power'    => round(
+                    $p->strength * ($p->fitness / 100) * (float) $p->form_factor,
+                    2
+                ),
+            ]);
+
+        $pick = fn(string $pos, int $n) => $all
+            ->where('position', $pos)
+            ->sortByDesc('power')
+            ->take($n)
+            ->values();
+
+        return collect()
+            ->merge($pick('goalkeeper', 1))
+            ->merge($pick('defender',   4))
+            ->merge($pick('midfielder', 4))
+            ->merge($pick('forward',    2));
+    }
+
+    // ── Modificador de formação ──────────────────────────────────────
+
+    /**
+     * Calcula o multiplicador de poder de um time em um setor,
+     * dado o esquema tático (formação).
+     *
+     * Baseline: 4-4-2  →  todos os setores = 1.00
+     *
+     * Impacto de formações alternativas:
+     *   4-3-3 → setores 4-5 +15 %, setor 3 -7 %
+     *   5-3-2 → setores 1-2 +7 %,  setor 5 estável
+     *   3-5-2 → setor  3   +7 %,  setores 1-2 -7 %
+     *
+     * Fórmula:
+     *   base = 0.70 (independente da formação)
+     *   flex = 0.30 × escalaGrupo
+     *
+     * Cada setor é influenciado principalmente pelo grupo posicional
+     * mais relevante naquele setor:
+     *   Setor 1-2 → defensores
+     *   Setor 3   → meios-campistas
+     *   Setor 4-5 → atacantes
+     */
+    private function formationModifier(string $formation, int $sector): float
+    {
+        $parts = array_map('intval', explode('-', $formation));
+        $def   = $parts[0];
+        $fwd   = end($parts);
+        $mid   = array_sum($parts) - $def - $fwd;
+
+        // Escala em relação à baseline 4-4-2
+        $defScale = $def / 4.0;
+        $midScale = $mid / 4.0;
+        $fwdScale = $fwd / 2.0;
+
+        $base = 0.70;
+        $flex = 0.30;
+
+        $sector = max(1, min(5, $sector));
+
+        return match ($sector) {
+            1 => $base + $flex * $defScale,
+            2 => $base + $flex * ($defScale * 0.60 + $midScale * 0.40),
+            3 => $base + $flex * $midScale,
+            4 => $base + $flex * ($fwdScale * 0.60 + $midScale * 0.40),
+            5 => $base + $flex * $fwdScale,
+        };
+    }
+
     // ── Decisão tática ───────────────────────────────────────────────
 
     /**
      * Define se o time com a posse deve avançar para o próximo setor
      * ou manter e consolidar a bola onde está.
-     *
-     * Fatores:
-     *   scoreDiff       — diferença do ponto de vista de quem tem a bola
-     *   playsLeft       — urgência temporal
-     *   sector          — posição atual no campo
-     *   possession      — time com a bola (para ajuste de setor)
      *
      * Probabilidade base de avançar: 60%
      *   + ajuste por placar (perdendo → mais agressivo)
@@ -196,14 +341,14 @@ class MatchSimulator
 
         // Ajuste por placar
         $prob += match (true) {
-            $scoreDiff >= 2  => -0.20,  // vencendo fácil → segura
-            $scoreDiff === 1 => -0.10,  // vencendo por 1 → cauteloso
-            $scoreDiff === 0 =>  0.00,  // empate → neutro
-            $scoreDiff === -1 => 0.15,  // perdendo → avança
-            default          =>  0.25,  // perdendo por 2+ → desesperado
+            $scoreDiff >= 2   => -0.20,  // vencendo fácil → segura
+            $scoreDiff === 1  => -0.10,  // vencendo por 1 → cauteloso
+            $scoreDiff === 0  =>  0.00,  // empate → neutro
+            $scoreDiff === -1 =>  0.15,  // perdendo → avança
+            default           =>  0.25,  // perdendo por 2+ → desesperado
         };
 
-        // Urgência nos últimos 15 minutos/jogadas
+        // Urgência nos últimos 15 jogadas
         if ($playsLeft <= 15) {
             $prob += match (true) {
                 $scoreDiff < 0 =>  0.15,  // perdendo nos acréscimos → tudo ou nada
@@ -226,10 +371,11 @@ class MatchSimulator
     // ── Disputa de setor ─────────────────────────────────────────────
 
     /**
-     * Calcula quem vence a disputa de posse em um setor.
+     * Calcula quem vence a disputa de posse em um setor,
+     * levando em conta a formação de ambos os times.
      *
-     * Poder efetivo de cada time no setor:
-     *   Σ (força_jogador × peso_posição_no_setor) × ruído_sorte
+     * Poder efetivo por time:
+     *   Σ (força_jogador × peso_posição_no_setor) × modificador_formação × ruído_sorte
      *
      * Home usa peso[sector], Away usa peso[6 - sector] (espelho do campo).
      */
@@ -238,9 +384,13 @@ class MatchSimulator
         Collection $away,
         int        $sector,
         string     $possession,
+        string     $homeFormation,
+        string     $awayFormation,
     ): array {
-        $homePow = $this->sectorPower($home, $sector);
-        $awayPow = $this->sectorPower($away, 6 - $sector);
+        $awaySector = 6 - $sector;
+
+        $homePow = $this->sectorPower($home, $sector)      * $this->formationModifier($homeFormation, $sector);
+        $awayPow = $this->sectorPower($away, $awaySector)  * $this->formationModifier($awayFormation, $awaySector);
 
         $range   = max($homePow, $awayPow) * self::LUCK_SECTOR;
         $homePow = max(1, $homePow + $this->randomNoise($range));
@@ -258,13 +408,12 @@ class MatchSimulator
     /**
      * Resolve um chute a gol.
      *
-     * Atacante: o forward com maior força efetiva disponível.
-     *           Se não houver forward, usa o jogador mais forte.
-     * Goleiro:  o goalkeeper do time defensor.
-     *
      * Duas etapas:
-     *   1. Chute no alvo? (70% base + vantagem do atacante)
-     *   2. Gol? (força atacante vs força GK com ruído)
+     *   1. Chute no alvo? (55 % base + bônus pela força do finalizador)
+     *   2. Gol? (força do finalizador vs força do goleiro com ±20 % ruído)
+     *
+     * Finalizador = melhor atacante (fallback: jogador mais forte).
+     * Goleiro      = goalkeeper do time defensor (fallback: mais forte).
      */
     private function resolveShot(
         Collection $home,
@@ -274,7 +423,7 @@ class MatchSimulator
         $attackers = $attackingTeam === 'home' ? $home : $away;
         $defenders = $attackingTeam === 'home' ? $away : $home;
 
-        $shooter = $attackers->where('position', 'forward')->sortByDesc('power')->first()
+        $shooter    = $attackers->where('position', 'forward')->sortByDesc('power')->first()
             ?? $attackers->sortByDesc('power')->first();
 
         $goalkeeper = $defenders->where('position', 'goalkeeper')->first()
@@ -293,10 +442,10 @@ class MatchSimulator
         }
 
         // Passo 2: gol ou defesa
-        $shotPow = $shooter['power'] + $this->randomNoise($shooter['power'] * self::LUCK_SHOT);
-        $gkPow   = $goalkeeper['power'] + $this->randomNoise($goalkeeper['power'] * self::LUCK_SHOT);
+        $shotPow  = $shooter['power']    + $this->randomNoise($shooter['power']    * self::LUCK_SHOT);
+        $gkPow    = $goalkeeper['power'] + $this->randomNoise($goalkeeper['power'] * self::LUCK_SHOT);
 
-        $total   = max(1, $shotPow + $gkPow);
+        $total    = max(1, $shotPow + $gkPow);
         $goalProb = $shotPow / $total;
         $goal     = (random_int(1, 1000) / 1000) <= $goalProb;
 
@@ -304,25 +453,6 @@ class MatchSimulator
     }
 
     // ── Helpers ──────────────────────────────────────────────────────
-
-    /**
-     * Carrega os jogadores ativos de um time com sua força efetiva pré-calculada.
-     *
-     *   effective_power = strength × (fitness / 100) × form_factor
-     */
-    private function loadPlayers(LeagueTeam $team): Collection
-    {
-        return $team->players()
-            ->where('status', 'active')
-            ->get()
-            ->map(fn ($p) => [
-                'position' => $p->position,
-                'power'    => round(
-                    $p->strength * ($p->fitness / 100) * (float) $p->form_factor,
-                    2
-                ),
-            ]);
-    }
 
     /**
      * Soma o poder efetivo dos jogadores de um time em um setor,
@@ -334,13 +464,16 @@ class MatchSimulator
         $weights = self::SECTOR_WEIGHTS[$sector];
 
         return $players->sum(
-            fn ($p) => $p['power'] * ($weights[$p['position']] ?? 0.30)
+            fn($p) => $p['power'] * ($weights[$p['position']] ?? 0.30)
         );
     }
 
     private function randomNoise(float $range): float
     {
-        if ($range <= 0) return 0.0;
+        if ($range <= 0) {
+            return 0.0;
+        }
+
         return random_int((int) (-$range * 100), (int) ($range * 100)) / 100;
     }
 }
