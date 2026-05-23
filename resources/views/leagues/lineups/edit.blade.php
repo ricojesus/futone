@@ -1,45 +1,75 @@
 <x-app-layout>
-    {{-- Header ──────────────────────────────────────────────────────── --}}
+
+    @php
+        $playersJson = $players->map(fn($p) => [
+            'id'          => (string) $p->id,
+            'name'        => $p->name ?? ('Jogador #' . substr($p->id, 0, 6)),
+            'position'    => $p->position,
+            'strength'    => (int) $p->strength,
+            'fitness'     => (int) ($p->fitness ?? 100),
+            'form_factor' => (float) ($p->form_factor ?? 1.0),
+            'status'      => $p->status ?? 'active',
+        ])->values()->toJson();
+
+        $currentStartersJson = $currentStarters instanceof \Illuminate\Support\Collection
+            ? $currentStarters->toJson()
+            : json_encode((object) $currentStarters);
+    @endphp
+
+    {{-- ══ Cabeçalho ═══════════════════════════════════════════════════════════ --}}
     <div class="border-b border-slate-800 bg-slate-900">
-        <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-            <div class="flex items-center gap-3 mb-1 text-sm">
-                <a href="{{ route('dashboard') }}" class="text-slate-500 hover:text-slate-300 transition">Dashboard</a>
-                <span class="text-slate-700">/</span>
-                <a href="{{ route('leagues.show', $league) }}" class="text-slate-500 hover:text-slate-300 transition">{{ $league->name }}</a>
-                <span class="text-slate-700">/</span>
+        <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-2 mb-1 text-xs text-slate-500">
+                <a href="{{ route('dashboard') }}" class="hover:text-slate-300 transition">Dashboard</a>
+                <span>/</span>
+                <a href="{{ route('leagues.show', $league) }}" class="hover:text-slate-300 transition">{{ $league->name }}</a>
+                <span>/</span>
                 <span class="text-slate-400">Escalação</span>
             </div>
-            <div class="flex items-start justify-between flex-wrap gap-4">
+            <div class="flex items-center justify-between gap-4 flex-wrap">
                 <div>
                     <h1 class="text-2xl font-extrabold text-white">Escalação</h1>
-                    <p class="mt-1 text-sm text-slate-400">
-                        {{ $leagueTeam->name }} · {{ $league->name }}
+                    <p class="mt-0.5 text-sm text-slate-400">
+                        {{ $leagueTeam->name }}
+                        <span class="text-slate-600 mx-1">·</span>
+                        {{ $league->name }}
                     </p>
                 </div>
-                <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-300">
-                    Temporada {{ $league->season }}
-                </span>
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-400">
+                        Temporada {{ $league->season }}
+                    </span>
+                    @if($lineup?->updated_at)
+                        <span class="text-xs text-slate-600">
+                            Salva {{ $lineup->updated_at->diffForHumans() }}
+                        </span>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
 
-    {{-- Corpo ───────────────────────────────────────────────────────── --}}
-    <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8"
+    {{-- ══ Corpo ════════════════════════════════════════════════════════════════ --}}
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8"
          x-data="lineupManager(
              {{ json_encode(\App\Models\LeagueLineup::FORMATIONS) }},
-             {{ json_encode($currentStarters) }},
-             '{{ $lineup?->formation ?? '4-4-2' }}'
+             {{ $currentStartersJson }},
+             '{{ $lineup?->formation ?? '4-4-2' }}',
+             {{ $playersJson }}
          )">
 
-        {{-- Feedback --}}
+        {{-- Alertas --}}
         @if (session('success'))
-            <div class="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-400">
+            <div class="mb-5 flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-400">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
                 {{ session('success') }}
             </div>
         @endif
 
         @if ($errors->any())
-            <div class="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
+            <div class="mb-5 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
                 <ul class="space-y-1 list-disc list-inside">
                     @foreach ($errors->all() as $e)
                         <li>{{ $e }}</li>
@@ -52,198 +82,437 @@
             @csrf
             @method('PUT')
 
-            {{-- Cabeçalho: formação + status ────────────────────────── --}}
-            <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+            {{-- ── Barra de ação ──────────────────────────────────────────────── --}}
+            <div class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3">
 
-                {{-- Seletor de formação --}}
+                {{-- Formação --}}
                 <div class="flex items-center gap-3">
-                    <label class="text-sm font-medium text-slate-400">Formação</label>
+                    <label class="text-xs font-semibold uppercase tracking-widest text-slate-500">Formação</label>
                     <select name="formation" x-model="formation" @change="onFormationChange()"
                             class="rounded-xl border border-slate-600 bg-slate-800 px-4 py-2 text-white text-sm
-                                   focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                   focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer">
                         @foreach (array_keys(\App\Models\LeagueLineup::FORMATIONS) as $f)
                             <option value="{{ $f }}">{{ $f }}</option>
                         @endforeach
                     </select>
                 </div>
 
-                {{-- Contador de titulares --}}
-                <div class="flex items-center gap-6 text-sm">
-                    <span class="text-slate-500">
-                        Titulares:
-                        <span class="font-bold" :class="totalCount === 11 ? 'text-emerald-400' : 'text-amber-400'"
-                              x-text="totalCount + '/11'"></span>
-                    </span>
-                    <template x-for="[role, label] in [['goalkeeper','GOL'],['defender','DEF'],['midfielder','MEI'],['forward','ATA']]" :key="role">
-                        <span class="text-slate-500">
-                            <span x-text="label"></span>
-                            <span class="font-bold"
+                {{-- Contadores --}}
+                <div class="flex items-center gap-4 text-xs">
+                    <template x-for="[role, abbr, color] in [
+                        ['goalkeeper','GOL','#f59e0b'],
+                        ['defender','DEF','#0ea5e9'],
+                        ['midfielder','MEI','#8b5cf6'],
+                        ['forward','ATA','#10b981']
+                    ]" :key="role">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full" :style="`background:${color}`"></span>
+                            <span class="font-semibold text-slate-400" x-text="abbr"></span>
+                            <span class="font-bold tabular-nums"
                                   :class="count(role) === required(role) ? 'text-emerald-400' : 'text-amber-400'"
                                   x-text="count(role) + '/' + required(role)"></span>
-                        </span>
+                        </div>
                     </template>
+                    <span class="text-slate-700">|</span>
+                    <span class="font-bold tabular-nums"
+                          :class="totalCount === 11 ? 'text-emerald-400' : 'text-amber-400'"
+                          x-text="totalCount + '/11 titulares'"></span>
                 </div>
 
-                {{-- Botão salvar --}}
+                {{-- Salvar --}}
                 <button type="submit"
                         :disabled="!isComplete()"
                         :class="isComplete()
-                            ? 'bg-emerald-500 hover:bg-emerald-400 text-white cursor-pointer'
+                            ? 'bg-emerald-500 hover:bg-emerald-400 cursor-pointer shadow-lg shadow-emerald-500/20'
                             : 'bg-slate-700 text-slate-500 cursor-not-allowed'"
-                        class="rounded-xl px-6 py-2.5 text-sm font-bold uppercase tracking-wider transition active:scale-95">
+                        class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition active:scale-95">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                    </svg>
                     Salvar Escalação
                 </button>
             </div>
 
-            {{-- Grid de posições ─────────────────────────────────────── --}}
-            <div class="grid grid-cols-1 gap-5 lg:grid-cols-4">
+            {{-- ── Grade principal: campo + banco ────────────────────────────── --}}
+            <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">
 
-                @php
-                    $groups = [
-                        'goalkeeper' => ['label' => 'Goleiros',        'abbr' => 'GOL', 'color' => 'yellow'],
-                        'defender'   => ['label' => 'Defensores',      'abbr' => 'DEF', 'color' => 'sky'],
-                        'midfielder' => ['label' => 'Meios-campistas',  'abbr' => 'MEI', 'color' => 'violet'],
-                        'forward'    => ['label' => 'Atacantes',        'abbr' => 'ATA', 'color' => 'emerald'],
-                    ];
-                    $colorMap = [
-                        'yellow'  => ['border' => 'border-yellow-500/40',  'bg' => 'bg-yellow-500/10',  'text' => 'text-yellow-400',  'badge' => 'bg-yellow-500/20 text-yellow-400',  'ring' => 'ring-yellow-500'],
-                        'sky'     => ['border' => 'border-sky-500/40',     'bg' => 'bg-sky-500/10',     'text' => 'text-sky-400',     'badge' => 'bg-sky-500/20 text-sky-400',     'ring' => 'ring-sky-500'],
-                        'violet'  => ['border' => 'border-violet-500/40',  'bg' => 'bg-violet-500/10',  'text' => 'text-violet-400',  'badge' => 'bg-violet-500/20 text-violet-400',  'ring' => 'ring-violet-500'],
-                        'emerald' => ['border' => 'border-emerald-500/40', 'bg' => 'bg-emerald-500/10', 'text' => 'text-emerald-400', 'badge' => 'bg-emerald-500/20 text-emerald-400', 'ring' => 'ring-emerald-500'],
-                    ];
-                @endphp
+                {{-- ════ CAMPO DE FUTEBOL ════════════════════════════════════════ --}}
+                <div class="lg:col-span-3 space-y-4">
 
-                @foreach ($groups as $role => $group)
-                    @php $c = $colorMap[$group['color']]; @endphp
+                    {{-- Campo --}}
+                    <div class="relative rounded-2xl overflow-hidden shadow-2xl select-none"
+                         style="height: 460px;
+                                background: repeating-linear-gradient(
+                                    90deg,
+                                    #14532d 0px, #14532d 50px,
+                                    #166534 50px, #166534 100px
+                                );">
 
-                    <div class="rounded-2xl border {{ $c['border'] }} bg-slate-900 overflow-hidden">
+                        {{-- ── Linhas do campo ──────────────────────────────── --}}
 
-                        {{-- Cabeçalho do grupo --}}
-                        <div class="{{ $c['bg'] }} px-4 py-3 flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <span class="rounded-md px-2 py-0.5 text-xs font-bold {{ $c['badge'] }}">
-                                    {{ $group['abbr'] }}
-                                </span>
-                                <span class="text-sm font-semibold text-white">{{ $group['label'] }}</span>
-                            </div>
-                            <span class="text-xs font-medium {{ $c['text'] }}"
-                                  x-text="count('{{ $role }}') + '/' + required('{{ $role }}')"></span>
+                        {{-- Borda interna --}}
+                        <div class="absolute inset-3 border-2 border-white/25 rounded-sm pointer-events-none"></div>
+
+                        {{-- Linha do meio (vertical) --}}
+                        <div class="absolute top-3 bottom-3 left-1/2 w-px bg-white/25 pointer-events-none"></div>
+
+                        {{-- Círculo central --}}
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/25 pointer-events-none"
+                             style="width: 110px; height: 110px;"></div>
+
+                        {{-- Ponto central --}}
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white/40 pointer-events-none"></div>
+
+                        {{-- Área de penalti esquerda --}}
+                        <div class="absolute top-1/2 -translate-y-1/2 left-3 border-2 border-white/25 border-l-0 pointer-events-none"
+                             style="width: 17%; height: 66%;"></div>
+
+                        {{-- Área pequena esquerda --}}
+                        <div class="absolute top-1/2 -translate-y-1/2 left-3 border-2 border-white/25 border-l-0 pointer-events-none"
+                             style="width: 7%; height: 38%;"></div>
+
+                        {{-- Área de penalti direita --}}
+                        <div class="absolute top-1/2 -translate-y-1/2 right-3 border-2 border-white/25 border-r-0 pointer-events-none"
+                             style="width: 17%; height: 66%;"></div>
+
+                        {{-- Área pequena direita --}}
+                        <div class="absolute top-1/2 -translate-y-1/2 right-3 border-2 border-white/25 border-r-0 pointer-events-none"
+                             style="width: 7%; height: 38%;"></div>
+
+                        {{-- Gol esquerdo (linha grossa) --}}
+                        <div class="absolute top-1/2 -translate-y-1/2 left-0 bg-white/30 pointer-events-none"
+                             style="width: 4px; height: 22%;"></div>
+
+                        {{-- Gol direito --}}
+                        <div class="absolute top-1/2 -translate-y-1/2 right-0 bg-white/30 pointer-events-none"
+                             style="width: 4px; height: 22%;"></div>
+
+                        {{-- ── Rótulo de formação ───────────────────────────── --}}
+                        <div class="absolute top-2 left-0 right-0 flex justify-center pointer-events-none">
+                            <span class="bg-black/30 rounded-full px-3 py-0.5 text-white/70 text-xs font-bold tracking-widest"
+                                  x-text="formation"></span>
                         </div>
 
-                        {{-- Lista de jogadores --}}
-                        <div class="divide-y divide-slate-800">
-                            @php
-                                $groupPlayers = $players->where('position', $role);
-                            @endphp
+                        {{-- ── Setas de sentido de ataque ───────────────────── --}}
+                        <div class="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none">
+                            <span class="text-white/20 text-xs tracking-widest">⬅ defesa &nbsp;&nbsp;&nbsp; ataque ➡</span>
+                        </div>
 
-                            @forelse ($groupPlayers as $player)
-                                @php $pid = $player->id; @endphp
+                        {{-- ── Tokens dos jogadores (Alpine) ───────────────── --}}
+                        <template x-for="p in pitchPlayers()" :key="p.id">
+                            <div :style="`left: ${p.x}%; top: ${p.y}%;`"
+                                 class="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10"
+                                 @click="toggle(p.id, p.role)"
+                                 :title="`Clique para remover ${shortName(p.id)}`">
 
-                                {{-- Hidden input (ativo apenas quando titular) --}}
-                                <template x-if="isStarter('{{ $pid }}')">
-                                    <input type="hidden"
-                                           name="starters[{{ $pid }}]"
-                                           value="{{ $role }}">
-                                </template>
+                                {{-- Círculo principal --}}
+                                <div class="relative w-12 h-12 rounded-full flex flex-col items-center justify-center border-2 shadow-xl
+                                            transition-all duration-150 group-hover:scale-110 group-hover:shadow-2xl"
+                                     :style="tokenStyle(p.role)">
 
-                                <button type="button"
-                                        @click="toggle('{{ $pid }}', '{{ $role }}')"
-                                        :disabled="!isStarter('{{ $pid }}') && !canAdd('{{ $role }}')"
-                                        class="w-full text-left px-4 py-3 transition
-                                               disabled:opacity-40 disabled:cursor-not-allowed
-                                               hover:bg-slate-800/60"
-                                        :class="isStarter('{{ $pid }}')
-                                            ? '{{ $c['bg'] }} ring-1 inset-ring {{ $c['ring'] }}'
-                                            : 'bg-transparent'">
+                                    {{-- Nome abreviado --}}
+                                    <span class="text-white font-bold text-center leading-none px-0.5 z-10 relative"
+                                          style="font-size: 8.5px; max-width: 44px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
+                                          x-text="shortName(p.id)"></span>
 
-                                    <div class="flex items-center gap-3">
-                                        {{-- Indicador titular --}}
-                                        <div class="w-4 h-4 rounded-full border-2 flex-shrink-0 transition"
-                                             :class="isStarter('{{ $pid }}')
-                                                 ? 'border-transparent {{ $c['bg'] }} ring-2 ring-offset-1 ring-offset-slate-900 {{ $c['ring'] }}'
-                                                 : 'border-slate-600'">
-                                            <template x-if="isStarter('{{ $pid }}')">
-                                                <div class="w-full h-full rounded-full {{ $c['bg'] }} scale-75"></div>
-                                            </template>
-                                        </div>
+                                    {{-- Poder do jogador --}}
+                                    <span class="text-white/70 font-semibold z-10 relative mt-0.5"
+                                          style="font-size: 7px;"
+                                          x-text="playerPower(p.id)"></span>
 
-                                        {{-- Info do jogador --}}
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-medium text-white truncate">
-                                                {{ $player->name ?? 'Jogador #' . substr($player->id, 0, 6) }}
-                                            </p>
-                                            <p class="text-xs text-slate-500 mt-0.5">
-                                                Força {{ $player->strength }}
-                                                · Fitness {{ $player->fitness }}%
-                                                @if ($player->fitness < 60)
-                                                    <span class="text-amber-400">⚠</span>
-                                                @endif
-                                            </p>
-                                        </div>
-
-                                        {{-- Poder efetivo --}}
-                                        <div class="text-right flex-shrink-0">
-                                            @php
-                                                $power = round($player->strength * ($player->fitness / 100) * (float)($player->form_factor ?? 1.0));
-                                            @endphp
-                                            <span class="text-sm font-bold {{ $c['text'] }}">
-                                                {{ $power }}
-                                            </span>
-                                            <p class="text-xs text-slate-600">poder</p>
-                                        </div>
+                                    {{-- Overlay de remoção ao hover --}}
+                                    <div class="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center
+                                                opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
                                     </div>
-
-                                    {{-- Badge: lesionado --}}
-                                    @if ($player->status === 'injured')
-                                        <div class="mt-1.5 inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-xs text-red-400">
-                                            🤕 Lesionado
-                                        </div>
-                                    @endif
-                                </button>
-
-                            @empty
-                                <div class="px-4 py-6 text-center text-xs text-slate-600">
-                                    Nenhum jogador nesta posição
                                 </div>
-                            @endforelse
+
+                                {{-- Rótulo do role abaixo do token --}}
+                                <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                                    <span class="rounded px-1 text-white/60 font-semibold" style="font-size: 7px;"
+                                          x-text="roleAbbr(p.role)"></span>
+                                </div>
+                            </div>
+                        </template>
+
+                        {{-- Estado vazio --}}
+                        <template x-if="totalCount === 0">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <svg class="w-10 h-10 text-white/15 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
+                                </svg>
+                                <p class="text-white/25 text-sm text-center px-12">
+                                    Selecione os jogadores no painel ao lado
+                                </p>
+                            </div>
+                        </template>
+
+                    </div>{{-- /campo --}}
+
+                    {{-- ── Impacto da formação nos setores ────────────────── --}}
+                    <div class="rounded-2xl border border-slate-700 bg-slate-900 p-4">
+                        <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">
+                            Modificador de força por setor —
+                            <span class="text-white" x-text="formation"></span>
+                        </h3>
+                        <div class="grid grid-cols-5 gap-2 text-center">
+                            <template x-for="(info, i) in [
+                                {label:'Defesa',  icon:'🛡️'},
+                                {label:'Def-Mei', icon:'↔'},
+                                {label:'Meio',    icon:'⚽'},
+                                {label:'Mei-Ata', icon:'↔'},
+                                {label:'Ataque',  icon:'⚡'}
+                            ]" :key="i">
+                                <div class="rounded-xl border p-2 transition"
+                                     :class="sectorMod(i+1) > 1.05 ? 'border-emerald-500/40 bg-emerald-500/10'
+                                           : sectorMod(i+1) < 0.95 ? 'border-red-500/30 bg-red-500/10'
+                                           : 'border-slate-700 bg-slate-800/50'">
+                                    <p class="text-slate-500 text-xs mb-1" x-text="info.label"></p>
+                                    <p class="font-bold text-sm"
+                                       :class="sectorMod(i+1) > 1.05 ? 'text-emerald-400'
+                                             : sectorMod(i+1) < 0.95 ? 'text-red-400'
+                                             : 'text-slate-300'"
+                                       x-text="(sectorMod(i+1) * 100).toFixed(0) + '%'"></p>
+                                </div>
+                            </template>
                         </div>
+                        <p class="mt-2 text-xs text-slate-600">
+                            Baseline: 4-4-2 = 100% em todos os setores. Acima = vantagem, abaixo = desvantagem.
+                        </p>
                     </div>
-                @endforeach
+
+                </div>{{-- /pitch col --}}
+
+                {{-- ════ BANCO / SELEÇÃO ══════════════════════════════════════ --}}
+                <div class="lg:col-span-2 lg:sticky lg:top-4">
+                    <div class="space-y-3 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-1">
+
+                        @php
+                            $roleConfig = [
+                                'goalkeeper' => [
+                                    'label' => 'Goleiros',
+                                    'abbr'  => 'GOL',
+                                    'hex'   => '#f59e0b',
+                                    'bghex' => 'rgba(245,158,11,0.15)',
+                                ],
+                                'defender' => [
+                                    'label' => 'Defensores',
+                                    'abbr'  => 'DEF',
+                                    'hex'   => '#0ea5e9',
+                                    'bghex' => 'rgba(14,165,233,0.15)',
+                                ],
+                                'midfielder' => [
+                                    'label' => 'Meios-campistas',
+                                    'abbr'  => 'MEI',
+                                    'hex'   => '#8b5cf6',
+                                    'bghex' => 'rgba(139,92,246,0.15)',
+                                ],
+                                'forward' => [
+                                    'label' => 'Atacantes',
+                                    'abbr'  => 'ATA',
+                                    'hex'   => '#10b981',
+                                    'bghex' => 'rgba(16,185,129,0.15)',
+                                ],
+                            ];
+                        @endphp
+
+                        @foreach ($roleConfig as $role => $cfg)
+                            <div class="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden">
+
+                                {{-- Cabeçalho do grupo --}}
+                                <div class="flex items-center justify-between px-4 py-2.5"
+                                     style="background: {{ $cfg['bghex'] }}; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold px-2 py-0.5 rounded-md"
+                                              style="background: {{ $cfg['bghex'] }}; color: {{ $cfg['hex'] }};">
+                                            {{ $cfg['abbr'] }}
+                                        </span>
+                                        <span class="text-sm font-semibold text-white">{{ $cfg['label'] }}</span>
+                                    </div>
+                                    <span class="text-xs font-bold tabular-nums"
+                                          :class="count('{{ $role }}') === required('{{ $role }}') ? 'text-emerald-400' : 'text-amber-400'"
+                                          x-text="count('{{ $role }}') + '/' + required('{{ $role }}')">
+                                    </span>
+                                </div>
+
+                                {{-- Lista de jogadores --}}
+                                <div class="divide-y divide-slate-800/60">
+                                    @php $groupPlayers = $players->where('position', $role); @endphp
+
+                                    @forelse ($groupPlayers as $player)
+                                        @php $pid = (string) $player->id; @endphp
+
+                                        {{-- Input oculto (só ativo quando titular) --}}
+                                        <template x-if="isStarter('{{ $pid }}')">
+                                            <input type="hidden"
+                                                   name="starters[{{ $pid }}]"
+                                                   value="{{ $role }}">
+                                        </template>
+
+                                        {{-- Card do jogador --}}
+                                        <button type="button"
+                                                @click="toggle('{{ $pid }}', '{{ $role }}')"
+                                                :disabled="!isStarter('{{ $pid }}') && !canAdd('{{ $role }}')"
+                                                class="group/card w-full text-left px-4 py-3 transition-colors
+                                                       disabled:opacity-35 disabled:cursor-not-allowed"
+                                                :class="isStarter('{{ $pid }}') ? 'bg-slate-800' : 'hover:bg-slate-800/60'">
+
+                                            <div class="flex items-center gap-3">
+
+                                                {{-- Indicador visual (dot) --}}
+                                                <div class="w-2.5 h-2.5 rounded-full flex-shrink-0 border transition-all"
+                                                     :style="isStarter('{{ $pid }}')
+                                                         ? 'background:{{ $cfg['hex'] }}; border-color:{{ $cfg['hex'] }};'
+                                                         : 'background:transparent; border-color:#374151;'">
+                                                </div>
+
+                                                {{-- Info do jogador --}}
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-sm font-semibold truncate leading-tight"
+                                                       :class="isStarter('{{ $pid }}') ? 'text-white' : 'text-slate-300'">
+                                                        {{ $player->name }}
+                                                    </p>
+                                                    <div class="flex items-center gap-2 mt-0.5">
+                                                        <span class="text-xs text-slate-500">
+                                                            Força <span class="text-slate-400 font-medium">{{ $player->strength }}</span>
+                                                        </span>
+                                                        @if (($player->fitness ?? 100) < 100)
+                                                            <span class="text-xs text-slate-500">
+                                                                · {{ $player->fitness }}%
+                                                                @if ($player->fitness < 60)
+                                                                    <span class="text-amber-400">⚠</span>
+                                                                @endif
+                                                            </span>
+                                                        @endif
+                                                        @if ($player->status === 'injured')
+                                                            <span class="text-xs text-red-400">· 🤕 lesionado</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                {{-- Poder efetivo --}}
+                                                @php
+                                                    $power = round($player->strength * (($player->fitness ?? 100) / 100) * (float) ($player->form_factor ?? 1.0));
+                                                @endphp
+                                                <div class="flex-shrink-0 text-right">
+                                                    <span class="text-sm font-bold tabular-nums transition"
+                                                          :style="isStarter('{{ $pid }}') ? 'color:{{ $cfg['hex'] }}' : 'color:#4b5563'">
+                                                        {{ $power }}
+                                                    </span>
+                                                    <p class="text-xs text-slate-700">poder</p>
+                                                </div>
+
+                                                {{-- Ícone de ação --}}
+                                                <div class="flex-shrink-0 w-5 text-center">
+                                                    <template x-if="isStarter('{{ $pid }}')">
+                                                        <svg class="w-4 h-4 text-slate-500 group-hover/card:text-red-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                        </svg>
+                                                    </template>
+                                                    <template x-if="!isStarter('{{ $pid }}')">
+                                                        <svg class="w-4 h-4 text-slate-700 group-hover/card:text-slate-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                                        </svg>
+                                                    </template>
+                                                </div>
+
+                                            </div>
+                                        </button>
+
+                                    @empty
+                                        <div class="px-4 py-6 text-center text-xs text-slate-600">
+                                            Nenhum jogador nesta posição
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        @endforeach
+
+                    </div>{{-- /scroll wrapper --}}
+                </div>{{-- /bench col --}}
 
             </div>{{-- /grid --}}
-
-            {{-- Legenda de impacto da formação ─────────────────────── --}}
-            <div class="mt-8 rounded-2xl border border-slate-700 bg-slate-900 p-5">
-                <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">
-                    Impacto da formação <span class="text-white" x-text="formation"></span> nos setores do campo
-                </h3>
-                <div class="grid grid-cols-5 gap-2 text-center text-xs">
-                    <template x-for="(label, i) in ['⬛ Defesa','Defesa Meia','Meio-campo','Meia Ataque','Ataque ⬛']" :key="i">
-                        <div class="rounded-xl border border-slate-700 p-2">
-                            <p class="text-slate-500 mb-1" x-text="label"></p>
-                            <p class="font-bold text-sm"
-                               :class="sectorMod(i + 1) > 1.05 ? 'text-emerald-400' : sectorMod(i + 1) < 0.95 ? 'text-red-400' : 'text-slate-300'"
-                               x-text="(sectorMod(i + 1) * 100).toFixed(0) + '%'"></p>
-                        </div>
-                    </template>
-                </div>
-                <p class="mt-3 text-xs text-slate-600">
-                    Percentual do modificador de força do time em cada setor do campo em relação à baseline 4-4-2.
-                    Acima de 100% = vantagem; abaixo = desvantagem.
-                </p>
-            </div>
-
         </form>
     </div>
 
+    {{-- ══ JavaScript ══════════════════════════════════════════════════════════ --}}
     <script>
-    function lineupManager(formations, currentStarters, initialFormation) {
+    function lineupManager(formations, currentStarters, initialFormation, allPlayers) {
         return {
             formations,
-            formation: initialFormation,
-            starters: currentStarters,  // {playerId: role}
+            formation:  initialFormation,
+            starters:   Object.assign({}, currentStarters),  // {leaguePlayerId: role}
+            allPlayers,                                        // array de objetos
 
-            // ── Contadores ───────────────────────────────────────────
+            // ── Lookup de jogador ──────────────────────────────────────────────
+            playerById(id) {
+                return this.allPlayers.find(p => p.id === id) || null;
+            },
+
+            shortName(id) {
+                const p = this.playerById(id);
+                if (!p) return '?';
+                const parts = p.name.trim().split(' ');
+                const last  = parts[parts.length - 1];
+                if (last.length > 9) return last.substring(0, 9) + '.';
+                return last;
+            },
+
+            playerPower(id) {
+                const p = this.playerById(id);
+                if (!p) return '';
+                return Math.round(p.strength * (p.fitness / 100) * p.form_factor);
+            },
+
+            // ── Layout do campo (landscape: GK esq → FWD dir) ─────────────────
+            pitchPlayers() {
+                const groups = {
+                    goalkeeper: [], defender: [], midfielder: [], forward: [],
+                };
+                for (const [id, role] of Object.entries(this.starters)) {
+                    if (groups[role] !== undefined) groups[role].push(id);
+                }
+
+                // x = posição horizontal (% de 0 a 100) por linha de função
+                const xMap = { goalkeeper: 9, defender: 28, midfielder: 51, forward: 75 };
+                const result = [];
+
+                for (const [role, ids] of Object.entries(groups)) {
+                    const x = xMap[role] ?? 50;
+                    ids.forEach((id, i) => {
+                        // y distribuído verticalmente: 1/(n+1), 2/(n+1), ...
+                        result.push({
+                            id,
+                            role,
+                            x,
+                            y: (i + 1) / (ids.length + 1) * 100,
+                        });
+                    });
+                }
+                return result;
+            },
+
+            // ── Estilo dos tokens ──────────────────────────────────────────────
+            tokenStyle(role) {
+                const palette = {
+                    goalkeeper: { bg: '#b45309', border: 'rgba(251,191,36,0.8)'  },
+                    defender:   { bg: '#0369a1', border: 'rgba(125,211,252,0.8)' },
+                    midfielder: { bg: '#6d28d9', border: 'rgba(196,181,253,0.8)' },
+                    forward:    { bg: '#047857', border: 'rgba(110,231,183,0.8)' },
+                };
+                const c = palette[role] || { bg: '#374151', border: 'rgba(255,255,255,0.3)' };
+                return `background-color:${c.bg}; border-color:${c.border};`;
+            },
+
+            roleAbbr(role) {
+                return { goalkeeper:'GOL', defender:'DEF', midfielder:'MEI', forward:'ATA' }[role] || role;
+            },
+
+            // ── Contadores ─────────────────────────────────────────────────────
             get totalCount() {
                 return Object.keys(this.starters).length;
             },
@@ -265,7 +534,7 @@
                     && this.count('forward')    === this.required('forward');
             },
 
-            // ── Estado individual ────────────────────────────────────
+            // ── Estado individual ──────────────────────────────────────────────
             isStarter(playerId) {
                 return Object.prototype.hasOwnProperty.call(this.starters, playerId);
             },
@@ -276,22 +545,24 @@
 
             toggle(playerId, role) {
                 if (this.isStarter(playerId)) {
-                    const copy = { ...this.starters };
-                    delete copy[playerId];
-                    this.starters = copy;
+                    const next = { ...this.starters };
+                    delete next[playerId];
+                    this.starters = next;
                 } else if (this.canAdd(role)) {
                     this.starters = { ...this.starters, [playerId]: role };
                 }
             },
 
-            // ── Mudança de formação ──────────────────────────────────
+            // ── Troca de formação ──────────────────────────────────────────────
             onFormationChange() {
-                // Remove titulares que excedem os slots da nova formação
-                const counts = { goalkeeper: 0, defender: 0, midfielder: 0, forward: 0 };
+                const counts   = { goalkeeper: 0, defender: 0, midfielder: 0, forward: 0 };
                 const newStarters = {};
 
                 for (const [id, role] of Object.entries(this.starters)) {
-                    const max = role === 'goalkeeper' ? 1 : (this.formations[this.formation]?.[role] || 0);
+                    const max = role === 'goalkeeper'
+                        ? 1
+                        : (this.formations[this.formation]?.[role] || 0);
+
                     if (counts[role] < max) {
                         newStarters[id] = role;
                         counts[role]++;
@@ -300,19 +571,17 @@
                 this.starters = newStarters;
             },
 
-            // ── Modificador de formação por setor (mirrors PHP) ──────
+            // ── Modificador de formação por setor (espelha PHP) ────────────────
             sectorMod(sector) {
                 const parts = this.formation.split('-').map(Number);
-                const def = parts[0];
-                const fwd = parts[parts.length - 1];
-                const mid = parts.reduce((a, b) => a + b, 0) - def - fwd;
+                const def   = parts[0];
+                const fwd   = parts[parts.length - 1];
+                const mid   = parts.reduce((a, b) => a + b, 0) - def - fwd;
 
                 const defScale = def / 4.0;
                 const midScale = mid / 4.0;
                 const fwdScale = fwd / 2.0;
-
-                const base = 0.70;
-                const flex = 0.30;
+                const base = 0.70, flex = 0.30;
 
                 switch (sector) {
                     case 1: return base + flex * defScale;
@@ -326,4 +595,5 @@
         };
     }
     </script>
+
 </x-app-layout>
