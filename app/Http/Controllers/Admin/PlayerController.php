@@ -35,6 +35,7 @@ class PlayerController extends Controller
             'age'        => ['nullable', 'integer', 'min:15', 'max:50'],
             'strength'   => ['required', 'integer', 'min:1', 'max:99'],
             'stamina'    => ['required', 'integer', 'min:1', 'max:100'],
+            'potential'  => ['nullable', 'integer', 'min:1', 'max:99'],
             'photo'      => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -59,7 +60,8 @@ class PlayerController extends Controller
         // Indexa países por code para lookup rápido no CSV
         $countryIndex = Country::pluck('id', 'code')->map(fn($id) => (string) $id)->toArray();
 
-        $fields   = ['name', 'position', 'country_code', 'age', 'strength', 'stamina'];
+        // Campos aceitos no CSV — potential é opcional (default 75 no banco)
+        $fields   = ['name', 'position', 'country_code', 'age', 'strength', 'stamina', 'potential'];
         $imported = 0;
         $errors   = [];
 
@@ -86,6 +88,11 @@ class PlayerController extends Controller
             $countryCode = strtoupper(trim($data['country_code'] ?? ''));
             $countryId   = $countryIndex[$countryCode] ?? null;
 
+            // potential: opcional no CSV; se fornecido deve ser 1–99
+            $potential = isset($data['potential']) && is_numeric(trim($data['potential']))
+                ? max(1, min(99, (int) trim($data['potential'])))
+                : 75;
+
             Player::create([
                 'name'       => trim($data['name']),
                 'position'   => trim($data['position']),
@@ -93,6 +100,7 @@ class PlayerController extends Controller
                 'age'        => is_numeric($data['age'] ?? null) ? (int) $data['age'] : null,
                 'strength'   => is_numeric($data['strength'] ?? null) ? (int) $data['strength'] : 50,
                 'stamina'    => is_numeric($data['stamina'] ?? null) ? (int) $data['stamina'] : 100,
+                'potential'  => $potential,
             ]);
 
             $imported++;

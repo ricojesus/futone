@@ -30,11 +30,13 @@ class TeamController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name'       => ['required', 'string', 'max:100'],
-            'country_id' => ['nullable', 'uuid', 'exists:countries,id'],
-            'state_id'   => ['nullable', 'uuid', 'exists:states,id'],
-            'tolerance'  => ['required', 'integer', 'min:1', 'max:100'],
-            'badge'      => ['nullable', 'image', 'max:2048'],
+            'name'             => ['required', 'string', 'max:100'],
+            'country_id'       => ['nullable', 'uuid', 'exists:countries,id'],
+            'state_id'         => ['nullable', 'uuid', 'exists:states,id'],
+            'tolerance'        => ['required', 'integer', 'min:1', 'max:100'],
+            'fans_base'        => ['nullable', 'integer', 'min:0'],
+            'stadium_capacity' => ['nullable', 'integer', 'min:0'],
+            'badge'            => ['nullable', 'image', 'max:2048'],
         ]);
 
         if ($request->hasFile('badge')) {
@@ -58,11 +60,13 @@ class TeamController extends Controller
     public function update(Request $request, Team $team): RedirectResponse
     {
         $data = $request->validate([
-            'name'       => ['required', 'string', 'max:100'],
-            'country_id' => ['nullable', 'uuid', 'exists:countries,id'],
-            'state_id'   => ['nullable', 'uuid', 'exists:states,id'],
-            'tolerance'  => ['required', 'integer', 'min:1', 'max:100'],
-            'badge'      => ['nullable', 'image', 'max:2048'],
+            'name'             => ['required', 'string', 'max:100'],
+            'country_id'       => ['nullable', 'uuid', 'exists:countries,id'],
+            'state_id'         => ['nullable', 'uuid', 'exists:states,id'],
+            'tolerance'        => ['required', 'integer', 'min:1', 'max:100'],
+            'fans_base'        => ['nullable', 'integer', 'min:0'],
+            'stadium_capacity' => ['nullable', 'integer', 'min:0'],
+            'badge'            => ['nullable', 'image', 'max:2048'],
         ]);
 
         if ($request->hasFile('badge')) {
@@ -118,11 +122,22 @@ class TeamController extends Controller
             $stateCode = strtoupper(trim($row['state'] ?? ''));
             $stateId   = $stateIndex[$stateCode] ?? null;
 
+            // fans_base e stadium_capacity: opcionais no CSV (default 10000 no banco)
+            $fansBase = isset($row['fans_base']) && is_numeric(trim($row['fans_base']))
+                ? max(0, (int) trim($row['fans_base']))
+                : 10000;
+
+            $stadiumCapacity = isset($row['stadium_capacity']) && is_numeric(trim($row['stadium_capacity']))
+                ? max(0, (int) trim($row['stadium_capacity']))
+                : 10000;
+
             Team::create([
-                'name'       => $name,
-                'state_id'   => $stateId,
-                'country_id' => $countryId,
-                'tolerance'  => $tolerance,
+                'name'             => $name,
+                'state_id'         => $stateId,
+                'country_id'       => $countryId,
+                'tolerance'        => $tolerance,
+                'fans_base'        => $fansBase,
+                'stadium_capacity' => $stadiumCapacity,
             ]);
 
             $imported++;
