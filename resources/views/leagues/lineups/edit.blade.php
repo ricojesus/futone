@@ -92,7 +92,9 @@
                             class="rounded-xl border border-slate-600 bg-slate-800 px-4 py-2 text-white text-sm
                                    focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer">
                         @foreach (array_keys(\App\Models\LeagueLineup::FORMATIONS) as $f)
-                            <option value="{{ $f }}">{{ $f }}</option>
+                            <option value="{{ $f }}" {{ ($lineup?->formation ?? '4-4-2') === $f ? 'selected' : '' }}>
+                                {{ $f }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -197,6 +199,40 @@
                         {{-- ── Setas de sentido de ataque ───────────────────── --}}
                         <div class="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none">
                             <span class="text-white/20 text-xs tracking-widest">⬅ defesa &nbsp;&nbsp;&nbsp; ataque ➡</span>
+                        </div>
+
+                        {{-- ── Zonas táticas dinâmicas (se movem com a formação) ── --}}
+
+                        {{-- Fundo semitransparente da zona de defesa --}}
+                        <div class="absolute top-0 bottom-0 pointer-events-none transition-all duration-500"
+                             :style="`left:0; width:${formationZones().defMidX}%; background:rgba(14,165,233,0.04);`"></div>
+
+                        {{-- Fundo semitransparente da zona de ataque --}}
+                        <div class="absolute top-0 bottom-0 pointer-events-none transition-all duration-500"
+                             :style="`left:${formationZones().midFwdX}%; right:0; background:rgba(16,185,129,0.04);`"></div>
+
+                        {{-- Linha divisória DEF | MEI (dashed vertical) --}}
+                        <div class="absolute top-4 bottom-4 w-px pointer-events-none transition-all duration-500"
+                             style="background: repeating-linear-gradient(180deg, rgba(255,255,255,0.25) 0, rgba(255,255,255,0.25) 6px, transparent 6px, transparent 12px);"
+                             :style="`left:${formationZones().defMidX}%`"></div>
+
+                        {{-- Linha divisória MEI | ATA --}}
+                        <div class="absolute top-4 bottom-4 w-px pointer-events-none transition-all duration-500"
+                             style="background: repeating-linear-gradient(180deg, rgba(255,255,255,0.25) 0, rgba(255,255,255,0.25) 6px, transparent 6px, transparent 12px);"
+                             :style="`left:${formationZones().midFwdX}%`"></div>
+
+                        {{-- Labels das zonas (topo) --}}
+                        <div class="absolute top-3 pointer-events-none text-center transition-all duration-500"
+                             :style="`left: 10%; width: ${formationZones().defMidX - 10}%`">
+                            <span class="text-sky-300/40 font-bold tracking-widest" style="font-size:9px;">DEF</span>
+                        </div>
+                        <div class="absolute top-3 pointer-events-none text-center transition-all duration-500"
+                             :style="`left: ${formationZones().defMidX}%; width: ${formationZones().midFwdX - formationZones().defMidX}%`">
+                            <span class="text-white/30 font-bold tracking-widest" style="font-size:9px;">MEI</span>
+                        </div>
+                        <div class="absolute top-3 pointer-events-none text-center transition-all duration-500"
+                             :style="`left: ${formationZones().midFwdX}%; width: ${90 - formationZones().midFwdX}%`">
+                            <span class="text-emerald-300/40 font-bold tracking-widest" style="font-size:9px;">ATA</span>
                         </div>
 
                         {{-- ── Tokens dos jogadores (Alpine) ───────────────── --}}
@@ -468,6 +504,55 @@
                 return Math.round(p.strength * (p.fitness / 100) * p.form_factor);
             },
 
+            // ── Decomposição da formação ───────────────────────────────────────
+            //   Retorna { def, mid, fwd } a partir da string "4-4-2", "4-2-3-1" etc.
+            formationParts() {
+                const parts = this.formation.split('-').map(Number);
+                const def   = parts[0];
+                const fwd   = parts[parts.length - 1];
+                const mid   = parts.reduce((a, b) => a + b, 0) - def - fwd;
+                return { def, mid, fwd };
+            },
+
+            // ── Posições x das linhas (% do campo) ────────────────────────────
+            //   Campo útil: x = 18% … 87%  (range = 69%)
+            //   GK: 9% (fixo).
+            //   Cada linha fica no centro da sua "fatia" proporcional ao nº de jogadores.
+            //
+            //   Fórmula:
+            //     defX = S + R × (def/2) / 10
+            //     midX = S + R × (def + mid/2) / 10
+            //     fwdX = S + R × (def + mid + fwd/2) / 10
+            //
+            //   Exemplos (S=18, R=69):
+            //     4-4-2  → DEF 31.8%  MEI 59.4%  ATA 80.1%
+            //     3-5-2  → DEF 28.4%  MEI 56.0%  ATA 80.1%
+            //     4-3-3  → DEF 31.8%  MEI 56.0%  ATA 76.7%
+            //     5-3-2  → DEF 35.3%  MEI 62.9%  ATA 80.1%
+            //     5-4-1  → DEF 35.3%  MEI 66.3%  ATA 83.6%
+            formationXPositions() {
+                const { def, mid, fwd } = this.formationParts();
+                const S = 18, R = 69;
+                return {
+                    goalkeeper: 9,
+                    defender:   S + R * (def / 2)             / 10,
+                    midfielder: S + R * (def + mid / 2)       / 10,
+                    forward:    S + R * (def + mid + fwd / 2) / 10,
+                };
+            },
+
+            // ── Fronteiras das zonas táticas no campo ──────────────────────────
+            //   defMidX = limite entre zona DEF e MEI
+            //   midFwdX = limite entre zona MEI e ATA
+            formationZones() {
+                const { def, mid } = this.formationParts();
+                const S = 18, R = 69;
+                return {
+                    defMidX: S + R * (def / 10),
+                    midFwdX: S + R * ((def + mid) / 10),
+                };
+            },
+
             // ── Layout do campo (landscape: GK esq → FWD dir) ─────────────────
             pitchPlayers() {
                 const groups = {
@@ -477,14 +562,13 @@
                     if (groups[role] !== undefined) groups[role].push(id);
                 }
 
-                // x = posição horizontal (% de 0 a 100) por linha de função
-                const xMap = { goalkeeper: 9, defender: 28, midfielder: 51, forward: 75 };
+                const xPos = this.formationXPositions();
                 const result = [];
 
                 for (const [role, ids] of Object.entries(groups)) {
-                    const x = xMap[role] ?? 50;
+                    const x = xPos[role] ?? 50;
                     ids.forEach((id, i) => {
-                        // y distribuído verticalmente: 1/(n+1), 2/(n+1), ...
+                        // y distribuído uniformemente na vertical
                         result.push({
                             id,
                             role,
@@ -573,10 +657,7 @@
 
             // ── Modificador de formação por setor (espelha PHP) ────────────────
             sectorMod(sector) {
-                const parts = this.formation.split('-').map(Number);
-                const def   = parts[0];
-                const fwd   = parts[parts.length - 1];
-                const mid   = parts.reduce((a, b) => a + b, 0) - def - fwd;
+                const { def, mid, fwd } = this.formationParts();
 
                 const defScale = def / 4.0;
                 const midScale = mid / 4.0;
