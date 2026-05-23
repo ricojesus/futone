@@ -1,0 +1,13 @@
+name,state,country_code,tolerance,fans_base,stadium_capacity
+Corinthians,SP,BRA,30,30000000,49205
+Palmeiras,SP,BRA,35,18000000,43713
+São Paulo,SP,BRA,35,15000000,72000
+Santos,SP,BRA,40,7000000,16798
+Red Bull Bragantino,SP,BRA,45,1000000,15000
+Guarani,SP,BRA,50,2000000,30000
+Ponte Preta,SP,BRA,50,1500000,19500
+Botafogo-SP,SP,BRA,55,800000,20000
+Ituano,SP,BRA,60,500000,10000
+Mirassol,SP,BRA,65,400000,15000
+Novorizontino,SP,BRA,60,300000,20000
+Água Santa,SP,BRA,70,200000,7000
