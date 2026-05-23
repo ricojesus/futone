@@ -137,14 +137,14 @@
             </div>
 
             {{-- ── Grade principal: campo + banco ────────────────────────────── --}}
-            <div class="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:items-start">
+            <div class="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:items-start">
 
                 {{-- ════ CAMPO DE FUTEBOL ════════════════════════════════════════ --}}
-                <div class="lg:col-span-3 space-y-4">
+                <div class="lg:col-span-2 space-y-4">
 
                     {{-- Campo --}}
                     <div class="relative rounded-2xl overflow-hidden shadow-2xl select-none"
-                         style="height: 460px;
+                         style="height: 520px;
                                 background: repeating-linear-gradient(
                                     90deg,
                                     #14532d 0px, #14532d 50px,
@@ -324,8 +324,8 @@
                 </div>{{-- /pitch col --}}
 
                 {{-- ════ BANCO / SELEÇÃO ══════════════════════════════════════ --}}
-                <div class="lg:col-span-2 lg:sticky lg:top-4">
-                    <div class="space-y-3 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-1">
+                <div class="lg:col-span-1 lg:sticky lg:top-4">
+                    <div class="space-y-3 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pr-1">
 
                         @php
                             $roleConfig = [
@@ -393,14 +393,14 @@
                                         <button type="button"
                                                 @click="toggle('{{ $pid }}', '{{ $role }}')"
                                                 :disabled="!isStarter('{{ $pid }}') && !canAdd('{{ $role }}')"
-                                                class="group/card w-full text-left px-4 py-3 transition-colors
+                                                class="group/card w-full text-left px-3 py-2 transition-colors
                                                        disabled:opacity-35 disabled:cursor-not-allowed"
                                                 :class="isStarter('{{ $pid }}') ? 'bg-slate-800' : 'hover:bg-slate-800/60'">
 
-                                            <div class="flex items-center gap-3">
+                                            <div class="flex items-center gap-2">
 
                                                 {{-- Indicador visual (dot) --}}
-                                                <div class="w-2.5 h-2.5 rounded-full flex-shrink-0 border transition-all"
+                                                <div class="w-2 h-2 rounded-full flex-shrink-0 border transition-all"
                                                      :style="isStarter('{{ $pid }}')
                                                          ? 'background:{{ $cfg['hex'] }}; border-color:{{ $cfg['hex'] }};'
                                                          : 'background:transparent; border-color:#374151;'">
@@ -408,25 +408,19 @@
 
                                                 {{-- Info do jogador --}}
                                                 <div class="flex-1 min-w-0">
-                                                    <p class="text-sm font-semibold truncate leading-tight"
+                                                    <p class="text-xs font-semibold truncate leading-tight"
                                                        :class="isStarter('{{ $pid }}') ? 'text-white' : 'text-slate-300'">
                                                         {{ $player->name }}
                                                     </p>
-                                                    <div class="flex items-center gap-2 mt-0.5">
-                                                        <span class="text-xs text-slate-500">
-                                                            Força <span class="text-slate-400 font-medium">{{ $player->strength }}</span>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="text-xs text-slate-600">
+                                                            {{ $player->strength }}
+                                                            @if ($player->status === 'injured')
+                                                                · 🤕
+                                                            @elseif (($player->fitness ?? 100) < 60)
+                                                                · <span class="text-amber-400">⚠{{ $player->fitness }}%</span>
+                                                            @endif
                                                         </span>
-                                                        @if (($player->fitness ?? 100) < 100)
-                                                            <span class="text-xs text-slate-500">
-                                                                · {{ $player->fitness }}%
-                                                                @if ($player->fitness < 60)
-                                                                    <span class="text-amber-400">⚠</span>
-                                                                @endif
-                                                            </span>
-                                                        @endif
-                                                        @if ($player->status === 'injured')
-                                                            <span class="text-xs text-red-400">· 🤕 lesionado</span>
-                                                        @endif
                                                     </div>
                                                 </div>
 
@@ -434,23 +428,20 @@
                                                 @php
                                                     $power = round($player->strength * (($player->fitness ?? 100) / 100) * (float) ($player->form_factor ?? 1.0));
                                                 @endphp
-                                                <div class="flex-shrink-0 text-right">
-                                                    <span class="text-sm font-bold tabular-nums transition"
-                                                          :style="isStarter('{{ $pid }}') ? 'color:{{ $cfg['hex'] }}' : 'color:#4b5563'">
-                                                        {{ $power }}
-                                                    </span>
-                                                    <p class="text-xs text-slate-700">poder</p>
-                                                </div>
+                                                <span class="flex-shrink-0 text-xs font-bold tabular-nums transition"
+                                                      :style="isStarter('{{ $pid }}') ? 'color:{{ $cfg['hex'] }}' : 'color:#4b5563'">
+                                                    {{ $power }}
+                                                </span>
 
                                                 {{-- Ícone de ação --}}
-                                                <div class="flex-shrink-0 w-5 text-center">
+                                                <div class="flex-shrink-0 w-4 text-center">
                                                     <template x-if="isStarter('{{ $pid }}')">
-                                                        <svg class="w-4 h-4 text-slate-500 group-hover/card:text-red-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <svg class="w-3.5 h-3.5 text-slate-500 group-hover/card:text-red-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                                         </svg>
                                                     </template>
                                                     <template x-if="!isStarter('{{ $pid }}')">
-                                                        <svg class="w-4 h-4 text-slate-700 group-hover/card:text-slate-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <svg class="w-3.5 h-3.5 text-slate-700 group-hover/card:text-slate-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                                         </svg>
                                                     </template>
