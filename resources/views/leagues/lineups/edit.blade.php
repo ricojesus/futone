@@ -83,57 +83,68 @@
             @method('PUT')
 
             {{-- ── Barra de ação ──────────────────────────────────────────────── --}}
-            <div class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3">
+            <div class="mb-5 rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 sm:px-5">
 
-                {{-- Formação --}}
-                <div class="flex items-center gap-3">
-                    <label class="text-xs font-semibold uppercase tracking-widest text-slate-500">Formação</label>
-                    <select name="formation" x-model="formation" @change="onFormationChange()"
-                            class="rounded-xl border border-slate-600 bg-slate-800 px-4 py-2 text-white text-sm
-                                   focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer">
-                        @foreach (array_keys(\App\Models\LeagueLineup::FORMATIONS) as $f)
-                            <option value="{{ $f }}" {{ ($lineup?->formation ?? '4-4-2') === $f ? 'selected' : '' }}>
-                                {{ $f }}
-                            </option>
-                        @endforeach
-                    </select>
+                {{-- Linha superior: Formação + Salvar --}}
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+
+                    {{-- Formação --}}
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <label class="text-xs font-semibold uppercase tracking-widest text-slate-500 hidden sm:block">Formação</label>
+                        <select name="formation" x-model="formation" @change="onFormationChange()"
+                                class="rounded-xl border border-slate-600 bg-slate-800 px-3 py-1.5 sm:px-4 sm:py-2 text-white text-sm
+                                       focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer">
+                            @foreach (array_keys(\App\Models\LeagueLineup::FORMATIONS) as $f)
+                                <option value="{{ $f }}" {{ ($lineup?->formation ?? '4-4-2') === $f ? 'selected' : '' }}>
+                                    {{ $f }}
+                                </option>
+                            @endforeach
+                        </select>
+                        {{-- Total de titulares (visível só em mobile) --}}
+                        <span class="sm:hidden font-bold tabular-nums text-xs"
+                              :class="totalCount === 11 ? 'text-emerald-400' : 'text-amber-400'"
+                              x-text="totalCount + '/11'"></span>
+                    </div>
+
+                    {{-- Salvar --}}
+                    <button type="submit"
+                            :disabled="!isComplete()"
+                            :class="isComplete()
+                                ? 'bg-emerald-500 hover:bg-emerald-400 cursor-pointer shadow-lg shadow-emerald-500/20'
+                                : 'bg-slate-700 text-slate-500 cursor-not-allowed'"
+                            class="inline-flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-bold text-white transition active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                        </svg>
+                        <span class="hidden xs:inline">Salvar</span>
+                        <span class="xs:hidden">Salvar</span>
+                    </button>
                 </div>
 
-                {{-- Contadores --}}
-                <div class="flex items-center gap-4 text-xs">
+                {{-- Linha inferior: Contadores por posição (todas as telas) --}}
+                <div class="mt-2.5 flex items-center gap-3 sm:gap-4 text-xs flex-wrap">
                     <template x-for="[role, abbr, color] in [
                         ['goalkeeper','GOL','#f59e0b'],
                         ['defender','DEF','#0ea5e9'],
                         ['midfielder','MEI','#8b5cf6'],
                         ['forward','ATA','#10b981']
                     ]" :key="role">
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full" :style="`background:${color}`"></span>
-                            <span class="font-semibold text-slate-400" x-text="abbr"></span>
+                        <div class="flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full flex-shrink-0" :style="`background:${color}`"></span>
+                            <span class="font-semibold text-slate-500" x-text="abbr"></span>
                             <span class="font-bold tabular-nums"
                                   :class="count(role) === required(role) ? 'text-emerald-400' : 'text-amber-400'"
                                   x-text="count(role) + '/' + required(role)"></span>
                         </div>
                     </template>
-                    <span class="text-slate-700">|</span>
-                    <span class="font-bold tabular-nums"
-                          :class="totalCount === 11 ? 'text-emerald-400' : 'text-amber-400'"
-                          x-text="totalCount + '/11 titulares'"></span>
+                    {{-- Total (visível em telas maiores) --}}
+                    <div class="hidden sm:flex items-center gap-1 ml-1 pl-3 border-l border-slate-700">
+                        <span class="font-bold tabular-nums"
+                              :class="totalCount === 11 ? 'text-emerald-400' : 'text-amber-400'"
+                              x-text="totalCount + '/11 titulares'"></span>
+                    </div>
                 </div>
-
-                {{-- Salvar --}}
-                <button type="submit"
-                        :disabled="!isComplete()"
-                        :class="isComplete()
-                            ? 'bg-emerald-500 hover:bg-emerald-400 cursor-pointer shadow-lg shadow-emerald-500/20'
-                            : 'bg-slate-700 text-slate-500 cursor-not-allowed'"
-                        class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition active:scale-95">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
-                    </svg>
-                    Salvar Escalação
-                </button>
             </div>
 
             {{-- ── Grade principal: campo + banco ────────────────────────────── --}}
@@ -143,9 +154,9 @@
                 <div class="lg:col-span-2 space-y-4">
 
                     {{-- Campo --}}
-                    <div class="relative rounded-2xl overflow-hidden shadow-2xl select-none"
-                         style="height: 520px;
-                                background: repeating-linear-gradient(
+                    {{-- h-64 = 256px (mobile) → sm:h-80 = 320px → lg:h-[520px] (desktop) --}}
+                    <div class="relative rounded-2xl overflow-hidden shadow-2xl select-none h-64 sm:h-80 lg:h-[520px]"
+                         style="background: repeating-linear-gradient(
                                     90deg,
                                     #14532d 0px, #14532d 50px,
                                     #166534 50px, #166534 100px
@@ -242,32 +253,34 @@
                                  @click="toggle(p.id, p.role)"
                                  :title="`Clique para remover ${shortName(p.id)}`">
 
-                                {{-- Círculo principal --}}
-                                <div class="relative w-12 h-12 rounded-full flex flex-col items-center justify-center border-2 shadow-xl
+                                {{-- Círculo principal
+                                     Mobile: w-8 h-8 (32px)  sm: w-10 h-10 (40px)  lg: w-12 h-12 (48px) --}}
+                                <div class="relative w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12
+                                            rounded-full flex flex-col items-center justify-center border-2 shadow-xl
                                             transition-all duration-150 group-hover:scale-110 group-hover:shadow-2xl"
                                      :style="tokenStyle(p.role)">
 
                                     {{-- Nome abreviado --}}
                                     <span class="text-white font-bold text-center leading-none px-0.5 z-10 relative"
-                                          style="font-size: 8.5px; max-width: 44px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
+                                          style="font-size: 7px; max-width: 30px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
                                           x-text="shortName(p.id)"></span>
 
-                                    {{-- Poder do jogador --}}
-                                    <span class="text-white/70 font-semibold z-10 relative mt-0.5"
+                                    {{-- Poder do jogador (oculto em mobile) --}}
+                                    <span class="hidden sm:block text-white/70 font-semibold z-10 relative mt-0.5"
                                           style="font-size: 7px;"
                                           x-text="playerPower(p.id)"></span>
 
                                     {{-- Overlay de remoção ao hover --}}
                                     <div class="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center
                                                 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
                                         </svg>
                                     </div>
                                 </div>
 
-                                {{-- Rótulo do role abaixo do token --}}
-                                <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                                {{-- Rótulo do role abaixo do token (oculto em mobile) --}}
+                                <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap hidden sm:block">
                                     <span class="rounded px-1 text-white/60 font-semibold" style="font-size: 7px;"
                                           x-text="roleAbbr(p.role)"></span>
                                 </div>
@@ -277,11 +290,15 @@
                         {{-- Estado vazio --}}
                         <template x-if="totalCount === 0">
                             <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <svg class="w-10 h-10 text-white/15 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-8 h-8 sm:w-10 sm:h-10 text-white/15 mb-2 sm:mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                           d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
                                 </svg>
-                                <p class="text-white/25 text-sm text-center px-12">
+                                {{-- Mobile: "abaixo"; desktop: "ao lado" --}}
+                                <p class="text-white/25 text-xs sm:text-sm text-center px-8 sm:px-12 lg:hidden">
+                                    Selecione os jogadores no painel abaixo
+                                </p>
+                                <p class="text-white/25 text-sm text-center px-12 hidden lg:block">
                                     Selecione os jogadores no painel ao lado
                                 </p>
                             </div>
@@ -290,25 +307,28 @@
                     </div>{{-- /campo --}}
 
                     {{-- ── Impacto da formação nos setores ────────────────── --}}
-                    <div class="rounded-2xl border border-slate-700 bg-slate-900 p-4">
-                        <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">
-                            Modificador de força por setor —
+                    <div class="rounded-2xl border border-slate-700 bg-slate-900 p-3 sm:p-4">
+                        <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2 sm:mb-3">
+                            <span class="hidden sm:inline">Modificador de força por setor — </span>
+                            <span class="sm:hidden">Força por setor · </span>
                             <span class="text-white" x-text="formation"></span>
                         </h3>
-                        <div class="grid grid-cols-5 gap-2 text-center">
+                        <div class="grid grid-cols-5 gap-1.5 sm:gap-2 text-center">
                             <template x-for="(info, i) in [
-                                {label:'Defesa',  icon:'🛡️'},
-                                {label:'Def-Mei', icon:'↔'},
-                                {label:'Meio',    icon:'⚽'},
-                                {label:'Mei-Ata', icon:'↔'},
-                                {label:'Ataque',  icon:'⚡'}
+                                {label:'DEF',     labelFull:'Defesa'},
+                                {label:'D-M',     labelFull:'Def-Mei'},
+                                {label:'MEI',     labelFull:'Meio'},
+                                {label:'M-A',     labelFull:'Mei-Ata'},
+                                {label:'ATA',     labelFull:'Ataque'}
                             ]" :key="i">
-                                <div class="rounded-xl border p-2 transition"
+                                <div class="rounded-xl border p-1.5 sm:p-2 transition"
                                      :class="sectorMod(i+1) > 1.05 ? 'border-emerald-500/40 bg-emerald-500/10'
                                            : sectorMod(i+1) < 0.95 ? 'border-red-500/30 bg-red-500/10'
                                            : 'border-slate-700 bg-slate-800/50'">
-                                    <p class="text-slate-500 text-xs mb-1" x-text="info.label"></p>
-                                    <p class="font-bold text-sm"
+                                    {{-- Label curto no mobile, completo no desktop --}}
+                                    <p class="text-slate-500 mb-0.5 sm:mb-1 sm:hidden" style="font-size:9px;" x-text="info.label"></p>
+                                    <p class="text-slate-500 text-xs mb-1 hidden sm:block" x-text="info.labelFull"></p>
+                                    <p class="font-bold text-xs sm:text-sm"
                                        :class="sectorMod(i+1) > 1.05 ? 'text-emerald-400'
                                              : sectorMod(i+1) < 0.95 ? 'text-red-400'
                                              : 'text-slate-300'"
@@ -316,7 +336,7 @@
                                 </div>
                             </template>
                         </div>
-                        <p class="mt-2 text-xs text-slate-600">
+                        <p class="mt-2 text-xs text-slate-600 hidden sm:block">
                             Baseline: 4-4-2 = 100% em todos os setores. Acima = vantagem, abaixo = desvantagem.
                         </p>
                     </div>
@@ -325,6 +345,10 @@
 
                 {{-- ════ BANCO / SELEÇÃO ══════════════════════════════════════ --}}
                 <div class="lg:col-span-1 lg:sticky lg:top-4">
+                    {{-- Título do banco (mobile) --}}
+                    <h2 class="lg:hidden text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3 px-1">
+                        Jogadores disponíveis
+                    </h2>
                     <div class="space-y-3 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pr-1">
 
                         @php
@@ -389,13 +413,33 @@
                                                    value="{{ $role }}">
                                         </template>
 
+                                        @php
+                                            $fitness   = (int) ($player->fitness   ?? 100);
+                                            $injured   = $player->status === 'injured';
+                                            $power     = round($player->strength * ($fitness / 100) * (float) ($player->form_factor ?? 1.0));
+
+                                            // Cores da barra de fitness
+                                            $fitColor  = match(true) {
+                                                $fitness >= 80 => '#10b981', // verde
+                                                $fitness >= 60 => '#f59e0b', // âmbar
+                                                $fitness >= 40 => '#f97316', // laranja
+                                                default        => '#ef4444', // vermelho
+                                            };
+                                            $fitLabel  = match(true) {
+                                                $fitness >= 80 => 'text-emerald-400',
+                                                $fitness >= 60 => 'text-amber-400',
+                                                $fitness >= 40 => 'text-orange-400',
+                                                default        => 'text-red-400',
+                                            };
+                                        @endphp
+
                                         {{-- Card do jogador --}}
                                         <button type="button"
                                                 @click="toggle('{{ $pid }}', '{{ $role }}')"
-                                                :disabled="!isStarter('{{ $pid }}') && !canAdd('{{ $role }}')"
-                                                class="group/card w-full text-left px-3 py-2 transition-colors
-                                                       disabled:opacity-35 disabled:cursor-not-allowed"
-                                                :class="isStarter('{{ $pid }}') ? 'bg-slate-800' : 'hover:bg-slate-800/60'">
+                                                :disabled="!isStarter('{{ $pid }}') && (!canAdd('{{ $role }}') || {{ $injured ? 'true' : 'false' }})"
+                                                class="group/card w-full text-left px-3 py-2.5 transition-colors
+                                                       disabled:opacity-40 disabled:cursor-not-allowed"
+                                                :class="isStarter('{{ $pid }}') ? 'bg-slate-800/80' : 'hover:bg-slate-800/50'">
 
                                             <div class="flex items-center gap-2">
 
@@ -408,26 +452,43 @@
 
                                                 {{-- Info do jogador --}}
                                                 <div class="flex-1 min-w-0">
-                                                    <p class="text-xs font-semibold truncate leading-tight"
-                                                       :class="isStarter('{{ $pid }}') ? 'text-white' : 'text-slate-300'">
-                                                        {{ $player->name }}
-                                                    </p>
-                                                    <div class="flex items-center gap-1.5">
-                                                        <span class="text-xs text-slate-600">
-                                                            {{ $player->strength }}
-                                                            @if ($player->status === 'injured')
-                                                                · 🤕
-                                                            @elseif (($player->fitness ?? 100) < 60)
-                                                                · <span class="text-amber-400">⚠{{ $player->fitness }}%</span>
-                                                            @endif
-                                                        </span>
+
+                                                    {{-- Linha 1: nome + badge lesão --}}
+                                                    <div class="flex items-center gap-1.5 min-w-0">
+                                                        <p class="text-xs font-semibold truncate leading-tight"
+                                                           :class="isStarter('{{ $pid }}') ? 'text-white' : 'text-slate-300'">
+                                                            {{ $player->name }}
+                                                        </p>
+                                                        @if ($injured)
+                                                            <span class="flex-shrink-0 inline-flex items-center gap-0.5 rounded px-1 py-px
+                                                                         text-red-400 bg-red-500/15 border border-red-500/25 leading-none font-semibold uppercase tracking-wide"
+                                                                  style="font-size: 8px;">
+                                                                🩹 Lesionado
+                                                            </span>
+                                                        @endif
                                                     </div>
+
+                                                    {{-- Linha 2: força base + barra de fitness --}}
+                                                    <div class="flex items-center gap-2 mt-0.5">
+                                                        <span class="text-slate-600 tabular-nums" style="font-size:10px;">
+                                                            {{ $player->strength }}
+                                                        </span>
+
+                                                        {{-- Barra de fitness --}}
+                                                        <div class="flex items-center gap-1">
+                                                            <div class="w-14 h-1 rounded-full bg-slate-700/80 overflow-hidden">
+                                                                <div class="h-full rounded-full"
+                                                                     style="width: {{ $fitness }}%; background: {{ $fitColor }};"></div>
+                                                            </div>
+                                                            <span class="tabular-nums font-medium {{ $fitLabel }}" style="font-size:9px;">
+                                                                {{ $fitness }}%
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
                                                 </div>
 
                                                 {{-- Poder efetivo --}}
-                                                @php
-                                                    $power = round($player->strength * (($player->fitness ?? 100) / 100) * (float) ($player->form_factor ?? 1.0));
-                                                @endphp
                                                 <span class="flex-shrink-0 text-xs font-bold tabular-nums transition"
                                                       :style="isStarter('{{ $pid }}') ? 'color:{{ $cfg['hex'] }}' : 'color:#4b5563'">
                                                     {{ $power }}
@@ -435,16 +496,24 @@
 
                                                 {{-- Ícone de ação --}}
                                                 <div class="flex-shrink-0 w-4 text-center">
-                                                    <template x-if="isStarter('{{ $pid }}')">
-                                                        <svg class="w-3.5 h-3.5 text-slate-500 group-hover/card:text-red-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                    @if ($injured)
+                                                        {{-- Jogador lesionado: nunca pode ser adicionado --}}
+                                                        <svg class="w-3.5 h-3.5 text-red-500/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                  d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
                                                         </svg>
-                                                    </template>
-                                                    <template x-if="!isStarter('{{ $pid }}')">
-                                                        <svg class="w-3.5 h-3.5 text-slate-700 group-hover/card:text-slate-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                                        </svg>
-                                                    </template>
+                                                    @else
+                                                        <template x-if="isStarter('{{ $pid }}')">
+                                                            <svg class="w-3.5 h-3.5 text-slate-500 group-hover/card:text-red-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                            </svg>
+                                                        </template>
+                                                        <template x-if="!isStarter('{{ $pid }}')">
+                                                            <svg class="w-3.5 h-3.5 text-slate-700 group-hover/card:text-slate-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                                            </svg>
+                                                        </template>
+                                                    @endif
                                                 </div>
 
                                             </div>

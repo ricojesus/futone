@@ -12,7 +12,7 @@ return new class extends Migration
             // Base de torcedores do clube (snapshot ao entrar numa liga)
             $table->unsignedInteger('fans_base')->default(10_000)->after('tolerance');
             // Capacidade do estádio (snapshot ao entrar numa liga)
-            $table->unsignedSmallInteger('stadium_capacity')->default(10_000)->after('fans_base');
+            $table->unsignedMediumInteger('stadium_capacity')->default(10_000)->after('fans_base');
         });
     }
 

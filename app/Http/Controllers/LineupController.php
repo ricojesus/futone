@@ -32,8 +32,9 @@ class LineupController extends Controller
             : collect();
 
         // Jogadores disponíveis ordenados por posição natural e força
+        // Inclui lesionados para exibição (serão desabilitados na UI mas visíveis)
         $players = $leagueTeam->players()
-            ->whereIn('status', ['active'])
+            ->whereIn('status', ['active', 'injured'])
             ->orderByRaw("FIELD(position, 'goalkeeper','defender','midfielder','forward')")
             ->orderByDesc('strength')
             ->get();
