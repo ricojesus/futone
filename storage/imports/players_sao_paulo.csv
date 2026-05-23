@@ -1,0 +1,204 @@
+name,position,country_code,age,strength,stamina,potential,team
+Rogério Silveira,goalkeeper,BRA,36,83,68,83,Corinthians
+Pedro Monteiro,goalkeeper,BRA,24,71,82,79,Corinthians
+Marco Cardoso,defender,BRA,34,78,70,78,Corinthians
+Felipe Teixeira,defender,BRA,28,76,77,80,Corinthians
+Davi Gonçalves,defender,BRA,31,77,73,77,Corinthians
+Lucas Mello,defender,BRA,23,73,85,82,Corinthians
+Bruno Xavier,defender,BRA,21,69,87,83,Corinthians
+André Campos,midfielder,BRA,35,79,65,79,Corinthians
+Thiago Martins,midfielder,BRA,27,75,83,81,Corinthians
+Gabriel Rocha,midfielder,BRA,26,77,80,83,Corinthians
+Caio Dias,midfielder,BRA,22,72,87,88,Corinthians
+Marcelo Andrade,midfielder,BRA,33,73,70,73,Corinthians
+Eduardo Correia,forward,BRA,24,80,84,87,Corinthians
+João Castro,forward,BRA,29,77,78,78,Corinthians
+Leandro Viana,forward,BRA,33,74,70,74,Corinthians
+Rafael Aguiar,forward,BRA,21,68,86,83,Corinthians
+Matheus Fonseca,forward,ARG,28,75,79,78,Corinthians
+Wander Borges,goalkeeper,BRA,31,85,75,86,Palmeiras
+Caique Ramos,goalkeeper,BRA,22,72,84,82,Palmeiras
+Murilo Cunha,defender,BRA,27,80,80,85,Palmeiras
+Nelson Guimarães,defender,PAR,33,82,71,82,Palmeiras
+Marcos Neves,defender,BRA,35,77,68,77,Palmeiras
+Patrick Duarte,defender,BRA,24,76,83,83,Palmeiras
+Mathias Alves,defender,BRA,20,70,88,85,Palmeiras
+Zé Rafael Santos,midfielder,BRA,32,78,72,78,Palmeiras
+Richard Sosa,midfielder,COL,25,81,82,86,Palmeiras
+Raphael Veiga Costa,midfielder,BRA,29,82,78,83,Palmeiras
+Hugo Estrela,midfielder,BRA,18,74,90,97,Palmeiras
+Mauricio Macedo,midfielder,BRA,23,74,85,82,Palmeiras
+Vitor Estrela,forward,BRA,19,80,89,97,Palmeiras
+Julio Benedetti,forward,ARG,26,80,80,84,Palmeiras
+Anderson Lima,forward,BRA,29,78,76,79,Palmeiras
+Breno Fonseca,forward,BRA,23,73,83,82,Palmeiras
+Rinaldo Pereira,forward,BRA,33,75,68,75,Palmeiras
+Rodrigo Vogt,goalkeeper,BRA,30,82,75,83,São Paulo
+Denis Carvalho,goalkeeper,BRA,35,77,68,77,São Paulo
+Arboleda Mantilla,defender,ECU,33,80,70,80,São Paulo
+Léo Pinheiro,defender,BRA,26,77,80,82,São Paulo
+Ferraresi Salazar,defender,VEN,25,75,82,82,São Paulo
+Welington Barros,defender,BRA,24,74,84,81,São Paulo
+Igor Vinicius,defender,BRA,27,73,80,75,São Paulo
+Carlos Neves,midfielder,BRA,23,76,85,84,São Paulo
+Fernando Magro,midfielder,BRA,28,78,79,80,São Paulo
+William Gomes,midfielder,BRA,26,74,82,80,São Paulo
+Luciano Santos,midfielder,BRA,33,77,69,77,São Paulo
+Michel Costa,midfielder,BRA,22,70,86,82,São Paulo
+Calleri Rodriguez,forward,ARG,31,80,72,80,São Paulo
+Wellington Rato,forward,BRA,30,76,74,76,São Paulo
+Ferreirinha Lima,forward,BRA,27,75,80,78,São Paulo
+Erick Marcos,forward,BRA,22,69,85,82,São Paulo
+Henrique Almeida,forward,BRA,24,71,83,79,São Paulo
+João Paulo Santos,goalkeeper,BRA,30,79,74,80,Santos
+Diógenes Vidal,goalkeeper,BRA,24,68,82,76,Santos
+Messias Sousa,defender,BRA,28,74,79,77,Santos
+Joaquim Figueiredo,defender,BRA,22,72,86,83,Santos
+Maicon Almeida,defender,BRA,31,76,72,76,Santos
+Lucas Pires,defender,BRA,24,73,84,80,Santos
+Nathan Vinicius,defender,BRA,20,68,88,82,Santos
+Rodrigo Fernandez,midfielder,URU,30,75,74,76,Santos
+Giuliano Morais,midfielder,BRA,35,75,65,75,Santos
+Gabriel Zanotti,midfielder,BRA,25,72,83,79,Santos
+Patrick Carvalho,midfielder,BRA,27,71,82,77,Santos
+Rodrigo Ferreira,midfielder,BRA,22,67,86,79,Santos
+Marcos Leonardo,forward,BRA,21,76,87,90,Santos
+Eduardo Sasha,forward,BRA,33,75,68,75,Santos
+Furch Rodriguez,forward,ARG,35,72,65,72,Santos
+Wendel Lima,forward,BRA,23,69,84,80,Santos
+Julio Ruiz,forward,BRA,22,67,85,79,Santos
+Cleiton Batista,goalkeeper,BRA,27,77,79,81,Red Bull Bragantino
+Eduardo Santos,goalkeeper,BRA,25,68,82,76,Red Bull Bragantino
+Natan Souza,defender,BRA,24,74,84,81,Red Bull Bragantino
+Léo Ortiz,defender,BRA,27,73,80,79,Red Bull Bragantino
+Juninho Capixaba,defender,BRA,29,71,78,73,Red Bull Bragantino
+Fabrício Bruno,defender,BRA,26,73,81,79,Red Bull Bragantino
+Guilherme Dias,defender,BRA,21,67,87,80,Red Bull Bragantino
+Raul Matheus,midfielder,BRA,23,73,85,81,Red Bull Bragantino
+Hyoran Silva,midfielder,BRA,30,74,74,75,Red Bull Bragantino
+Jadsom Lima,midfielder,BRA,28,71,79,74,Red Bull Bragantino
+Matheus Fernandes,midfielder,BRA,24,69,82,76,Red Bull Bragantino
+Helinho Andrade,forward,BRA,24,75,83,82,Red Bull Bragantino
+Sandro Poggio,forward,BRA,29,74,77,76,Red Bull Bragantino
+Lincoln Correia,forward,BRA,22,71,85,83,Red Bull Bragantino
+Vitinho Matos,forward,BRA,20,67,88,82,Red Bull Bragantino
+Laquintana Rios,forward,COL,26,70,79,74,Red Bull Bragantino
+Victor Gomes,goalkeeper,BRA,33,74,70,74,Guarani
+Lucas Adorno,goalkeeper,BRA,26,63,81,70,Guarani
+Reynaldo Matos,defender,BRA,30,70,73,71,Guarani
+Ernando Pereira,defender,BRA,28,68,77,71,Guarani
+Bruno Melo,defender,BRA,33,69,68,69,Guarani
+Rafael Carvalho,defender,BRA,25,67,82,74,Guarani
+Anderson Silva,defender,BRA,22,63,85,75,Guarani
+Régis Oliveira,midfielder,BRA,30,69,73,70,Guarani
+Giovanni Pavani,midfielder,BRA,26,67,81,73,Guarani
+Yago Pikachu,midfielder,BRA,32,68,70,68,Guarani
+Marlon Andrade,midfielder,BRA,24,65,83,73,Guarani
+Caio César,midfielder,BRA,21,62,86,76,Guarani
+Junior Todinho,forward,BRA,28,70,76,72,Guarani
+Caio Dantas,forward,BRA,26,68,79,73,Guarani
+Isaque Gonçalves,forward,BRA,23,66,83,76,Guarani
+Jenison Santos,forward,BRA,32,67,68,67,Guarani
+Vinicius Zanocelo,forward,BRA,21,63,86,76,Guarani
+Caique Silva,goalkeeper,BRA,26,73,77,77,Ponte Preta
+Nicolas Santos,goalkeeper,BRA,24,63,82,72,Ponte Preta
+Luis Orejuela,defender,COL,29,68,77,70,Ponte Preta
+Renato Lima,defender,BRA,32,69,70,69,Ponte Preta
+Sergio Raphael,defender,BRA,27,67,79,71,Ponte Preta
+Camilo Dias,defender,BRA,24,65,83,73,Ponte Preta
+Kevin Oliveira,defender,BRA,22,62,85,74,Ponte Preta
+Mateus Henrique,midfielder,BRA,24,67,84,75,Ponte Preta
+Elvis Melo,midfielder,BRA,30,68,72,69,Ponte Preta
+Danilo Portilho,midfielder,BRA,31,67,70,68,Ponte Preta
+João Vitor Lima,midfielder,BRA,23,64,84,73,Ponte Preta
+Pedro Lucas,midfielder,BRA,21,61,86,75,Ponte Preta
+Lucão Figueiredo,forward,BRA,29,69,74,70,Ponte Preta
+Alemão Santos,forward,BRA,27,67,78,70,Ponte Preta
+Bruno Sávio,forward,BRA,24,65,82,74,Ponte Preta
+Pedrinho Lima,forward,BRA,21,62,85,76,Ponte Preta
+Thalisson Oliveira,forward,BRA,23,63,83,72,Ponte Preta
+Douglas Borges,goalkeeper,BRA,34,70,68,70,Botafogo-SP
+Matheus Nogueira,goalkeeper,BRA,24,60,81,68,Botafogo-SP
+Wallison Macedo,defender,BRA,28,66,77,68,Botafogo-SP
+Plinio Artur,defender,BRA,31,65,72,65,Botafogo-SP
+Fábio Sanches,defender,BRA,27,64,78,67,Botafogo-SP
+Daniel Castro,defender,BRA,24,63,82,71,Botafogo-SP
+Saulo Ferreira,defender,BRA,22,59,84,70,Botafogo-SP
+Gustavo Bochecha,midfielder,BRA,27,65,79,68,Botafogo-SP
+Leandro Maciel,midfielder,BRA,33,65,67,65,Botafogo-SP
+Diego Gonçalves,midfielder,BRA,29,63,75,65,Botafogo-SP
+Tiago Calvano,midfielder,BRA,25,62,82,70,Botafogo-SP
+Everton Dias,midfielder,BRA,21,59,85,71,Botafogo-SP
+Diego Tavares,forward,BRA,29,66,73,67,Botafogo-SP
+Mário Sérgio,forward,BRA,32,64,68,64,Botafogo-SP
+Carlos Henrique,forward,BRA,24,62,81,70,Botafogo-SP
+Welligton Lima,forward,BRA,22,59,83,70,Botafogo-SP
+Fernando Paulista,forward,BRA,26,61,78,64,Botafogo-SP
+Pegorari Santos,goalkeeper,BRA,34,68,66,68,Ituano
+Rafael Paschoal,goalkeeper,BRA,23,58,81,66,Ituano
+Léo Duarte,defender,BRA,27,64,77,67,Ituano
+Rafael Bueno,defender,BRA,33,63,68,63,Ituano
+Bernardo Valim,defender,BRA,26,62,79,66,Ituano
+Kaique Rocha,defender,BRA,22,60,84,70,Ituano
+Gabriel Dias,defender,BRA,21,57,85,69,Ituano
+Joilson Medeiros,midfielder,BRA,30,63,72,64,Ituano
+Gui Mendonça,midfielder,BRA,25,62,81,68,Ituano
+Nicolas Freire,midfielder,BRA,28,61,76,63,Ituano
+Samuel Souza,midfielder,BRA,23,59,83,68,Ituano
+Wesley Dias,midfielder,BRA,21,57,85,68,Ituano
+Matheus Peixoto,forward,BRA,28,64,74,66,Ituano
+Aylon Santos,forward,BRA,24,62,81,70,Ituano
+Murilo Camargo,forward,BRA,26,60,78,64,Ituano
+Vinicius Guimarães,forward,BRA,21,58,84,70,Ituano
+Danilo Gomes,forward,BRA,22,57,83,68,Ituano
+Alex Muralha,goalkeeper,BRA,36,67,63,67,Mirassol
+Muralha Junior,goalkeeper,BRA,24,57,80,65,Mirassol
+Luís Otávio,defender,BRA,29,63,74,65,Mirassol
+Donato Filho,defender,BRA,32,62,68,62,Mirassol
+Cléber Oliveira,defender,BRA,27,61,78,64,Mirassol
+João Lucas,defender,BRA,23,59,84,68,Mirassol
+Anderson Lima Jr,defender,BRA,21,56,85,67,Mirassol
+Danielzinho Ramos,midfielder,BRA,32,62,68,62,Mirassol
+Negueba Santos,midfielder,BRA,30,61,71,62,Mirassol
+Zé Vitor,midfielder,BRA,26,59,79,64,Mirassol
+Chico Gomes,midfielder,BRA,24,58,82,66,Mirassol
+Fabrício Campos,midfielder,BRA,22,56,83,66,Mirassol
+Rodrigo Teles,forward,BRA,29,63,73,64,Mirassol
+Iury Castilho,forward,BRA,26,61,77,64,Mirassol
+Edson Dias,forward,BRA,24,59,81,67,Mirassol
+Bryan Lima,forward,BRA,22,57,83,68,Mirassol
+Nathan Simões,forward,BRA,21,56,84,68,Mirassol
+Giovanni Ramos,goalkeeper,BRA,30,68,73,70,Novorizontino
+Dida Neto,goalkeeper,BRA,25,58,80,66,Novorizontino
+Wálber Filho,defender,BRA,28,63,77,66,Novorizontino
+Reverson Lima,defender,BRA,33,63,67,63,Novorizontino
+Hélder Santos,defender,BRA,26,62,79,66,Novorizontino
+Rodrigo Ferreira Jr,defender,BRA,23,60,83,69,Novorizontino
+Léo Montes,defender,BRA,21,57,85,68,Novorizontino
+Léo Naldi,midfielder,BRA,30,63,72,64,Novorizontino
+Marcelinho Recife,midfielder,BRA,29,62,74,63,Novorizontino
+Gegê Lima,midfielder,BRA,27,60,79,63,Novorizontino
+Waguininho Santos,midfielder,BRA,24,59,83,67,Novorizontino
+Ronaldo Júnior,midfielder,BRA,22,57,84,67,Novorizontino
+Lucão Oliveira,forward,BRA,30,63,71,64,Novorizontino
+Douglas Costa Neto,forward,BRA,27,61,77,63,Novorizontino
+Cléo Silva,forward,BRA,24,59,81,67,Novorizontino
+Vini Rodrigues,forward,BRA,22,57,83,68,Novorizontino
+Felipe Marçal,forward,BRA,21,56,84,68,Novorizontino
+Moisés Souza,goalkeeper,BRA,32,64,68,64,Água Santa
+Patrick Gaúcho,goalkeeper,BRA,23,54,80,62,Água Santa
+Vitão Freitas,defender,BRA,28,59,74,61,Água Santa
+Rodrigo Santos,defender,BRA,34,57,65,57,Água Santa
+Willian Maranhão,defender,BRA,26,58,77,62,Água Santa
+Arthur Henrique,defender,BRA,23,56,82,65,Água Santa
+Mateus Lima,defender,BRA,21,53,84,65,Água Santa
+Vitinho Castro,midfielder,BRA,29,58,73,60,Água Santa
+João Guilherme,midfielder,BRA,27,57,77,60,Água Santa
+Vitor Suzuki,midfielder,BRA,25,56,79,62,Água Santa
+Netinho Sousa,midfielder,BRA,23,54,82,63,Água Santa
+Renan Lima,midfielder,BRA,21,53,83,64,Água Santa
+Eron Lima,forward,BRA,29,59,72,60,Água Santa
+Iago Lima,forward,BRA,26,57,77,61,Água Santa
+Wellington Simão,forward,BRA,24,56,80,63,Água Santa
+Álvaro Campos,forward,BRA,22,53,82,64,Água Santa
+Tiago Soares,forward,BRA,20,52,84,66,Água Santa
