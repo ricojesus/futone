@@ -34,8 +34,6 @@ class LeagueController extends Controller
     {
         $validated = $request->validate([
             'name'            => 'required|string|max:100',
-            'format'          => 'required|in:league,cup,mixed',
-            'legs'            => 'required|in:single,double',
             'access'          => 'required|in:public,private',
             'max_teams'       => 'required|integer|min:2|max:32',
             'season'          => 'required|integer|min:1900|max:2200',
@@ -56,17 +54,17 @@ class LeagueController extends Controller
                 'season'          => (int) $validated['season'],
             ]);
 
-            // Calcula rodadas estimadas (será recalculado ao iniciar com times reais)
-            $n           = (int) $validated['max_teams'];
+            // Formato padrão: pontos corridos, ida e volta
+            $n            = (int) $validated['max_teams'];
             $roundsPerLeg = ($n % 2 === 0) ? ($n - 1) : $n;
-            $totalRounds  = $validated['legs'] === 'double' ? $roundsPerLeg * 2 : $roundsPerLeg;
+            $totalRounds  = $roundsPerLeg * 2; // ida + volta
 
             LeagueChampionship::create([
                 'league_id'       => $league->id,
                 'championship_id' => null,
                 'name'            => $league->name,
-                'type'            => $validated['format'],
-                'legs'            => $validated['legs'],
+                'type'            => 'league',   // pontos corridos
+                'legs'            => 'double',   // ida e volta
                 'teams_count'     => $n,
                 'status'          => 'waiting',
                 'current_round'   => 0,

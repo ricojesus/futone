@@ -8,7 +8,7 @@
                 <span class="text-slate-400 text-sm">Criar Liga</span>
             </div>
             <h1 class="text-2xl font-extrabold text-white">Criar Nova Liga</h1>
-            <p class="mt-1 text-sm text-slate-400">Configure o formato, visibilidade e convide seus amigos.</p>
+            <p class="mt-1 text-sm text-slate-400">Pontos corridos, ida e volta — convide seus amigos e comece a jogar.</p>
         </div>
     </div>
 
@@ -27,7 +27,7 @@
         <form action="{{ route('leagues.store') }}" method="POST" class="space-y-6">
             @csrf
 
-            {{-- Nome da liga --}}
+            {{-- Nome --}}
             <div class="rounded-2xl border border-slate-700 bg-slate-900 p-6">
                 <h2 class="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-400">Identificação</h2>
                 <label class="block text-sm font-medium text-slate-300 mb-1.5">Nome da Liga *</label>
@@ -37,73 +37,7 @@
                     required maxlength="100" />
             </div>
 
-            {{-- Formato do campeonato --}}
-            <div class="rounded-2xl border border-slate-700 bg-slate-900 p-6">
-                <h2 class="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-400">Formato</h2>
-
-                {{-- Tipo --}}
-                <label class="block text-sm font-medium text-slate-300 mb-3">Estilo de competição</label>
-                <div class="grid gap-3 sm:grid-cols-3 mb-6">
-
-                    <label class="cursor-pointer">
-                        <input type="radio" name="format" value="league" class="sr-only peer"
-                               {{ old('format', 'league') === 'league' ? 'checked' : '' }} />
-                        <div class="rounded-xl border border-slate-600 bg-slate-800 p-4 transition
-                                    peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 h-full">
-                            <div class="text-2xl mb-2">🏆</div>
-                            <p class="text-sm font-semibold text-white">Pontos corridos</p>
-                            <p class="text-xs text-slate-400 mt-1">Todos jogam contra todos. Mais pontos vence.</p>
-                        </div>
-                    </label>
-
-                    <label class="cursor-pointer">
-                        <input type="radio" name="format" value="cup" class="sr-only peer"
-                               {{ old('format') === 'cup' ? 'checked' : '' }} />
-                        <div class="rounded-xl border border-slate-600 bg-slate-800 p-4 transition
-                                    peer-checked:border-amber-500 peer-checked:bg-amber-500/10 h-full">
-                            <div class="text-2xl mb-2">⚡</div>
-                            <p class="text-sm font-semibold text-white">Mata-mata</p>
-                            <p class="text-xs text-slate-400 mt-1">Eliminação direta a cada fase.</p>
-                        </div>
-                    </label>
-
-                    <label class="cursor-pointer">
-                        <input type="radio" name="format" value="mixed" class="sr-only peer"
-                               {{ old('format') === 'mixed' ? 'checked' : '' }} />
-                        <div class="rounded-xl border border-slate-600 bg-slate-800 p-4 transition
-                                    peer-checked:border-violet-500 peer-checked:bg-violet-500/10 h-full">
-                            <div class="text-2xl mb-2">🎯</div>
-                            <p class="text-sm font-semibold text-white">Grupos + Mata-mata</p>
-                            <p class="text-xs text-slate-400 mt-1">Fase de grupos seguida de eliminatórias.</p>
-                        </div>
-                    </label>
-                </div>
-
-                {{-- Jogos --}}
-                <label class="block text-sm font-medium text-slate-300 mb-3">Jogos por confronto</label>
-                <div class="flex gap-3">
-                    <label class="flex-1 cursor-pointer">
-                        <input type="radio" name="legs" value="double" class="sr-only peer"
-                               {{ old('legs', 'double') === 'double' ? 'checked' : '' }} />
-                        <div class="rounded-xl border border-slate-600 bg-slate-800 p-3 text-center transition
-                                    peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10">
-                            <p class="text-sm font-semibold text-white">Ida e volta</p>
-                            <p class="text-xs text-slate-500 mt-0.5">2 jogos por duelo, alternando mando</p>
-                        </div>
-                    </label>
-                    <label class="flex-1 cursor-pointer">
-                        <input type="radio" name="legs" value="single" class="sr-only peer"
-                               {{ old('legs') === 'single' ? 'checked' : '' }} />
-                        <div class="rounded-xl border border-slate-600 bg-slate-800 p-3 text-center transition
-                                    peer-checked:border-amber-500 peer-checked:bg-amber-500/10">
-                            <p class="text-sm font-semibold text-white">Jogo único</p>
-                            <p class="text-xs text-slate-500 mt-0.5">1 jogo por duelo, campo neutro ou sorteado</p>
-                        </div>
-                    </label>
-                </div>
-            </div>
-
-            {{-- Visibilidade + Times + Temporada --}}
+            {{-- Configurações --}}
             <div class="rounded-2xl border border-slate-700 bg-slate-900 p-6">
                 <h2 class="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-400">Configurações</h2>
 
@@ -167,7 +101,6 @@
                 <div class="mt-5">
                     <label class="block text-sm font-medium text-slate-300 mb-3">Atribuição de Times</label>
                     <div class="grid gap-3 sm:grid-cols-2">
-
                         <label class="cursor-pointer">
                             <input type="radio" name="team_assignment" value="choice"
                                    class="sr-only peer"
