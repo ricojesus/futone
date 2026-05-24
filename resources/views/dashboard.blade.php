@@ -18,20 +18,20 @@
 
             <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
 
-                {{-- Criar uma liga --}}
+                {{-- Ver campeonatos --}}
                 <div class="group relative flex flex-col rounded-2xl border border-slate-700 bg-slate-900 p-6 transition hover:border-emerald-500/60 hover:bg-slate-800/60">
                     <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/30">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0" />
                         </svg>
                     </div>
-                    <h3 class="mb-2 text-lg font-bold text-white">Criar uma Liga</h3>
+                    <h3 class="mb-2 text-lg font-bold text-white">Campeonatos</h3>
                     <p class="mb-6 flex-1 text-sm leading-relaxed text-slate-400">
-                        Monte sua própria liga, convide amigos e defina as regras. Você controla o campeonato.
+                        Veja os campeonatos estaduais e o Brasileirão disponíveis. Escolha um time e dispute a temporada.
                     </p>
-                    <a href="{{ route('leagues.create') }}"
+                    <a href="{{ route('leagues.join') }}"
                         class="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-emerald-400 active:scale-95">
-                        Criar liga
+                        Ver campeonatos
                     </a>
                 </div>
 

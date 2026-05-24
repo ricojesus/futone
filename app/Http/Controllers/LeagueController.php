@@ -27,11 +27,13 @@ class LeagueController extends Controller
 
     public function create()
     {
-        return view('leagues.create');
+        // Criação manual de liga reservada para uso futuro / admins
+        abort(404);
     }
 
     public function store(Request $request)
     {
+        abort(404);
         $validated = $request->validate([
             'name'            => 'required|string|max:100',
             'access'          => 'required|in:public,private',

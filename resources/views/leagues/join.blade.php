@@ -52,10 +52,7 @@
 
             @if ($publicLeagues->isEmpty())
                 <div class="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 px-6 py-12 text-center">
-                    <p class="text-slate-500">Nenhuma liga pública aguardando jogadores no momento.</p>
-                    <a href="{{ route('leagues.create') }}" class="mt-4 inline-block text-sm text-emerald-400 hover:text-emerald-300 transition">
-                        Criar a sua própria liga →
-                    </a>
+                    <p class="text-slate-500">Nenhum campeonato aguardando jogadores no momento.</p>
                 </div>
             @else
                 <div class="grid gap-4 sm:grid-cols-2">
@@ -99,10 +96,5 @@
             @endif
         </div>
 
-        <div class="text-center">
-            <a href="{{ route('leagues.create') }}" class="text-sm text-slate-500 hover:text-emerald-400 transition">
-                Prefere criar a sua própria liga? Clique aqui →
-            </a>
-        </div>
     </div>
 </x-app-layout>
