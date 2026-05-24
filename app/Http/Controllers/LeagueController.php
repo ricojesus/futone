@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Championship;
 use App\Models\League;
 use App\Models\LeagueChampionship;
 use Illuminate\Http\Request;
@@ -28,33 +27,28 @@ class LeagueController extends Controller
 
     public function create()
     {
-        $championships = Championship::with(['country', 'state'])
-            ->orderBy('name')
-            ->get();
-
-        return view('leagues.create', compact('championships'));
+        return view('leagues.create');
     }
 
     public function store(Request $request)
     {
-        $championship = Championship::findOrFail($request->input('championship_id', ''));
-
         $validated = $request->validate([
             'name'            => 'required|string|max:100',
-            'championship_id' => 'required|uuid|exists:championships,id',
-            'type'            => 'required|in:public,private',
-            'max_teams'       => 'required|integer|min:2|max:' . $championship->teams_count,
+            'format'          => 'required|in:league,cup,mixed',
+            'legs'            => 'required|in:single,double',
+            'access'          => 'required|in:public,private',
+            'max_teams'       => 'required|integer|min:2|max:32',
             'season'          => 'required|integer|min:1900|max:2200',
             'team_assignment' => 'required|in:choice,random',
         ]);
 
-        $league = DB::transaction(function () use ($validated, $championship) {
+        $league = DB::transaction(function () use ($validated) {
             $league = League::create([
                 'name'            => $validated['name'],
                 'slug'            => Str::slug($validated['name']) . '-' . Str::lower(Str::random(5)),
                 'owner_id'        => auth()->id(),
-                'state_id'        => $championship->state_id,
-                'type'            => $validated['type'],
+                'state_id'        => null,
+                'type'            => $validated['access'],
                 'invite_code'     => Str::upper(Str::random(8)),
                 'max_teams'       => (int) $validated['max_teams'],
                 'team_assignment' => $validated['team_assignment'],
@@ -62,15 +56,21 @@ class LeagueController extends Controller
                 'season'          => (int) $validated['season'],
             ]);
 
+            // Calcula rodadas estimadas (será recalculado ao iniciar com times reais)
+            $n           = (int) $validated['max_teams'];
+            $roundsPerLeg = ($n % 2 === 0) ? ($n - 1) : $n;
+            $totalRounds  = $validated['legs'] === 'double' ? $roundsPerLeg * 2 : $roundsPerLeg;
+
             LeagueChampionship::create([
-                'league_id'        => $league->id,
-                'championship_id'  => $championship->id,
-                'name'             => $championship->name,
-                'type'             => $championship->type,
-                'legs'             => $championship->legs,
-                'teams_count'      => $championship->teams_count,
-                'promotion_spots'  => $championship->promotion_spots,
-                'relegation_spots' => $championship->relegation_spots,
+                'league_id'       => $league->id,
+                'championship_id' => null,
+                'name'            => $league->name,
+                'type'            => $validated['format'],
+                'legs'            => $validated['legs'],
+                'teams_count'     => $n,
+                'status'          => 'waiting',
+                'current_round'   => 0,
+                'total_rounds'    => $totalRounds,
             ]);
 
             return $league;
