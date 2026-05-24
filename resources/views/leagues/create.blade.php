@@ -3,12 +3,12 @@
     <div class="border-b border-slate-800 bg-slate-900">
         <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
             <div class="flex items-center gap-3 mb-1">
-                <a href="{{ route('dashboard') }}" class="text-slate-500 hover:text-slate-300 transition text-sm">Dashboard</a>
+                <a href="{{ route('leagues.index') }}" class="text-slate-500 hover:text-slate-300 transition text-sm">Minhas Ligas</a>
                 <span class="text-slate-700">/</span>
                 <span class="text-slate-400 text-sm">Criar Liga</span>
             </div>
             <h1 class="text-2xl font-extrabold text-white">Criar Nova Liga</h1>
-            <p class="mt-1 text-sm text-slate-400">Pontos corridos, ida e volta — convide seus amigos e comece a jogar.</p>
+            <p class="mt-1 text-sm text-slate-400">Crie um mundo de jogo e convide seus amigos. As competições serão adicionadas dentro da liga.</p>
         </div>
     </div>
 
@@ -32,7 +32,7 @@
                 <h2 class="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-400">Identificação</h2>
                 <label class="block text-sm font-medium text-slate-300 mb-1.5">Nome da Liga *</label>
                 <input type="text" name="name" value="{{ old('name') }}"
-                    placeholder="Ex: Copa dos Amigos 2026"
+                    placeholder="Ex: Liga dos Amigos 2026"
                     class="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     required maxlength="100" />
             </div>
@@ -71,78 +71,22 @@
                         </div>
                     </div>
 
-                    {{-- Número de times --}}
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1.5">Número de Times *</label>
-                        <input type="number" name="max_teams"
-                            value="{{ old('max_teams', 8) }}"
-                            min="2" max="32"
-                            class="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                            required />
-                        <p class="mt-1 text-xs text-slate-500">Times sem dono humano serão controlados pela IA. Máx. 32.</p>
-                    </div>
-                </div>
-
-                <div class="grid gap-5 sm:grid-cols-2 mt-5">
                     {{-- Temporada --}}
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1.5">Temporada Inicial *</label>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">Temporada *</label>
                         <input type="number" name="season"
                             value="{{ old('season', date('Y')) }}"
                             min="1900" max="2200"
                             class="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                             required />
-                        <p class="mt-1 text-xs text-slate-500">Ano em que a liga começa.</p>
-                    </div>
-                    <div>{{-- placeholder --}}</div>
-                </div>
-
-                {{-- Atribuição de times --}}
-                <div class="mt-5">
-                    <label class="block text-sm font-medium text-slate-300 mb-3">Atribuição de Times</label>
-                    <div class="grid gap-3 sm:grid-cols-2">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="team_assignment" value="choice"
-                                   class="sr-only peer"
-                                   {{ old('team_assignment', 'choice') === 'choice' ? 'checked' : '' }} />
-                            <div class="rounded-xl border border-slate-600 bg-slate-800 p-4 transition
-                                        peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10">
-                                <div class="flex items-start gap-3">
-                                    <span class="text-2xl leading-none">🏟️</span>
-                                    <div>
-                                        <p class="text-sm font-semibold text-white">Escolha livre</p>
-                                        <p class="text-xs text-slate-400 mt-0.5">
-                                            Cada manager escolhe o time que quer gerenciar entre os disponíveis.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </label>
-
-                        <label class="cursor-pointer">
-                            <input type="radio" name="team_assignment" value="random"
-                                   class="sr-only peer"
-                                   {{ old('team_assignment') === 'random' ? 'checked' : '' }} />
-                            <div class="rounded-xl border border-slate-600 bg-slate-800 p-4 transition
-                                        peer-checked:border-violet-500 peer-checked:bg-violet-500/10">
-                                <div class="flex items-start gap-3">
-                                    <span class="text-2xl leading-none">🎲</span>
-                                    <div>
-                                        <p class="text-sm font-semibold text-white">Sorteio</p>
-                                        <p class="text-xs text-slate-400 mt-0.5">
-                                            O sistema sorteia um time aleatório para cada manager ao entrar.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </label>
+                        <p class="mt-1 text-xs text-slate-500">Ano da temporada desta liga.</p>
                     </div>
                 </div>
             </div>
 
             {{-- Ações --}}
             <div class="flex items-center justify-end gap-4">
-                <a href="{{ route('dashboard') }}"
+                <a href="{{ route('leagues.index') }}"
                     class="rounded-xl border border-slate-600 px-5 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-slate-800">
                     Cancelar
                 </a>

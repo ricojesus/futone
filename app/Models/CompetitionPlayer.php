@@ -8,13 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class LeaguePlayer extends Model
+class CompetitionPlayer extends Model
 {
     use HasUuids;
 
+    protected $table = 'competition_players';
+
     protected $fillable = [
-        'league_id',
-        'league_team_id',
+        'competition_id',
+        'competition_team_id',
         'player_id',
         'country_id',
         'name',
@@ -40,14 +42,16 @@ class LeaguePlayer extends Model
         'released_at' => 'datetime',
     ];
 
-    public function league(): BelongsTo
+    // ── Relacionamentos ───────────────────────────────────────────────────
+
+    public function competition(): BelongsTo
     {
-        return $this->belongsTo(League::class, 'league_id');
+        return $this->belongsTo(Competition::class, 'competition_id');
     }
 
-    public function leagueTeam(): BelongsTo
+    public function competitionTeam(): BelongsTo
     {
-        return $this->belongsTo(LeagueTeam::class, 'league_team_id');
+        return $this->belongsTo(CompetitionTeam::class, 'competition_team_id');
     }
 
     public function player(): BelongsTo
@@ -62,14 +66,16 @@ class LeaguePlayer extends Model
 
     public function activeTransferListing(): HasOne
     {
-        return $this->hasOne(LeagueTransferListing::class, 'league_player_id')
+        return $this->hasOne(CompetitionTransferListing::class, 'competition_player_id')
             ->where('status', 'open');
     }
 
     public function transfers(): HasMany
     {
-        return $this->hasMany(LeagueTransfer::class, 'league_player_id');
+        return $this->hasMany(CompetitionTransfer::class, 'competition_player_id');
     }
+
+    // ── Helpers ──────────────────────────────────────────────────────────
 
     public function isAvailable(): bool
     {
@@ -113,7 +119,6 @@ class LeaguePlayer extends Model
 
     /**
      * Retorna o delta percentual de mercado causado pela forma.
-     * Ex: form_factor 1.08 → "+8%" | 0.91 → "-9%"
      */
     public function formImpact(): string
     {

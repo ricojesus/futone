@@ -10,7 +10,7 @@
                 <span class="text-slate-400 text-sm">Escolher Time</span>
             </div>
             <h1 class="text-2xl font-extrabold text-white">Escolha seu Time</h1>
-            <p class="mt-1 text-sm text-slate-400">Selecione o time que irá representar você em <strong class="text-white">{{ $league->name }}</strong>.</p>
+            <p class="mt-1 text-sm text-slate-400">Selecione o time que irá representar você em <strong class="text-white">{{ $competition->name ?? $league->name }}</strong>.</p>
         </div>
     </div>
 

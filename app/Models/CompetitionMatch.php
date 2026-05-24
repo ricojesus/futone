@@ -6,13 +6,14 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class LeagueMatch extends Model
+class CompetitionMatch extends Model
 {
     use HasUuids;
 
+    protected $table = 'competition_matches';
+
     protected $fillable = [
-        'league_championship_id',
-        'league_id',
+        'competition_id',
         'home_team_id',
         'away_team_id',
         'round',
@@ -32,34 +33,29 @@ class LeagueMatch extends Model
         'data'         => 'array',
     ];
 
-    // ── Relacionamentos ──────────────────────────────────────────────
+    // ── Relacionamentos ───────────────────────────────────────────────────
 
-    public function leagueChampionship(): BelongsTo
+    public function competition(): BelongsTo
     {
-        return $this->belongsTo(LeagueChampionship::class, 'league_championship_id');
-    }
-
-    public function league(): BelongsTo
-    {
-        return $this->belongsTo(League::class, 'league_id');
+        return $this->belongsTo(Competition::class, 'competition_id');
     }
 
     public function homeTeam(): BelongsTo
     {
-        return $this->belongsTo(LeagueTeam::class, 'home_team_id');
+        return $this->belongsTo(CompetitionTeam::class, 'home_team_id');
     }
 
     public function awayTeam(): BelongsTo
     {
-        return $this->belongsTo(LeagueTeam::class, 'away_team_id');
+        return $this->belongsTo(CompetitionTeam::class, 'away_team_id');
     }
 
     public function winner(): BelongsTo
     {
-        return $this->belongsTo(LeagueTeam::class, 'winner_team_id');
+        return $this->belongsTo(CompetitionTeam::class, 'winner_team_id');
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────
+    // ── Helpers ──────────────────────────────────────────────────────────
 
     public function isFinished(): bool
     {
@@ -82,7 +78,7 @@ class LeagueMatch extends Model
     }
 
     /** Retorna o resultado do ponto de vista do time informado */
-    public function resultFor(string $leagueTeamId): string
+    public function resultFor(string $competitionTeamId): string
     {
         if (!$this->isFinished()) return 'pending';
 
@@ -90,7 +86,7 @@ class LeagueMatch extends Model
 
         $homeWon = $this->home_score > $this->away_score;
 
-        if ($leagueTeamId === $this->home_team_id) {
+        if ($competitionTeamId === $this->home_team_id) {
             return $homeWon ? 'win' : 'loss';
         }
 

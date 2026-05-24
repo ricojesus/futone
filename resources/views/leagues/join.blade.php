@@ -52,43 +52,35 @@
 
             @if ($publicLeagues->isEmpty())
                 <div class="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 px-6 py-12 text-center">
-                    <p class="text-slate-500">Nenhum campeonato aguardando jogadores no momento.</p>
+                    <p class="text-slate-500">Nenhuma liga pública aguardando participantes no momento.</p>
                 </div>
             @else
                 <div class="grid gap-4 sm:grid-cols-2">
                     @foreach ($publicLeagues as $league)
-                        @php $championship = $league->championships->first() @endphp
+                        @php $competitionCount = $league->competitions->count() @endphp
                         <div class="flex flex-col rounded-2xl border border-slate-700 bg-slate-900 p-5 transition hover:border-emerald-500/30">
                             <div class="mb-3 flex items-start justify-between gap-2">
                                 <div>
                                     <h3 class="font-bold text-white">{{ $league->name }}</h3>
-                                    @if ($championship)
-                                        <p class="text-sm text-slate-400">{{ $championship->name }}</p>
-                                    @endif
+                                    <p class="text-sm text-slate-400">
+                                        {{ $competitionCount }} {{ $competitionCount === 1 ? 'competição' : 'competições' }}
+                                        @if ($league->season)
+                                            · Temporada {{ $league->season }}
+                                        @endif
+                                    </p>
                                 </div>
                                 <span class="shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-400">Aguardando</span>
                             </div>
 
                             <div class="mb-4 flex items-center gap-4 text-xs text-slate-500">
-                                <span>{{ $league->teams_count }} / {{ $league->max_teams }} times</span>
                                 <span>Criada por <strong class="text-slate-400">{{ $league->owner->name }}</strong></span>
                             </div>
 
-                            {{-- Barra de progresso --}}
-                            @php $pct = ($league->teams_count ?? 0) / max($league->max_teams, 1) * 100 @endphp
-                            <div class="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
-                                <div class="h-1.5 rounded-full bg-emerald-500/60" style="width: {{ $pct }}%"></div>
-                            </div>
-
                             <div class="mt-auto">
-                                @if ($league->teams_count >= $league->max_teams)
-                                    <span class="inline-block text-xs text-slate-500 italic">Liga cheia</span>
-                                @else
-                                    <a href="{{ route('leagues.show', $league) }}"
-                                        class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-emerald-400 active:scale-95">
-                                        Ver Liga
-                                    </a>
-                                @endif
+                                <a href="{{ route('leagues.show', $league) }}"
+                                    class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-emerald-400 active:scale-95">
+                                    Ver Liga
+                                </a>
                             </div>
                         </div>
                     @endforeach

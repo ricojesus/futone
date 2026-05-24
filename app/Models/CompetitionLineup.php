@@ -5,22 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class LeagueLineup extends Model
+class CompetitionLineup extends Model
 {
     use HasUuids;
 
+    protected $table = 'competition_lineups';
+
     protected $fillable = [
-        'league_id',
-        'league_team_id',
+        'competition_id',
+        'competition_team_id',
         'formation',
         'round',
         'status',
     ];
 
-    // ── Constantes ───────────────────────────────────────────────────
+    // ── Constantes ───────────────────────────────────────────────────────
 
     /**
      * Formações suportadas: nome → {defender, midfielder, forward}.
@@ -34,53 +36,52 @@ class LeagueLineup extends Model
         '4-5-1'   => ['defender' => 4, 'midfielder' => 5, 'forward' => 1],
         '3-4-3'   => ['defender' => 3, 'midfielder' => 4, 'forward' => 3],
         '5-4-1'   => ['defender' => 5, 'midfielder' => 4, 'forward' => 1],
-        '4-2-3-1' => ['defender' => 4, 'midfielder' => 5, 'forward' => 1], // 2 vol + 3 mei = 5 meio-campistas
+        '4-2-3-1' => ['defender' => 4, 'midfielder' => 5, 'forward' => 1],
     ];
 
-    // ── Relacionamentos ──────────────────────────────────────────────
+    // ── Relacionamentos ───────────────────────────────────────────────────
 
-    public function league(): BelongsTo
+    public function competition(): BelongsTo
     {
-        return $this->belongsTo(League::class, 'league_id');
+        return $this->belongsTo(Competition::class, 'competition_id');
     }
 
-    public function leagueTeam(): BelongsTo
+    public function competitionTeam(): BelongsTo
     {
-        return $this->belongsTo(LeagueTeam::class, 'league_team_id');
+        return $this->belongsTo(CompetitionTeam::class, 'competition_team_id');
     }
 
     public function lineupPlayers(): HasMany
     {
-        return $this->hasMany(LeagueLineupPlayer::class, 'lineup_id');
+        return $this->hasMany(CompetitionLineupPlayer::class, 'lineup_id');
     }
 
     public function starters(): HasMany
     {
-        return $this->hasMany(LeagueLineupPlayer::class, 'lineup_id')
+        return $this->hasMany(CompetitionLineupPlayer::class, 'lineup_id')
             ->where('is_starter', true)
             ->orderBy('slot');
     }
 
     /**
-     * Jogadores titulares como LeaguePlayers (com pivot).
+     * Jogadores titulares como CompetitionPlayers (com pivot).
      */
     public function players(): BelongsToMany
     {
         return $this->belongsToMany(
-            LeaguePlayer::class,
-            'league_lineup_players',
+            CompetitionPlayer::class,
+            'competition_lineup_players',
             'lineup_id',
-            'league_player_id'
+            'competition_player_id'
         )
         ->withPivot(['role', 'is_starter', 'slot'])
         ->withTimestamps();
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────
+    // ── Helpers ──────────────────────────────────────────────────────────
 
     /**
      * Retorna a configuração posicional da formação atual.
-     * Ex: ['defender' => 4, 'midfielder' => 4, 'forward' => 2]
      */
     public function slots(): array
     {
@@ -88,9 +89,6 @@ class LeagueLineup extends Model
             ?? self::FORMATIONS['4-4-2'];
     }
 
-    /**
-     * Total de titulares esperado (sempre 11 = 1 GK + 10 de linha).
-     */
     public function expectedStarterCount(): int
     {
         return 11;

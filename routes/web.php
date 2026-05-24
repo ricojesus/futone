@@ -14,6 +14,7 @@ use App\Http\Controllers\LeagueTeamController;
 use App\Http\Controllers\LineupController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserDashboardController;
+use App\Models\CompetitionTeam;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -41,7 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/leagues/{league}/join',   [LeagueTeamController::class, 'create'])->name('leagues.teams.create');
     Route::post('/leagues/{league}/teams', [LeagueTeamController::class, 'store'])->name('leagues.teams.store');
 
-    // Lineup management
+    // Lineup management — {leagueTeam} resolves to a CompetitionTeam record
     Route::get('/leagues/{league}/teams/{leagueTeam}/lineup',  [LineupController::class, 'edit'])->name('leagues.lineup.edit');
     Route::put('/leagues/{league}/teams/{leagueTeam}/lineup',  [LineupController::class, 'update'])->name('leagues.lineup.update');
 });

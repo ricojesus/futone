@@ -16,7 +16,7 @@ class GenerateLeagues extends Command
                             {season : Ano da temporada (ex: 2026)}
                             {--admin= : E-mail do usuário admin dono das ligas (padrão: primeiro admin)}';
 
-    protected $description = 'Gera os campeonatos estaduais e o Campeonato Brasileiro para uma temporada.';
+    protected $description = 'Cria um League (mundo) e gera os campeonatos estaduais e o Campeonato Brasileiro para uma temporada.';
 
     public function __construct(
         private readonly LeagueGeneratorService $generator,
@@ -53,52 +53,53 @@ class GenerateLeagues extends Command
 
         // ── Gera ──────────────────────────────────────────────────────────
         try {
-            $created = $this->generator->generateSeason($year, $admin);
+            $result = $this->generator->generateSeason($year, $admin);
         } catch (\Throwable $e) {
             $this->error('Erro ao gerar temporada: ' . $e->getMessage());
             return Command::FAILURE;
         }
 
+        $league = $result['league'];
+
+        $this->line("<fg=cyan;options=bold>✓ League (mundo) criado:</> <fg=white>{$league->name}</> <fg=gray>[{$league->id}]</>");
+        $this->newLine();
+
         // ── Exibe resumo ──────────────────────────────────────────────────
         $this->line('<fg=green;options=bold>✓ Campeonatos estaduais criados:</>');
-        $this->showLeagueTable($created['state']);
+        $this->showCompetitionTable($result['state']);
 
         $this->newLine();
         $this->line('<fg=blue;options=bold>✓ Campeonatos nacionais criados:</>');
-        $this->showLeagueTable($created['national']);
+        $this->showCompetitionTable($result['national']);
 
-        $stateCount    = count($created['state']);
-        $nationalCount = count($created['national']);
+        $stateCount    = count($result['state']);
+        $nationalCount = count($result['national']);
         $total         = $stateCount + $nationalCount;
 
         $this->newLine();
-        $this->info("Total: {$total} liga(s) gerada(s) — {$stateCount} estadual(is), {$nationalCount} nacional(is).");
+        $this->info("Total: {$total} competição(ões) gerada(s) — {$stateCount} estadual(is), {$nationalCount} nacional(is).");
 
         return Command::SUCCESS;
     }
 
-    private function showLeagueTable(array $leagues): void
+    private function showCompetitionTable(array $competitions): void
     {
-        if (empty($leagues)) {
+        if (empty($competitions)) {
             $this->line('  <fg=yellow>(nenhuma)</>');
             return;
         }
 
-        $rows = array_map(function ($league) {
-            $championship = $league->championships()->first();
-            $rounds       = $championship?->total_rounds ?? '—';
-            $teams        = $league->teams()->count();
-
+        $rows = array_map(function ($competition) {
             return [
-                $league->name,
-                $league->divisionLabel(),
-                $teams,
-                $rounds,
+                $competition->name,
+                $competition->divisionLabel(),
+                $competition->teams()->count(),
+                $competition->total_rounds ?? '—',
             ];
-        }, $leagues);
+        }, $competitions);
 
         $this->table(
-            ['Liga', 'Divisão', 'Times', 'Rodadas'],
+            ['Competição', 'Divisão', 'Times', 'Rodadas'],
             $rows,
         );
     }

@@ -6,13 +6,15 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class LeagueLineupPlayer extends Model
+class CompetitionLineupPlayer extends Model
 {
     use HasUuids;
 
+    protected $table = 'competition_lineup_players';
+
     protected $fillable = [
         'lineup_id',
-        'league_player_id',
+        'competition_player_id',
         'role',
         'is_starter',
         'slot',
@@ -22,19 +24,19 @@ class LeagueLineupPlayer extends Model
         'is_starter' => 'boolean',
     ];
 
-    // ── Relacionamentos ──────────────────────────────────────────────
+    // ── Relacionamentos ───────────────────────────────────────────────────
 
     public function lineup(): BelongsTo
     {
-        return $this->belongsTo(LeagueLineup::class, 'lineup_id');
+        return $this->belongsTo(CompetitionLineup::class, 'lineup_id');
     }
 
-    public function leaguePlayer(): BelongsTo
+    public function competitionPlayer(): BelongsTo
     {
-        return $this->belongsTo(LeaguePlayer::class, 'league_player_id');
+        return $this->belongsTo(CompetitionPlayer::class, 'competition_player_id');
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────
+    // ── Helpers ──────────────────────────────────────────────────────────
 
     public function roleLabel(): string
     {

@@ -52,7 +52,7 @@
     {{-- ══ Corpo ════════════════════════════════════════════════════════════════ --}}
     <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8"
          x-data="lineupManager(
-             {{ json_encode(\App\Models\LeagueLineup::FORMATIONS) }},
+             {{ json_encode(\App\Models\CompetitionLineup::FORMATIONS) }},
              {{ $currentStartersJson }},
              '{{ $lineup?->formation ?? '4-4-2' }}',
              {{ $playersJson }}
@@ -94,7 +94,7 @@
                         <select name="formation" x-model="formation" @change="onFormationChange()"
                                 class="rounded-xl border border-slate-600 bg-slate-800 px-3 py-1.5 sm:px-4 sm:py-2 text-white text-sm
                                        focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer">
-                            @foreach (array_keys(\App\Models\LeagueLineup::FORMATIONS) as $f)
+                            @foreach (array_keys(\App\Models\CompetitionLineup::FORMATIONS) as $f)
                                 <option value="{{ $f }}" {{ ($lineup?->formation ?? '4-4-2') === $f ? 'selected' : '' }}>
                                     {{ $f }}
                                 </option>

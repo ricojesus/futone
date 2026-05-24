@@ -2,18 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Competition;
+use App\Models\CompetitionLineup;
+use App\Models\CompetitionTeam;
 use App\Models\League;
-use App\Models\LeagueLineup;
-use App\Models\LeagueTeam;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class LineupController extends Controller
 {
     /**
-     * Exibe o formulário de escalação do time na liga.
+     * Exibe o formulário de escalação do time na competição.
+     *
+     * Route: GET /leagues/{league}/teams/{leagueTeam}/lineup
+     * The {leagueTeam} route parameter resolves to a CompetitionTeam.
      */
-    public function edit(League $league, LeagueTeam $leagueTeam)
+    public function edit(League $league, CompetitionTeam $leagueTeam)
     {
         $this->authorizeManager($league, $leagueTeam);
 
@@ -21,33 +25,35 @@ class LineupController extends Controller
         $lineup = $leagueTeam->lineups()
             ->where('status', 'active')
             ->where('round', 0)
-            ->with(['lineupPlayers.leaguePlayer'])
+            ->with(['lineupPlayers.competitionPlayer'])
             ->first();
 
         // Mapa playerId → role para preencher a UI
         $currentStarters = $lineup
             ? $lineup->lineupPlayers
                 ->where('is_starter', true)
-                ->mapWithKeys(fn($lp) => [$lp->league_player_id => $lp->role])
+                ->mapWithKeys(fn($lp) => [$lp->competition_player_id => $lp->role])
             : collect();
 
         // Jogadores disponíveis ordenados por posição natural e força
-        // Inclui lesionados para exibição (serão desabilitados na UI mas visíveis)
         $players = $leagueTeam->players()
             ->whereIn('status', ['active', 'injured'])
             ->orderByRaw("FIELD(position, 'goalkeeper','defender','midfielder','forward')")
             ->orderByDesc('strength')
             ->get();
 
+        // Get competition for breadcrumb/context
+        $competition = $leagueTeam->competition;
+
         return view('leagues.lineups.edit', compact(
-            'league', 'leagueTeam', 'lineup', 'currentStarters', 'players'
+            'league', 'leagueTeam', 'lineup', 'currentStarters', 'players', 'competition'
         ));
     }
 
     /**
      * Salva a escalação padrão do time.
      */
-    public function update(Request $request, League $league, LeagueTeam $leagueTeam)
+    public function update(Request $request, League $league, CompetitionTeam $leagueTeam)
     {
         $this->authorizeManager($league, $leagueTeam);
 
@@ -56,12 +62,12 @@ class LineupController extends Controller
 
         // ── Valida formação ──────────────────────────────────────────
         abort_unless(
-            array_key_exists($formation, LeagueLineup::FORMATIONS),
+            array_key_exists($formation, CompetitionLineup::FORMATIONS),
             422,
             "Formação «{$formation}» não suportada."
         );
 
-        $slots = LeagueLineup::FORMATIONS[$formation];
+        $slots = CompetitionLineup::FORMATIONS[$formation];
 
         // ── Valida total de jogadores ────────────────────────────────
         $errors = [];
@@ -70,7 +76,6 @@ class LineupController extends Controller
             $errors[] = 'A escalação precisa ter exatamente 11 jogadores.';
         }
 
-        // Contagem por função
         $counts = ['goalkeeper' => 0, 'defender' => 0, 'midfielder' => 0, 'forward' => 0];
         foreach ($starters as $playerId => $role) {
             if (! array_key_exists($role, $counts)) {
@@ -92,9 +97,7 @@ class LineupController extends Controller
         }
 
         if (! empty($errors)) {
-            return back()
-                ->withInput()
-                ->withErrors($errors);
+            return back()->withInput()->withErrors($errors);
         }
 
         // ── Verifica que todos os jogadores pertencem ao time ────────
@@ -112,9 +115,14 @@ class LineupController extends Controller
 
         // ── Persiste ─────────────────────────────────────────────────
         DB::transaction(function () use ($league, $leagueTeam, $formation, $starters) {
+            $competition = $leagueTeam->competition;
+
             $lineup = $leagueTeam->lineups()->updateOrCreate(
                 ['round' => 0, 'status' => 'active'],
-                ['formation' => $formation, 'league_id' => $league->id]
+                [
+                    'formation'      => $formation,
+                    'competition_id' => $competition->id,
+                ]
             );
 
             $lineup->lineupPlayers()->delete();
@@ -125,10 +133,10 @@ class LineupController extends Controller
                 $slotCounters[$role]++;
 
                 $lineup->lineupPlayers()->create([
-                    'league_player_id' => $playerId,
-                    'role'             => $role,
-                    'slot'             => $slotCounters[$role],
-                    'is_starter'       => true,
+                    'competition_player_id' => $playerId,
+                    'role'                  => $role,
+                    'slot'                  => $slotCounters[$role],
+                    'is_starter'            => true,
                 ]);
             }
         });
@@ -140,10 +148,12 @@ class LineupController extends Controller
 
     // ── Helpers ──────────────────────────────────────────────────────
 
-    private function authorizeManager(League $league, LeagueTeam $leagueTeam): void
+    private function authorizeManager(League $league, CompetitionTeam $leagueTeam): void
     {
+        // Verify the competition team belongs to a competition within this league
+        $competition = $leagueTeam->competition;
         abort_unless(
-            $leagueTeam->league_id === $league->id,
+            $competition && $competition->league_id === $league->id,
             404
         );
         abort_unless(

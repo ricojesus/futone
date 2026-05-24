@@ -12,8 +12,8 @@ class LeagueJoinController extends Controller
     {
         $publicLeagues = League::where('type', 'public')
             ->where('status', 'waiting')
-            ->with(['championships', 'teams', 'owner'])
-            ->withCount('teams')
+            ->with(['competitions', 'owner'])
+            ->withCount('competitions')
             ->latest()
             ->get();
 
@@ -34,12 +34,6 @@ class LeagueJoinController extends Controller
         if (! $league) {
             return back()
                 ->withErrors(['invite_code' => 'Código inválido ou liga não encontrada.'])
-                ->withInput();
-        }
-
-        if ($league->teams()->count() >= $league->max_teams) {
-            return back()
-                ->withErrors(['invite_code' => 'Esta liga já está com todas as vagas preenchidas.'])
                 ->withInput();
         }
 

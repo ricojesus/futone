@@ -2,9 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\Competition;
+use App\Models\CompetitionPlayer;
+use App\Models\CompetitionTeam;
 use App\Models\League;
-use App\Models\LeaguePlayer;
-use App\Models\LeagueTeam;
 use App\Models\State;
 use App\Models\Team;
 use App\Models\User;
@@ -13,27 +14,24 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * Gera as ligas de uma temporada completa:
+ * Gera as competições de uma temporada completa dentro de uma League (mundo):
  *
  *  - Campeonato Estadual A1 + A2 para cada estado com times cadastrados.
  *  - Campeonato Brasileiro Série A + Série B com os melhores times de cada estado.
  *
- * Critério de força inicial: média de strength dos LeaguePlayers de ligas anteriores.
+ * Critério de força inicial: média de strength dos CompetitionPlayers de ligas anteriores.
  * Fallback (time sem histórico): fans_base / 1.000.000.
  */
 class LeagueGeneratorService
 {
     // ── Configuração das divisões ────────────────────────────────────────
 
-    /** Vagas por divisão estadual */
     const STATE_A1_SLOTS = 8;
     const STATE_A2_SLOTS = 8;
 
-    /** Vagas no campeonato nacional */
     const NATIONAL_A_SLOTS = 20;
     const NATIONAL_B_SLOTS = 20;
 
-    /** Times de cada estado que sobem para o Série A/B (por estado) */
     const NATIONAL_A_PER_STATE = 2;
     const NATIONAL_B_PER_STATE = 2;
 
@@ -76,9 +74,11 @@ class LeagueGeneratorService
     // ── API pública ───────────────────────────────────────────────────────
 
     /**
-     * Gera todas as ligas de uma temporada.
+     * Gera todas as competições de uma temporada dentro de um League (mundo).
      *
-     * @return array{state: League[], national: League[]}
+     * Cria o League (mundo) automaticamente e popula-o com Competition records.
+     *
+     * @return array{league: League, state: Competition[], national: Competition[]}
      */
     public function generateSeason(int $year, User $admin): array
     {
@@ -89,15 +89,27 @@ class LeagueGeneratorService
         }
 
         $created = ['state' => [], 'national' => []];
+        $league  = null;
 
-        // Pools para montar os brasileiros após gerar os estaduais
-        $poolSerieA = collect(); // top times de A1 de cada estado
-        $poolSerieB = collect(); // times restantes de A1 + top de A2
+        $poolSerieA = collect();
+        $poolSerieB = collect();
 
         DB::transaction(function () use (
             $year, $admin, $stateTeams,
-            &$created, &$poolSerieA, &$poolSerieB,
+            &$league, &$created, &$poolSerieA, &$poolSerieB,
         ) {
+            // ── Cria o League (mundo) ──────────────────────────────────────
+            $league = League::create([
+                'name'        => "Temporada {$year}",
+                'slug'        => "temporada-{$year}-" . Str::lower(Str::random(4)),
+                'owner_id'    => $admin->id,
+                'type'        => League::ACCESS_PUBLIC,
+                'invite_code' => null,
+                'status'      => League::STATUS_IN_PROGRESS,
+                'season'      => $year,
+                'started_at'  => now(),
+            ]);
+
             foreach ($stateTeams as $stateCode => $teams) {
                 $state = State::where('code', $stateCode)->first();
                 if (! $state) continue;
@@ -106,41 +118,38 @@ class LeagueGeneratorService
                 $a2Teams = $teams->skip(self::STATE_A1_SLOTS)->take(self::STATE_A2_SLOTS);
 
                 // ── Estadual A1 ───────────────────────────────────────────
-                $leagueA1 = $this->createLeague([
+                $compA1 = $this->createCompetition($league, [
                     'name'             => $this->stateName($stateCode, $year, 'A1'),
                     'slug'             => $this->slug($stateCode, 'a1', $year),
-                    'owner_id'         => $admin->id,
+                    'competition_type' => Competition::COMPETITION_TYPE_STATE,
+                    'division'         => Competition::DIVISION_FIRST,
                     'state_id'         => $state->id,
-                    'competition_type' => League::COMPETITION_TYPE_STATE,
-                    'division'         => League::DIVISION_FIRST,
                     'season'           => $year,
-                    'max_teams'        => self::STATE_A1_SLOTS,
+                    'teams_count'      => $a1Teams->count(),
                 ]);
 
-                $this->attachTeams($leagueA1, $a1Teams);
-                $this->calendar->generate($leagueA1);
-                $created['state'][] = $leagueA1;
+                $this->attachTeams($compA1, $a1Teams);
+                $this->calendar->generate($compA1);
+                $created['state'][] = $compA1;
 
-                // Distribui para pools do nacional
                 $poolSerieA = $poolSerieA->concat($a1Teams->take(self::NATIONAL_A_PER_STATE));
                 $poolSerieB = $poolSerieB->concat($a1Teams->skip(self::NATIONAL_A_PER_STATE));
 
-                // ── Estadual A2 (somente se houver times suficientes) ──────
+                // ── Estadual A2 ───────────────────────────────────────────
                 if ($a2Teams->count() >= 2) {
-                    $leagueA2 = $this->createLeague([
+                    $compA2 = $this->createCompetition($league, [
                         'name'             => $this->stateName($stateCode, $year, 'A2'),
                         'slug'             => $this->slug($stateCode, 'a2', $year),
-                        'owner_id'         => $admin->id,
+                        'competition_type' => Competition::COMPETITION_TYPE_STATE,
+                        'division'         => Competition::DIVISION_SECOND,
                         'state_id'         => $state->id,
-                        'competition_type' => League::COMPETITION_TYPE_STATE,
-                        'division'         => League::DIVISION_SECOND,
                         'season'           => $year,
-                        'max_teams'        => self::STATE_A2_SLOTS,
+                        'teams_count'      => $a2Teams->count(),
                     ]);
 
-                    $this->attachTeams($leagueA2, $a2Teams);
-                    $this->calendar->generate($leagueA2);
-                    $created['state'][] = $leagueA2;
+                    $this->attachTeams($compA2, $a2Teams);
+                    $this->calendar->generate($compA2);
+                    $created['state'][] = $compA2;
 
                     $poolSerieB = $poolSerieB->concat($a2Teams->take(self::NATIONAL_B_PER_STATE));
                 }
@@ -150,15 +159,14 @@ class LeagueGeneratorService
             $serieATeams = $poolSerieA->unique('id')->take(self::NATIONAL_A_SLOTS);
 
             if ($serieATeams->count() >= 2) {
-                $serieA = $this->createLeague([
+                $serieA = $this->createCompetition($league, [
                     'name'             => "Campeonato Brasileiro Série A {$year}",
                     'slug'             => "brasileiro-serie-a-{$year}",
-                    'owner_id'         => $admin->id,
+                    'competition_type' => Competition::COMPETITION_TYPE_NATIONAL,
+                    'division'         => Competition::DIVISION_FIRST,
                     'state_id'         => null,
-                    'competition_type' => League::COMPETITION_TYPE_NATIONAL,
-                    'division'         => League::DIVISION_FIRST,
                     'season'           => $year,
-                    'max_teams'        => self::NATIONAL_A_SLOTS,
+                    'teams_count'      => $serieATeams->count(),
                 ]);
 
                 $this->attachTeams($serieA, $serieATeams);
@@ -170,15 +178,14 @@ class LeagueGeneratorService
             $serieBTeams = $poolSerieB->unique('id')->take(self::NATIONAL_B_SLOTS);
 
             if ($serieBTeams->count() >= 2) {
-                $serieB = $this->createLeague([
+                $serieB = $this->createCompetition($league, [
                     'name'             => "Campeonato Brasileiro Série B {$year}",
                     'slug'             => "brasileiro-serie-b-{$year}",
-                    'owner_id'         => $admin->id,
+                    'competition_type' => Competition::COMPETITION_TYPE_NATIONAL,
+                    'division'         => Competition::DIVISION_SECOND,
                     'state_id'         => null,
-                    'competition_type' => League::COMPETITION_TYPE_NATIONAL,
-                    'division'         => League::DIVISION_SECOND,
                     'season'           => $year,
-                    'max_teams'        => self::NATIONAL_B_SLOTS,
+                    'teams_count'      => $serieBTeams->count(),
                 ]);
 
                 $this->attachTeams($serieB, $serieBTeams);
@@ -187,7 +194,7 @@ class LeagueGeneratorService
             }
         });
 
-        return $created;
+        return array_merge(['league' => $league], $created);
     }
 
     // ── Lógica interna ────────────────────────────────────────────────────
@@ -199,20 +206,17 @@ class LeagueGeneratorService
      */
     private function rankTeamsByState(): Collection
     {
-        // Pré-calcula força de todos os times num único query
-        $strengthByTeam = LeaguePlayer::select('league_team_id', DB::raw('AVG(strength) as avg_strength'))
-            ->join('league_teams', 'league_players.league_team_id', '=', 'league_teams.id')
-            ->groupBy('league_teams.team_id', 'league_players.league_team_id')
-            ->pluck('avg_strength', 'league_team_id')
+        $strengthByTeam = CompetitionPlayer::select('competition_team_id', DB::raw('AVG(strength) as avg_strength'))
+            ->join('competition_teams', 'competition_players.competition_team_id', '=', 'competition_teams.id')
+            ->groupBy('competition_teams.team_id', 'competition_players.competition_team_id')
+            ->pluck('avg_strength', 'competition_team_id')
             ->toArray();
 
-        // Mapeia league_team_id → team_id para resolução rápida
-        $teamIdByLeagueTeam = LeagueTeam::pluck('team_id', 'id')->toArray();
+        $teamIdByCompTeam = CompetitionTeam::pluck('team_id', 'id')->toArray();
 
-        // Força por team_id (média entre ligas, se o time esteve em mais de uma)
         $strengthByTeamId = [];
-        foreach ($strengthByTeam as $leagueTeamId => $avg) {
-            $teamId = $teamIdByLeagueTeam[$leagueTeamId] ?? null;
+        foreach ($strengthByTeam as $compTeamId => $avg) {
+            $teamId = $teamIdByCompTeam[$compTeamId] ?? null;
             if ($teamId) {
                 $strengthByTeamId[$teamId][] = (float) $avg;
             }
@@ -232,29 +236,33 @@ class LeagueGeneratorService
             ->sortKeys();
     }
 
-    /** Cria o registro de League com defaults de sistema. */
-    private function createLeague(array $data): League
+    /** Cria o registro de Competition dentro de um League com defaults de sistema. */
+    private function createCompetition(League $league, array $data): Competition
     {
-        return League::create(array_merge([
-            'type'            => League::ACCESS_PUBLIC,
-            'status'          => League::STATUS_WAITING,
-            'team_assignment' => 'random',
-            'invite_code'     => null,
+        return Competition::create(array_merge([
+            'league_id'      => $league->id,
+            'championship_id' => null,
+            'format'         => 'league',
+            'legs'           => 'double',
+            'teams_count'    => 0,
+            'status'         => Competition::STATUS_WAITING,
+            'current_round'  => 0,
+            'total_rounds'   => null,
         ], $data));
     }
 
     /**
-     * Cria LeagueTeam para cada time e copia os jogadores da liga de referência.
+     * Cria CompetitionTeam para cada time e copia os jogadores de referência.
      *
      * @param Collection<Team> $teams
      */
-    private function attachTeams(League $league, Collection $teams): void
+    private function attachTeams(Competition $competition, Collection $teams): void
     {
         foreach ($teams as $team) {
-            $leagueTeam = LeagueTeam::create([
-                'league_id'        => $league->id,
+            $compTeam = CompetitionTeam::create([
+                'competition_id'   => $competition->id,
                 'team_id'          => $team->id,
-                'user_id'          => null,          // CPU por padrão
+                'user_id'          => null,
                 'name'             => $team->name,
                 'tolerance'        => $team->tolerance,
                 'fans'             => $team->fans_base,
@@ -263,18 +271,17 @@ class LeagueGeneratorService
                 'ticket_price'     => $this->initialTicketPrice($team),
             ]);
 
-            $this->copyPlayers($team, $leagueTeam, $league);
+            $this->copyPlayers($team, $compTeam, $competition);
         }
     }
 
     /**
-     * Copia jogadores do LeagueTeam mais recente como referência.
-     * Reinicia fitness e form_factor para a nova temporada.
+     * Copia jogadores do CompetitionTeam mais recente como referência.
      */
-    private function copyPlayers(Team $team, LeagueTeam $newLeagueTeam, League $newLeague): void
+    private function copyPlayers(Team $team, CompetitionTeam $newCompTeam, Competition $newComp): void
     {
-        $ref = LeagueTeam::where('team_id', $team->id)
-            ->where('id', '!=', $newLeagueTeam->id)
+        $ref = CompetitionTeam::where('team_id', $team->id)
+            ->where('id', '!=', $newCompTeam->id)
             ->latest()
             ->first();
 
@@ -282,53 +289,44 @@ class LeagueGeneratorService
 
         $ref->players()
             ->whereIn('status', ['active', 'injured'])
-            ->each(function (LeaguePlayer $p) use ($newLeagueTeam, $newLeague) {
-                LeaguePlayer::create([
-                    'league_id'       => $newLeague->id,
-                    'league_team_id'  => $newLeagueTeam->id,
-                    'player_id'       => $p->player_id,
-                    'country_id'      => $p->country_id,
-                    'name'            => $p->name,
-                    'position'        => $p->position,
-                    'age'             => $p->age + 1, // envelhece uma temporada
-                    'strength'        => $p->strength,
-                    'stamina'         => $p->stamina,
-                    'potential'       => $p->potential,
-                    'status'          => 'active',    // todos começam saudáveis
-                    'wage'            => $p->wage,
-                    'market_value'    => $p->market_value,
-                    'form_factor'     => 1.0,         // reset do form
-                    'fitness'         => 100,          // reset do fitness
+            ->each(function (CompetitionPlayer $p) use ($newCompTeam, $newComp) {
+                CompetitionPlayer::create([
+                    'competition_id'      => $newComp->id,
+                    'competition_team_id' => $newCompTeam->id,
+                    'player_id'           => $p->player_id,
+                    'country_id'          => $p->country_id,
+                    'name'                => $p->name,
+                    'position'            => $p->position,
+                    'age'                 => $p->age + 1,
+                    'strength'            => $p->strength,
+                    'stamina'             => $p->stamina,
+                    'potential'           => $p->potential,
+                    'status'              => 'active',
+                    'wage'                => $p->wage,
+                    'market_value'        => $p->market_value,
+                    'form_factor'         => 1.0,
+                    'fitness'             => 100,
                 ]);
             });
     }
 
-    /**
-     * Orçamento inicial proporcional à base de fãs.
-     * ~R$ 0,50 por fã, mínimo R$ 2 milhões, máximo R$ 100 milhões.
-     */
     private function initialBudget(Team $team): int
     {
         return (int) min(100_000_000, max(2_000_000, $team->fans_base * 0.5));
     }
 
-    /**
-     * Preço do ingresso inicial: R$ 30–R$ 150 proporcional à popularidade.
-     */
     private function initialTicketPrice(Team $team): int
     {
-        $ratio = min(1.0, $team->fans_base / 30_000_000); // normaliza pelo maior torcedor
+        $ratio = min(1.0, $team->fans_base / 30_000_000);
         return (int) (30 + $ratio * 120);
     }
 
-    /** Nome do campeonato estadual: "Campeonato Paulista A1 2026". */
     private function stateName(string $code, int $year, string $div): string
     {
         $base = self::STATE_CHAMPIONSHIP_NAMES[$code] ?? "Campeonato Estadual ({$code})";
         return "{$base} {$div} {$year}";
     }
 
-    /** Slug URL: "campeonato-paulista-a1-2026". */
     private function slug(string ...$parts): string
     {
         return Str::slug(implode('-', $parts));

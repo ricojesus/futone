@@ -2,14 +2,13 @@
 
 namespace App\Services;
 
-use App\Models\League;
-use App\Models\LeagueChampionship;
-use App\Models\LeagueMatch;
+use App\Models\Competition;
+use App\Models\CompetitionMatch;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
- * Gera o calendário de pontos corridos (ida e volta) para uma liga.
+ * Gera o calendário de pontos corridos (ida e volta) para uma competição.
  *
  * Algoritmo: circle method (round-robin).
  * - N times pares: N-1 rodadas por turno.
@@ -23,37 +22,30 @@ class CalendarGeneratorService
     const DEFAULT_RELEGATION_SPOTS = 4;
 
     /**
-     * Cria o LeagueChampionship e todos os LeagueMatch da liga.
+     * Gera todos os CompetitionMatch da competição e actualiza seus totais.
      */
-    public function generate(League $league): LeagueChampionship
+    public function generate(Competition $competition): Competition
     {
-        $teamIds = $league->teams()->pluck('id')->shuffle()->values()->toArray();
+        $teamIds = $competition->teams()->pluck('id')->shuffle()->values()->toArray();
         $n       = count($teamIds);
 
         if ($n < 2) {
-            throw new \RuntimeException("Liga «{$league->name}» precisa de pelo menos 2 times para gerar o calendário.");
+            throw new \RuntimeException("Competição «{$competition->name}» precisa de pelo menos 2 times para gerar o calendário.");
         }
 
         // Rodadas: (N-1)*2 se par, N*2 se ímpar (cada turno tem bye)
         $roundsPerLeg = ($n % 2 === 0) ? ($n - 1) : $n;
         $totalRounds  = $roundsPerLeg * 2; // ida + volta
 
-        // ── Campeonato ────────────────────────────────────────────────────
-        $championship = LeagueChampionship::create([
-            'league_id'         => $league->id,
-            'championship_id'   => null,
-            'name'              => $league->name,
-            'type'              => 'league',
-            'legs'              => 'double',
-            'teams_count'       => $n,
-            'promotion_spots'   => $league->isSecondDivision() ? self::DEFAULT_PROMOTION_SPOTS : null,
-            'relegation_spots'  => $league->isFirstDivision()  ? self::DEFAULT_RELEGATION_SPOTS : null,
-            'status'            => 'waiting',
-            'current_round'     => 0,
-            'total_rounds'      => $totalRounds,
+        // ── Atualiza metadados da competição ────────────────────────────
+        $competition->update([
+            'teams_count'  => $n,
+            'total_rounds' => $totalRounds,
+            'promotion_spots'   => $competition->isSecondDivision() ? self::DEFAULT_PROMOTION_SPOTS : null,
+            'relegation_spots'  => $competition->isFirstDivision()  ? self::DEFAULT_RELEGATION_SPOTS : null,
         ]);
 
-        // ── Fixtures ──────────────────────────────────────────────────────
+        // ── Fixtures ──────────────────────────────────────────────────
         $firstLeg  = $this->buildRoundRobin($teamIds);
         $secondLeg = $this->invertLegs($firstLeg, $roundsPerLeg);
 
@@ -66,38 +58,37 @@ class CalendarGeneratorService
 
             foreach ($fixtures as [$homeId, $awayId]) {
                 $rows[] = [
-                    'id'                      => (string) Str::uuid(),
-                    'league_championship_id'  => $championship->id,
-                    'league_id'               => $league->id,
-                    'home_team_id'            => $homeId,
-                    'away_team_id'            => $awayId,
-                    'round'                   => $round,
-                    'leg'                     => $leg,
-                    'status'                  => 'scheduled',
-                    'home_score'              => null,
-                    'away_score'              => null,
-                    'winner_team_id'          => null,
-                    'scheduled_at'            => null,
-                    'played_at'               => null,
-                    'created_at'              => $now,
-                    'updated_at'              => $now,
+                    'id'             => (string) Str::uuid(),
+                    'competition_id' => $competition->id,
+                    'home_team_id'   => $homeId,
+                    'away_team_id'   => $awayId,
+                    'round'          => $round,
+                    'leg'            => $leg,
+                    'status'         => 'scheduled',
+                    'home_score'     => null,
+                    'away_score'     => null,
+                    'winner_team_id' => null,
+                    'data'           => null,
+                    'scheduled_at'   => null,
+                    'played_at'      => null,
+                    'created_at'     => $now,
+                    'updated_at'     => $now,
                 ];
             }
         }
 
         // Bulk insert para performance
         foreach (array_chunk($rows, 200) as $chunk) {
-            LeagueMatch::insert($chunk);
+            CompetitionMatch::insert($chunk);
         }
 
-        return $championship;
+        return $competition->fresh();
     }
 
     // ── Algoritmo round-robin (circle method) ────────────────────────────
 
     /**
      * Retorna array de rodadas para o turno de ida.
-     * Cada rodada é um array de [home_id, away_id].
      *
      * @param  array<string>  $teams  IDs dos times (já embaralhados)
      * @return array<array<array<string>>>
@@ -108,7 +99,7 @@ class CalendarGeneratorService
         $hasBye = $n % 2 !== 0;
 
         if ($hasBye) {
-            $teams[] = null; // time fictício = folga
+            $teams[] = null;
             $n++;
         }
 
@@ -123,7 +114,6 @@ class CalendarGeneratorService
                 $away = $teams[$n - 1 - $i];
 
                 if ($home !== null && $away !== null) {
-                    // Alterna mandante/visitante por rodada para distribuir jogos em casa
                     $fixtures[] = ($round % 2 === 0)
                         ? [$home, $away]
                         : [$away, $home];
@@ -143,10 +133,10 @@ class CalendarGeneratorService
     }
 
     /**
-     * Gera o turno de volta invertendo mandante/visitante e offset de rodada.
+     * Gera o turno de volta invertendo mandante/visitante.
      *
      * @param  array<array<array<string>>>  $firstLeg
-     * @param  int                          $offset    número de rodadas do turno de ida
+     * @param  int                          $offset
      */
     private function invertLegs(array $firstLeg, int $offset): array
     {

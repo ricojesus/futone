@@ -6,14 +6,16 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class LeagueTransferOffer extends Model
+class CompetitionTransferOffer extends Model
 {
     use HasUuids;
+
+    protected $table = 'competition_transfer_offers';
 
     protected $fillable = [
         'listing_id',
         'buyer_team_id',
-        'league_player_id',
+        'competition_player_id',
         'offered_fee',
         'offered_wage',
         'contract_rounds',
@@ -28,18 +30,17 @@ class LeagueTransferOffer extends Model
 
     public function listing(): BelongsTo
     {
-        return $this->belongsTo(LeagueTransferListing::class, 'listing_id');
+        return $this->belongsTo(CompetitionTransferListing::class, 'listing_id');
     }
 
     public function buyerTeam(): BelongsTo
     {
-        return $this->belongsTo(LeagueTeam::class, 'buyer_team_id');
+        return $this->belongsTo(CompetitionTeam::class, 'buyer_team_id');
     }
 
-    /** Jogador alvo — via listing ou diretamente (free agent) */
     public function player(): BelongsTo
     {
-        return $this->belongsTo(LeaguePlayer::class, 'league_player_id');
+        return $this->belongsTo(CompetitionPlayer::class, 'competition_player_id');
     }
 
     public function isPending(): bool     { return $this->status === 'pending'; }

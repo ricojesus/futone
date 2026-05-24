@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class LeagueTeam extends Model
+class CompetitionTeam extends Model
 {
     use HasUuids;
 
+    protected $table = 'competition_teams';
+
     protected $fillable = [
-        'league_id',
+        'competition_id',
         'team_id',
         'user_id',
         'coach_id',
@@ -31,9 +33,11 @@ class LeagueTeam extends Model
         'goals_against',
     ];
 
-    public function league(): BelongsTo
+    // ── Relacionamentos ───────────────────────────────────────────────────
+
+    public function competition(): BelongsTo
     {
-        return $this->belongsTo(League::class, 'league_id');
+        return $this->belongsTo(Competition::class, 'competition_id');
     }
 
     public function team(): BelongsTo
@@ -53,49 +57,49 @@ class LeagueTeam extends Model
 
     public function players(): HasMany
     {
-        return $this->hasMany(LeaguePlayer::class, 'league_team_id');
+        return $this->hasMany(CompetitionPlayer::class, 'competition_team_id');
     }
 
     public function transactions(): HasMany
     {
-        return $this->hasMany(LeagueTransaction::class, 'league_team_id');
+        return $this->hasMany(CompetitionTransaction::class, 'competition_team_id');
     }
 
     public function transferListings(): HasMany
     {
-        return $this->hasMany(LeagueTransferListing::class, 'seller_team_id');
+        return $this->hasMany(CompetitionTransferListing::class, 'seller_team_id');
     }
 
     public function transferOffers(): HasMany
     {
-        return $this->hasMany(LeagueTransferOffer::class, 'buyer_team_id');
+        return $this->hasMany(CompetitionTransferOffer::class, 'buyer_team_id');
     }
 
     public function transfersIn(): HasMany
     {
-        return $this->hasMany(LeagueTransfer::class, 'to_team_id');
+        return $this->hasMany(CompetitionTransfer::class, 'to_team_id');
     }
 
     public function transfersOut(): HasMany
     {
-        return $this->hasMany(LeagueTransfer::class, 'from_team_id');
+        return $this->hasMany(CompetitionTransfer::class, 'from_team_id');
     }
 
     public function lineups(): HasMany
     {
-        return $this->hasMany(LeagueLineup::class, 'league_team_id');
+        return $this->hasMany(CompetitionLineup::class, 'competition_team_id');
     }
 
     /**
      * Escalação ativa para uma rodada específica.
      * Retorna o override da rodada se existir, senão a escalação padrão (round=0).
      */
-    public function activeLineup(int $round = 0): ?LeagueLineup
+    public function activeLineup(int $round = 0): ?CompetitionLineup
     {
         return $this->lineups()
             ->where('status', 'active')
             ->whereIn('round', [$round, 0])
-            ->orderByDesc('round')   // prefere override de rodada ao padrão
+            ->orderByDesc('round')
             ->first();
     }
 
@@ -109,7 +113,6 @@ class LeagueTeam extends Model
         return $this->goals_for - $this->goals_against;
     }
 
-    /** Demite o treinador se satisfaction < tolerance */
     public function shouldFireCoach(): bool
     {
         return $this->satisfaction < $this->tolerance;

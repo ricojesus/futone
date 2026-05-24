@@ -6,12 +6,14 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class LeagueTransaction extends Model
+class CompetitionTransaction extends Model
 {
     use HasUuids;
 
+    protected $table = 'competition_transactions';
+
     protected $fillable = [
-        'league_team_id',
+        'competition_team_id',
         'type',
         'amount',
         'description',
@@ -22,9 +24,9 @@ class LeagueTransaction extends Model
         'amount' => 'integer',
     ];
 
-    public function leagueTeam(): BelongsTo
+    public function competitionTeam(): BelongsTo
     {
-        return $this->belongsTo(LeagueTeam::class, 'league_team_id');
+        return $this->belongsTo(CompetitionTeam::class, 'competition_team_id');
     }
 
     public function isCredit(): bool

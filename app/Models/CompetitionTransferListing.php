@@ -7,14 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class LeagueTransferListing extends Model
+class CompetitionTransferListing extends Model
 {
     use HasUuids;
 
+    protected $table = 'competition_transfer_listings';
+
     protected $fillable = [
-        'league_id',
+        'competition_id',
         'seller_team_id',
-        'league_player_id',
+        'competition_player_id',
         'asking_price',
         'min_acceptable',
         'status',
@@ -27,24 +29,24 @@ class LeagueTransferListing extends Model
         'expires_at' => 'datetime',
     ];
 
-    public function league(): BelongsTo
+    public function competition(): BelongsTo
     {
-        return $this->belongsTo(League::class, 'league_id');
+        return $this->belongsTo(Competition::class, 'competition_id');
     }
 
     public function sellerTeam(): BelongsTo
     {
-        return $this->belongsTo(LeagueTeam::class, 'seller_team_id');
+        return $this->belongsTo(CompetitionTeam::class, 'seller_team_id');
     }
 
     public function player(): BelongsTo
     {
-        return $this->belongsTo(LeaguePlayer::class, 'league_player_id');
+        return $this->belongsTo(CompetitionPlayer::class, 'competition_player_id');
     }
 
     public function offers(): HasMany
     {
-        return $this->hasMany(LeagueTransferOffer::class, 'listing_id');
+        return $this->hasMany(CompetitionTransferOffer::class, 'listing_id');
     }
 
     public function isOpen(): bool
@@ -52,7 +54,6 @@ class LeagueTransferListing extends Model
         return $this->status === 'open';
     }
 
-    /** Verifica se uma proposta cobre o mínimo aceitável pelo clube */
     public function acceptsFee(int $fee): bool
     {
         return $fee >= $this->min_acceptable;
