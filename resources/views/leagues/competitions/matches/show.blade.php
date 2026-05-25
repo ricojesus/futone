@@ -453,7 +453,7 @@ function matchReplay() {
                 if (feed) feed.scrollTop = 0;
             });
 
-            const delay = Math.max(50, Math.round(900 / this.speed));
+            const delay = Math.max(50, Math.round(3600 / this.speed));
             this.timer = setTimeout(() => this.tick(), delay);
         },
     };

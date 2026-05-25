@@ -9,6 +9,58 @@
         <div class="border-b border-sky-500/20 bg-sky-500/5 px-4 py-3 text-sm text-sky-400 text-center">{{ session('info') }}</div>
     @endif
 
+    {{-- ── Polling de rodada (apenas para não-donos em competições em andamento) ── --}}
+    @if (! $isOwner && $competition->isInProgress())
+    <div
+        x-data="roundPoller({
+            statusUrl: '{{ route('competitions.round-status', [$league, $competition]) }}',
+            currentRound: {{ $competition->current_round }},
+            competitionUrl: '{{ route('competitions.show', [$league, $competition]) }}'
+        })"
+        x-init="start()"
+        @keydown.escape.window="dismiss()"
+    >
+        {{-- Toast de nova rodada --}}
+        <div
+            x-show="toast"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 -translate-y-4"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 -translate-y-4"
+            class="fixed top-4 left-1/2 z-50 -translate-x-1/2 w-full max-w-sm px-4"
+            style="display:none"
+        >
+            <div class="rounded-2xl border border-emerald-500/40 bg-slate-900 shadow-2xl shadow-black/60 overflow-hidden">
+                <div class="flex items-start gap-3 p-4">
+                    <span class="shrink-0 mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 text-base">⚽</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-white text-sm" x-text="toastTitle"></p>
+                        <p class="text-xs text-slate-400 mt-0.5" x-text="toastBody"></p>
+                    </div>
+                    <button @click="dismiss()" class="shrink-0 text-slate-600 hover:text-slate-300 transition text-lg leading-none">&times;</button>
+                </div>
+                <div class="px-4 pb-4 flex gap-2">
+                    <a :href="matchUrl ?? competitionUrl"
+                       class="flex-1 rounded-xl bg-emerald-500 px-3 py-2 text-center text-xs font-bold text-white hover:bg-emerald-400 transition"
+                       x-text="matchUrl ? 'Assistir meu jogo' : 'Ver rodada'">
+                    </a>
+                    <button @click="dismiss()"
+                        class="rounded-xl border border-slate-700 px-3 py-2 text-xs text-slate-400 hover:text-white transition">
+                        Fechar
+                    </button>
+                </div>
+                {{-- Barra de progresso do timer de auto-redirect --}}
+                <div x-show="matchUrl" class="h-1 bg-slate-800">
+                    <div class="h-full bg-emerald-500 transition-all duration-1000"
+                         :style="'width:' + timerPct + '%'"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Header --}}
     <div class="relative overflow-hidden border-b border-slate-800 bg-slate-900">
         <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(16,185,129,0.07),transparent_60%)]"></div>
@@ -284,4 +336,77 @@
             </div>
         </div>
     </div>
+
+@if (! $isOwner && $competition->isInProgress())
+@push('scripts')
+<script>
+function roundPoller({ statusUrl, currentRound, competitionUrl }) {
+    return {
+        knownRound:     currentRound,
+        toast:          false,
+        toastTitle:     '',
+        toastBody:      '',
+        matchUrl:       null,
+        competitionUrl: competitionUrl,
+        timerPct:       100,
+        _timer:         null,
+        _interval:      null,
+
+        start() {
+            // Polling a cada 20 segundos
+            this._interval = setInterval(() => this.poll(), 20_000);
+        },
+
+        async poll() {
+            try {
+                const res  = await fetch(statusUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const data = await res.json();
+
+                if (data.current_round > this.knownRound) {
+                    this.knownRound = data.current_round;
+                    this.matchUrl   = data.my_match_url ?? null;
+                    this.showToast(data.current_round);
+                }
+
+                // Para de fazer polling se a competição encerrou
+                if (data.status === 'finished') {
+                    clearInterval(this._interval);
+                }
+            } catch (_) {
+                // Silencia erros de rede — tenta novamente no próximo tick
+            }
+        },
+
+        showToast(round) {
+            this.toastTitle = `Rodada ${round} disponível!`;
+            this.toastBody  = this.matchUrl
+                ? 'Seu jogo foi simulado. Assista agora.'
+                : `A rodada ${round} foi simulada. Veja os resultados.`;
+            this.toast    = true;
+            this.timerPct = 100;
+
+            // Se tem partida do usuário: auto-redirect em 8s com barra de progresso
+            if (this.matchUrl) {
+                let elapsed = 0;
+                this._timer = setInterval(() => {
+                    elapsed     += 1000;
+                    this.timerPct = Math.max(0, 100 - (elapsed / 20000) * 100);
+                    if (elapsed >= 20000) {
+                        clearInterval(this._timer);
+                        window.location.href = this.matchUrl;
+                    }
+                }, 1000);
+            }
+        },
+
+        dismiss() {
+            this.toast = false;
+            clearInterval(this._timer);
+        },
+    };
+}
+</script>
+@endpush
+@endif
+
 </x-app-layout>

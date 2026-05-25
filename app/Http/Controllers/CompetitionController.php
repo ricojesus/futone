@@ -10,6 +10,7 @@ use App\Models\CompetitionTeam;
 use App\Models\League;
 use App\Models\LeagueTeam;
 use App\Models\Team;
+use App\Services\LiveMatchSimulator;
 use App\Services\MatchSimulator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -65,6 +66,47 @@ class CompetitionController extends Controller
         return view('leagues.competitions.show', compact(
             'league', 'competition', 'matchesByRound', 'myLeagueTeam', 'myTeam', 'standings', 'isOwner', 'topScorers'
         ));
+    }
+
+    /**
+     * Retorna o estado atual da competição para polling do cliente.
+     * Resposta leve: rodada atual, status e (se o usuário tiver time) URL da sua partida na rodada mais recente.
+     */
+    public function roundStatus(League $league, Competition $competition)
+    {
+        abort_unless($competition->league_id === $league->id, 404);
+
+        $myLeagueTeam = LeagueTeam::where('league_id', $league->id)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        $myMatchUrl = null;
+
+        if ($myLeagueTeam && $competition->current_round > 0) {
+            $myCompTeam = CompetitionTeam::where('competition_id', $competition->id)
+                ->where('league_team_id', $myLeagueTeam->id)
+                ->first();
+
+            if ($myCompTeam) {
+                $myMatch = CompetitionMatch::where('competition_id', $competition->id)
+                    ->where('round', $competition->current_round)
+                    ->where('status', 'finished')
+                    ->where(function ($q) use ($myCompTeam) {
+                        $q->where('home_team_id', $myCompTeam->id)
+                          ->orWhere('away_team_id', $myCompTeam->id);
+                    })->first();
+
+                if ($myMatch) {
+                    $myMatchUrl = route('matches.show', [$league, $competition, $myMatch, 'replay' => 1]);
+                }
+            }
+        }
+
+        return response()->json([
+            'current_round' => $competition->current_round,
+            'status'        => $competition->status,
+            'my_match_url'  => $myMatchUrl,
+        ]);
     }
 
     /**
@@ -131,9 +173,17 @@ class CompetitionController extends Controller
     /**
      * Simula todas as partidas da próxima rodada desta competição.
      * Só o dono da liga pode acionar.
+     *
+     * Partidas CPU × CPU  → simuladas instantaneamente (MatchSimulator)
+     * Partidas CPU × Humano → primeiro tempo simulado, aguarda intervalo (LiveMatchSimulator)
      */
-    public function advanceRound(Request $request, League $league, Competition $competition, MatchSimulator $simulator)
-    {
+    public function advanceRound(
+        Request             $request,
+        League              $league,
+        Competition         $competition,
+        MatchSimulator      $simulator,
+        LiveMatchSimulator  $liveSimulator,
+    ) {
         abort_unless($competition->league_id === $league->id, 404);
         abort_unless($league->owner_id === auth()->id(), 403);
         abort_unless($competition->isInProgress(), 409, 'Competição não está em andamento.');
@@ -146,7 +196,7 @@ class CompetitionController extends Controller
 
         $matches = $competition->matches()
             ->where('round', $nextRound)
-            ->where('status', '!=', 'finished')
+            ->whereNotIn('status', ['finished', 'halftime'])
             ->with(['homeTeam.leagueTeam', 'awayTeam.leagueTeam'])
             ->get();
 
@@ -154,11 +204,16 @@ class CompetitionController extends Controller
             return back()->with('info', 'Todas as partidas desta rodada já foram simuladas.');
         }
 
-        DB::transaction(function () use ($matches, $simulator, $competition, $nextRound) {
-            // 1. Recuperação parcial antes da rodada (descanso desde a última)
+        // Separa partidas por tipo de motor
+        $cpuMatches  = $matches->filter(fn($m) => $this->isCpuMatch($m));
+        $liveMatches = $matches->filter(fn($m) => ! $this->isCpuMatch($m));
+
+        DB::transaction(function () use ($cpuMatches, $liveMatches, $simulator, $liveSimulator, $competition, $nextRound) {
+            // 1. Recuperação parcial de fitness antes da rodada
             $this->applyFitnessRecovery($competition);
 
-            foreach ($matches as $match) {
+            // ── CPU × CPU: simula tudo agora ────────────────────────
+            foreach ($cpuMatches as $match) {
                 $result = $simulator->simulate($match);
 
                 $winnerId = null;
@@ -211,21 +266,33 @@ class CompetitionController extends Controller
                 $awayTeam->increment('goals_against',  $result['home_score']);
             }
 
-            $competition->increment('current_round');
-
-            // Se foi a última rodada, encerra a competição
-            if ($competition->current_round >= $competition->total_rounds) {
-                $competition->update(['status' => Competition::STATUS_FINISHED]);
+            // ── CPU × Humano: simula primeiro tempo, aguarda intervalo ──
+            foreach ($liveMatches as $match) {
+                $liveSimulator->simulateFirstHalf($match);
+                // Status da partida → 'halftime' (salvo dentro do simulador)
+                // A rodada SÓ avança quando o segundo tempo for concluído
             }
 
-            // 2. Contabilizar gols por jogador (artilharia)
-            $this->applyGoalsScored($matches);
+            // A rodada avança apenas se todos os jogos da rodada estão finalizados
+            // (sem partidas em halftime pendentes)
+            $hasPendingLive = $liveMatches->isNotEmpty();
 
-            // 3. Desgaste físico após os jogos desta rodada
-            $this->applyFitnessDegradation($matches);
+            if (! $hasPendingLive) {
+                $competition->increment('current_round');
+
+                if ($competition->current_round >= $competition->total_rounds) {
+                    $competition->update(['status' => Competition::STATUS_FINISHED]);
+                }
+            }
+
+            // 2. Contabilizar gols por jogador (artilharia) — apenas CPU matches finalizados
+            $this->applyGoalsScored($cpuMatches);
+
+            // 3. Desgaste físico para os times que jogaram (CPU matches)
+            $this->applyFitnessDegradation($cpuMatches);
         });
 
-        // Se o usuário tem um time nesta competição, redireciona para assistir à partida dele
+        // Se o dono tem um time que joga ao vivo nesta rodada, redireciona para o intervalo
         $myLeagueTeam = LeagueTeam::where('league_id', $league->id)
             ->where('user_id', auth()->id())
             ->first();
@@ -244,16 +311,35 @@ class CompetitionController extends Controller
                     })->first();
 
                 if ($myMatch) {
-                    return redirect()->route('matches.show', [$league, $competition, $myMatch, 'replay' => 1]);
+                    $route = $myMatch->status === 'halftime'
+                        ? route('matches.halftime', [$league, $competition, $myMatch])
+                        : route('matches.show', [$league, $competition, $myMatch, 'replay' => 1]);
+
+                    return redirect($route);
                 }
             }
         }
 
-        return redirect()->route('competitions.show', [$league, $competition])
-            ->with('success', "Rodada {$nextRound} simulada! {$matches->count()} partidas jogadas.");
+        $liveCount = $liveMatches->count();
+        $cpuCount  = $cpuMatches->count();
+        $msg = $liveCount > 0
+            ? "{$cpuCount} partidas simuladas. {$liveCount} partida(s) aguardando o intervalo."
+            : "Rodada {$nextRound} simulada! {$cpuCount} partidas jogadas.";
+
+        return redirect()->route('competitions.show', [$league, $competition])->with('success', $msg);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────
+
+    /**
+     * Retorna true se ambos os times da partida são CPU (sem usuário humano).
+     * Partidas com pelo menos um lado humano usam o LiveMatchSimulator.
+     */
+    private function isCpuMatch(CompetitionMatch $match): bool
+    {
+        return $match->homeTeam->leagueTeam->isCpu()
+            && $match->awayTeam->leagueTeam->isCpu();
+    }
 
     /**
      * Bloqueia o acesso ao formulário de inscrição se:

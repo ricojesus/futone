@@ -51,10 +51,13 @@ Route::middleware('auth')->group(function () {
 
     // Competitions (dentro de uma liga)
     Route::get( '/leagues/{league}/competitions/{competition}',                    [CompetitionController::class, 'show'])->name('competitions.show');
+    Route::get( '/leagues/{league}/competitions/{competition}/round-status',       [CompetitionController::class, 'roundStatus'])->name('competitions.round-status');
     Route::get( '/leagues/{league}/competitions/{competition}/join',               [CompetitionController::class, 'join'])->name('competitions.join');
     Route::post('/leagues/{league}/competitions/{competition}/join',               [CompetitionController::class, 'joinStore'])->name('competitions.join.store');
     Route::post('/leagues/{league}/competitions/{competition}/advance-round',      [CompetitionController::class, 'advanceRound'])->name('competitions.advance-round');
-    Route::get( '/leagues/{league}/competitions/{competition}/matches/{match}',   [MatchController::class, 'show'])->name('matches.show');
+    Route::get(  '/leagues/{league}/competitions/{competition}/matches/{match}',          [MatchController::class, 'show'])->name('matches.show');
+    Route::get(  '/leagues/{league}/competitions/{competition}/matches/{match}/halftime', [MatchController::class, 'halftime'])->name('matches.halftime');
+    Route::post( '/leagues/{league}/competitions/{competition}/matches/{match}/halftime', [MatchController::class, 'resumeSecondHalf'])->name('matches.halftime.resume');
 });
 
 Route::middleware('auth')->group(function () {
