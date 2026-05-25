@@ -97,8 +97,8 @@
                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($myLeagues->take(6) as $league)
                         @php
-                            $championship = $league->championships->first();
                             $isOwner = $league->owner_id === auth()->id();
+                            $compCount = $league->competitions->count();
                         @endphp
                         <a href="{{ route('leagues.show', $league) }}"
                             class="flex items-center gap-4 rounded-2xl border border-slate-700 bg-slate-900 p-4 transition hover:border-emerald-500/30 hover:bg-slate-800/60">
@@ -115,8 +115,8 @@
                             <div class="min-w-0 flex-1">
                                 <p class="text-sm font-semibold text-white truncate">{{ $league->name }}</p>
                                 <p class="text-xs text-slate-500 truncate">
-                                    {{ $championship?->name ?? '—' }}
-                                    · {{ $league->teams->count() }}/{{ $league->max_teams }} times
+                                    {{ $compCount }} {{ $compCount === 1 ? 'competição' : 'competições' }}
+                                    · Temporada {{ $league->season }}
                                 </p>
                             </div>
                             @if ($isOwner)

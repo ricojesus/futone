@@ -12,9 +12,9 @@ class UserDashboardController extends Controller
 
         $myLeagues = League::where(function ($q) use ($user) {
                 $q->where('owner_id', $user->id)
-                  ->orWhereHas('teams', fn ($q2) => $q2->where('user_id', $user->id));
+                  ->orWhereHas('competitions.teams', fn ($q2) => $q2->where('user_id', $user->id));
             })
-            ->with(['championships', 'teams'])
+            ->with(['competitions'])
             ->latest()
             ->limit(6)
             ->get();

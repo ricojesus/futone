@@ -201,7 +201,7 @@ class TransferService
         $seller  = $listing->sellerTeam;
 
         DB::transaction(function () use ($offer, $listing, $player, $buyer, $seller) {
-            $currentChampionship = $buyer->league->championships()->first();
+            $currentChampionship = $buyer->competition;
             $currentRound = $currentChampionship?->current_round ?? 0;
             $contractUntil = $currentRound + $offer->contract_rounds;
 
@@ -254,7 +254,7 @@ class TransferService
         LeagueTeam $buyer,
     ): void {
         DB::transaction(function () use ($offer, $player, $buyer) {
-            $currentChampionship = $buyer->league->championships()->first();
+            $currentChampionship = $buyer->competition;
             $currentRound = $currentChampionship?->current_round ?? 0;
             $contractUntil = $currentRound + $offer->contract_rounds;
 
