@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\League;
+use App\Services\LeagueGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -57,6 +58,33 @@ class LeagueController extends Controller
         $isOwner  = $league->owner_id === auth()->id();
 
         return view('leagues.show', compact('league', 'isOwner'));
+    }
+
+    public function generate(Request $request, League $league, LeagueGeneratorService $generator)
+    {
+        abort_unless(auth()->id() === $league->owner_id, 403);
+        abort_unless($league->competitions()->count() === 0, 409, 'Esta liga já possui competições.');
+
+        try {
+            $result = $generator->generateForLeague($league);
+        } catch (\Throwable $e) {
+            return redirect()->route('leagues.show', $league)
+                ->with('error', 'Erro ao gerar competições: ' . $e->getMessage());
+        }
+
+        $total = count($result['state']) + count($result['national']);
+
+        // Inicia a liga automaticamente ao gerar as competições
+        if ($league->isWaiting()) {
+            $league->update([
+                'status'     => League::STATUS_IN_PROGRESS,
+                'started_at' => now(),
+            ]);
+            $league->competitions()->update(['status' => 'in_progress']);
+        }
+
+        return redirect()->route('leagues.show', $league)
+            ->with('success', "{$total} competições geradas com sucesso!");
     }
 
     public function start(Request $request, League $league)

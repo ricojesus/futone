@@ -73,7 +73,17 @@
 
                 {{-- Ações principais --}}
                 <div class="flex shrink-0 flex-col gap-2 sm:items-end">
-                    @if ($isOwner && $league->isWaiting())
+                    @if ($isOwner && $league->competitions->isEmpty())
+                        <form action="{{ route('leagues.generate', $league) }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                class="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-emerald-400 active:scale-95"
+                                onclick="return confirm('Gerar os campeonatos desta temporada agora?')">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
+                                Gerar Competições
+                            </button>
+                        </form>
+                    @elseif ($isOwner && $league->isWaiting())
                         <form action="{{ route('leagues.start', $league) }}" method="POST">
                             @csrf
                             <button type="submit"

@@ -37,7 +37,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/leagues/join',   [LeagueJoinController::class, 'store'])->name('leagues.join.store');
 
     Route::get('/leagues/{league}',        [LeagueController::class, 'show'])->name('leagues.show');
-    Route::post('/leagues/{league}/start', [LeagueController::class, 'start'])->name('leagues.start');
+    Route::post('/leagues/{league}/start',    [LeagueController::class, 'start'])->name('leagues.start');
+    Route::post('/leagues/{league}/generate', [LeagueController::class, 'generate'])->name('leagues.generate');
 
     // Team enrollment
     Route::get('/leagues/{league}/join',   [LeagueTeamController::class, 'create'])->name('leagues.teams.create');

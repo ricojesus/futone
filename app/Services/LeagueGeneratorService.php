@@ -80,8 +80,39 @@ class LeagueGeneratorService
      *
      * @return array{league: League, state: Competition[], national: Competition[]}
      */
+    /**
+     * Cria um novo League (mundo) e gera todas as competições da temporada.
+     * Usado pelo comando artisan `leagues:generate`.
+     *
+     * @return array{league: League, state: Competition[], national: Competition[]}
+     */
     public function generateSeason(int $year, User $admin): array
     {
+        $league = League::create([
+            'name'        => "Temporada {$year}",
+            'slug'        => "temporada-{$year}-" . Str::lower(Str::random(4)),
+            'owner_id'    => $admin->id,
+            'type'        => League::ACCESS_PUBLIC,
+            'invite_code' => null,
+            'status'      => League::STATUS_IN_PROGRESS,
+            'season'      => $year,
+            'started_at'  => now(),
+        ]);
+
+        $created = $this->generateForLeague($league);
+
+        return array_merge(['league' => $league], $created);
+    }
+
+    /**
+     * Gera todas as competições de uma temporada dentro de um League já existente.
+     * Usado quando o usuário cria a liga manualmente e aciona "Gerar competições".
+     *
+     * @return array{state: Competition[], national: Competition[]}
+     */
+    public function generateForLeague(League $league): array
+    {
+        $year       = (int) $league->season;
         $stateTeams = $this->rankTeamsByState();
 
         if ($stateTeams->isEmpty()) {
@@ -89,27 +120,14 @@ class LeagueGeneratorService
         }
 
         $created = ['state' => [], 'national' => []];
-        $league  = null;
 
         $poolSerieA = collect();
         $poolSerieB = collect();
 
         DB::transaction(function () use (
-            $year, $admin, $stateTeams,
-            &$league, &$created, &$poolSerieA, &$poolSerieB,
+            $year, $league, $stateTeams,
+            &$created, &$poolSerieA, &$poolSerieB,
         ) {
-            // ── Cria o League (mundo) ──────────────────────────────────────
-            $league = League::create([
-                'name'        => "Temporada {$year}",
-                'slug'        => "temporada-{$year}-" . Str::lower(Str::random(4)),
-                'owner_id'    => $admin->id,
-                'type'        => League::ACCESS_PUBLIC,
-                'invite_code' => null,
-                'status'      => League::STATUS_IN_PROGRESS,
-                'season'      => $year,
-                'started_at'  => now(),
-            ]);
-
             foreach ($stateTeams as $stateCode => $teams) {
                 $state = State::where('code', $stateCode)->first();
                 if (! $state) continue;
@@ -194,7 +212,7 @@ class LeagueGeneratorService
             }
         });
 
-        return array_merge(['league' => $league], $created);
+        return $created;
     }
 
     // ── Lógica interna ────────────────────────────────────────────────────
