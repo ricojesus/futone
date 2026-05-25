@@ -124,38 +124,63 @@
             @else
                 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($league->competitions as $competition)
-                        <div class="flex flex-col rounded-2xl border border-slate-700 bg-slate-900 p-5 transition hover:border-emerald-500/30">
+                        @php
+                            $myTeamInComp = $competition->teams->firstWhere('user_id', auth()->id());
+                        @endphp
+                        <div class="flex flex-col rounded-2xl border border-slate-700 bg-slate-900 p-5 transition hover:border-slate-600">
+
+                            {{-- Topo: nome + status --}}
                             <div class="mb-3 flex items-start justify-between gap-2">
                                 <div>
                                     <h3 class="font-bold text-white leading-snug">{{ $competition->name }}</h3>
-                                    <p class="text-xs text-slate-500 mt-0.5">{{ $competition->divisionLabel() }}</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">
+                                        {{ $competition->divisionLabel() }}
+                                        @if ($competition->isStateChampionship() && $competition->state)
+                                            · {{ $competition->state->code }}
+                                        @elseif ($competition->isNationalChampionship())
+                                            · Nacional
+                                        @endif
+                                    </p>
                                 </div>
                                 @if ($competition->isWaiting())
                                     <span class="shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-400">Aguardando</span>
                                 @elseif ($competition->isInProgress())
-                                    <span class="shrink-0 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-400">Em andamento</span>
+                                    <span class="shrink-0 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-400">
+                                        Rod. {{ $competition->current_round }}/{{ $competition->total_rounds }}
+                                    </span>
                                 @else
                                     <span class="shrink-0 rounded-full border border-slate-600 bg-slate-800 px-2 py-0.5 text-xs font-semibold text-slate-400">Encerrada</span>
                                 @endif
                             </div>
 
-                            <div class="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+                            {{-- Info --}}
+                            <div class="flex items-center gap-3 text-xs text-slate-500 mb-4">
                                 <span>{{ $competition->teams_count }} times</span>
                                 @if ($competition->total_rounds)
+                                    <span>·</span>
                                     <span>{{ $competition->total_rounds }} rodadas</span>
-                                @endif
-                                @if ($competition->isStateChampionship() && $competition->state)
-                                    <span>{{ $competition->state->code }}</span>
-                                @elseif ($competition->isNationalChampionship())
-                                    <span>Nacional</span>
                                 @endif
                             </div>
 
-                            @if ($competition->isInProgress() && $competition->current_round > 0)
-                                <div class="mt-3 text-xs text-emerald-400">
-                                    Rodada {{ $competition->current_round }}/{{ $competition->total_rounds }}
-                                </div>
-                            @endif
+                            {{-- Time do usuário ou ação --}}
+                            <div class="mt-auto flex items-center justify-between gap-2 border-t border-slate-800 pt-3">
+                                @if ($myTeamInComp)
+                                    <span class="text-xs text-emerald-400 font-medium truncate">⚽ {{ $myTeamInComp->name }}</span>
+                                @elseif ($competition->isWaiting())
+                                    <a href="{{ route('competitions.join', [$league, $competition]) }}"
+                                        class="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition">
+                                        + Escolher time
+                                    </a>
+                                @else
+                                    <span class="text-xs text-slate-600">Sem time</span>
+                                @endif
+
+                                <a href="{{ route('competitions.show', [$league, $competition]) }}"
+                                    class="shrink-0 inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-slate-600 hover:text-white transition">
+                                    Ver agenda
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                                </a>
+                            </div>
                         </div>
                     @endforeach
                 </div>

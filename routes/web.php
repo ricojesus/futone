@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\PlayerController;
 use App\Http\Controllers\Admin\StateController;
 use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\CompetitionController;
 use App\Http\Controllers\LeagueController;
 use App\Http\Controllers\LeagueJoinController;
 use App\Http\Controllers\LeagueTeamController;
@@ -45,6 +46,11 @@ Route::middleware('auth')->group(function () {
     // Lineup management — {leagueTeam} resolves to a CompetitionTeam record
     Route::get('/leagues/{league}/teams/{leagueTeam}/lineup',  [LineupController::class, 'edit'])->name('leagues.lineup.edit');
     Route::put('/leagues/{league}/teams/{leagueTeam}/lineup',  [LineupController::class, 'update'])->name('leagues.lineup.update');
+
+    // Competitions (dentro de uma liga)
+    Route::get( '/leagues/{league}/competitions/{competition}',       [CompetitionController::class, 'show'])->name('competitions.show');
+    Route::get( '/leagues/{league}/competitions/{competition}/join',  [CompetitionController::class, 'join'])->name('competitions.join');
+    Route::post('/leagues/{league}/competitions/{competition}/join',  [CompetitionController::class, 'joinStore'])->name('competitions.join.store');
 });
 
 Route::middleware('auth')->group(function () {
