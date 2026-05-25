@@ -16,7 +16,7 @@ class CompetitionLineup extends Model
 
     protected $fillable = [
         'competition_id',
-        'competition_team_id',
+        'league_team_id',
         'formation',
         'round',
         'status',
@@ -46,9 +46,9 @@ class CompetitionLineup extends Model
         return $this->belongsTo(Competition::class, 'competition_id');
     }
 
-    public function competitionTeam(): BelongsTo
+    public function leagueTeam(): BelongsTo
     {
-        return $this->belongsTo(CompetitionTeam::class, 'competition_team_id');
+        return $this->belongsTo(LeagueTeam::class, 'league_team_id');
     }
 
     public function lineupPlayers(): HasMany

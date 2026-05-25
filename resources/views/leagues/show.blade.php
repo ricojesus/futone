@@ -132,10 +132,18 @@
                     <p class="text-sm text-slate-600 mt-1">Use o comando <code class="bg-slate-800 px-1 rounded">leagues:generate</code> para gerar as competições.</p>
                 </div>
             @else
+                @php
+                    // Verifica se o usuário já tem LeagueTeam nesta liga
+                    $myLeagueTeamInLeague = $league->leagueTeams->firstWhere('user_id', auth()->id());
+                    $alreadyEnrolled = $myLeagueTeamInLeague !== null;
+                @endphp
                 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($league->competitions as $competition)
                         @php
-                            $myTeamInComp = $competition->teams->firstWhere('user_id', auth()->id());
+                            // Check if the user's LeagueTeam has a CompetitionTeam in this competition
+                            $myTeamInComp = $myLeagueTeamInLeague
+                                ? $competition->teams->firstWhere('league_team_id', $myLeagueTeamInLeague->id)
+                                : null;
                         @endphp
                         <div class="flex flex-col rounded-2xl border border-slate-700 bg-slate-900 p-5 transition hover:border-slate-600">
 
@@ -176,7 +184,7 @@
                             <div class="mt-auto flex items-center justify-between gap-2 border-t border-slate-800 pt-3">
                                 @if ($myTeamInComp)
                                     <span class="text-xs text-emerald-400 font-medium truncate">⚽ {{ $myTeamInComp->name }}</span>
-                                @elseif ($competition->isWaiting())
+                                @elseif (! $alreadyEnrolled && ! $competition->isFinished())
                                     <a href="{{ route('competitions.join', [$league, $competition]) }}"
                                         class="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition">
                                         + Escolher time

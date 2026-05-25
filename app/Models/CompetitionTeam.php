@@ -15,16 +15,9 @@ class CompetitionTeam extends Model
 
     protected $fillable = [
         'competition_id',
+        'league_team_id',
         'team_id',
-        'user_id',
-        'coach_id',
         'name',
-        'satisfaction',
-        'tolerance',
-        'budget',
-        'fans',
-        'stadium_capacity',
-        'ticket_price',
         'points',
         'wins',
         'draws',
@@ -40,24 +33,14 @@ class CompetitionTeam extends Model
         return $this->belongsTo(Competition::class, 'competition_id');
     }
 
+    public function leagueTeam(): BelongsTo
+    {
+        return $this->belongsTo(LeagueTeam::class, 'league_team_id');
+    }
+
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class, 'team_id');
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
-
-    public function coach(): BelongsTo
-    {
-        return $this->belongsTo(Coach::class, 'coach_id');
-    }
-
-    public function players(): HasMany
-    {
-        return $this->hasMany(CompetitionPlayer::class, 'competition_team_id');
     }
 
     public function transactions(): HasMany
@@ -85,36 +68,33 @@ class CompetitionTeam extends Model
         return $this->hasMany(CompetitionTransfer::class, 'from_team_id');
     }
 
-    public function lineups(): HasMany
+    // ── Proxies via leagueTeam ────────────────────────────────────────────
+
+    /**
+     * Players proxy — delegates to the LeagueTeam's players.
+     */
+    public function players(): HasMany
     {
-        return $this->hasMany(CompetitionLineup::class, 'competition_team_id');
+        return $this->leagueTeam->players();
     }
 
     /**
-     * Escalação ativa para uma rodada específica.
-     * Retorna o override da rodada se existir, senão a escalação padrão (round=0).
+     * Lineups proxy — delegates to the LeagueTeam's lineups.
      */
-    public function activeLineup(int $round = 0): ?CompetitionLineup
+    public function lineups(): HasMany
     {
-        return $this->lineups()
-            ->where('status', 'active')
-            ->whereIn('round', [$round, 0])
-            ->orderByDesc('round')
-            ->first();
+        return $this->leagueTeam->lineups();
     }
+
+    // ── Helpers ──────────────────────────────────────────────────────────
 
     public function isCpu(): bool
     {
-        return $this->user_id === null;
+        return $this->leagueTeam?->isCpu() ?? true;
     }
 
     public function goalDifference(): int
     {
         return $this->goals_for - $this->goals_against;
-    }
-
-    public function shouldFireCoach(): bool
-    {
-        return $this->satisfaction < $this->tolerance;
     }
 }

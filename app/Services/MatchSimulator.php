@@ -2,8 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\LeagueLineup;
-use App\Models\LeagueMatch;
+use App\Models\CompetitionLineup;
+use App\Models\CompetitionMatch;
+use App\Models\CompetitionTeam;
 use App\Models\LeagueTeam;
 use Illuminate\Support\Collection;
 
@@ -59,7 +60,7 @@ class MatchSimulator
      *   events: list<array>
      * }
      */
-    public function simulate(LeagueMatch $match): array
+    public function simulate(CompetitionMatch $match): array
     {
         $homeData = $this->loadLineup($match->homeTeam, $match->round ?? 0);
         $awayData = $this->loadLineup($match->awayTeam, $match->round ?? 0);
@@ -127,12 +128,18 @@ class MatchSimulator
                     else $awayScore++;
 
                     $events[] = [
-                        'type'      => 'goal',
-                        'team'      => $possession,
-                        'play'      => $play,
-                        'narration' => $this->narrator->narrate('goal', array_merge(
+                        'type'         => 'goal',
+                        'team'         => $possession,
+                        'play'         => $play,
+                        'scorer_id'    => $shot['scorer_id'],
+                        'scorer_name'  => $shot['scorer_name'],
+                        'narration'    => $this->narrator->narrate('goal', array_merge(
                             $narratorCtx,
-                            ['home_score' => $homeScore, 'away_score' => $awayScore]
+                            [
+                                'home_score'  => $homeScore,
+                                'away_score'  => $awayScore,
+                                'scorer_name' => $shot['scorer_name'],
+                            ]
                         )),
                     ];
 
@@ -226,7 +233,7 @@ class MatchSimulator
     /**
      * Simula e persiste o resultado direto no LeagueMatch.
      */
-    public function simulateAndSave(LeagueMatch $match): LeagueMatch
+    public function simulateAndSave(CompetitionMatch $match): CompetitionMatch
     {
         $result = $this->simulate($match);
 
@@ -256,7 +263,9 @@ class MatchSimulator
             ],
         ]);
 
-        return $match->fresh();
+        /** @var CompetitionMatch $fresh */
+        $fresh = $match->fresh();
+        return $fresh;
     }
 
     // ── Carregamento de escalação ────────────────────────────────────
@@ -271,9 +280,11 @@ class MatchSimulator
      *
      * @return array{players: Collection, formation: string}
      */
-    private function loadLineup(LeagueTeam $team, int $round): array
+    private function loadLineup(CompetitionTeam $compTeam, int $round): array
     {
-        $lineup = $team->lineups()
+        $leagueTeam = $compTeam->leagueTeam;
+
+        $lineup = $leagueTeam->lineups()
             ->where('status', 'active')
             ->whereIn('round', [$round, 0])
             ->orderByDesc('round')
@@ -281,9 +292,11 @@ class MatchSimulator
 
         if ($lineup) {
             $players = $lineup->players()
-                ->where('league_lineup_players.is_starter', true)
+                ->where('competition_lineup_players.is_starter', true)
                 ->get()
                 ->map(fn($p) => [
+                    'id'       => $p->id,
+                    'name'     => $p->name,
                     'position' => $p->pivot->role,
                     'power'    => round(
                         $p->strength * ($p->fitness / 100) * (float) $p->form_factor,
@@ -295,7 +308,7 @@ class MatchSimulator
         }
 
         return [
-            'players'   => $this->autoSelectPlayers($team),
+            'players'   => $this->autoSelectPlayers($leagueTeam),
             'formation' => '4-4-2',
         ];
     }
@@ -303,12 +316,14 @@ class MatchSimulator
     /**
      * Seleciona automaticamente os 11 melhores jogadores em 4-4-2.
      */
-    private function autoSelectPlayers(LeagueTeam $team): Collection
+    private function autoSelectPlayers(LeagueTeam $leagueTeam): Collection
     {
-        $all = $team->players()
+        $all = $leagueTeam->players()
             ->where('status', 'active')
             ->get()
             ->map(fn($p) => [
+                'id'       => $p->id,
+                'name'     => $p->name,
                 'position' => $p->position,
                 'power'    => round(
                     $p->strength * ($p->fitness / 100) * (float) $p->form_factor,
@@ -451,21 +466,32 @@ class MatchSimulator
         $attackers  = $attackingTeam === 'home' ? $home : $away;
         $defenders  = $attackingTeam === 'home' ? $away : $home;
 
-        $shooter    = $attackers->where('position', 'forward')->sortByDesc('power')->first()
+        // Goleador potencial: atacantes têm 3× mais chance que meias, meias 2× que defensores
+        $scorerPool = $attackers->map(fn($p) => array_merge($p, [
+            'scorer_weight' => match ($p['position']) {
+                'forward'    => $p['power'] * 3.0,
+                'midfielder' => $p['power'] * 1.5,
+                'defender'   => $p['power'] * 0.5,
+                default      => 0.0, // goleiro não marca
+            },
+        ]))->filter(fn($p) => $p['scorer_weight'] > 0);
+
+        // Selecionar o finalizador pelo maior power (para calcular probabilidade de gol)
+        $shooter = $attackers->where('position', 'forward')->sortByDesc('power')->first()
             ?? $attackers->sortByDesc('power')->first();
 
         $goalkeeper = $defenders->where('position', 'goalkeeper')->first()
             ?? $defenders->sortByDesc('power')->first();
 
         if (! $shooter || ! $goalkeeper) {
-            return ['on_target' => false, 'goal' => false];
+            return ['on_target' => false, 'goal' => false, 'scorer_id' => null, 'scorer_name' => null];
         }
 
         $onTargetProb = min(0.90, 0.55 + ($shooter['power'] / 200));
         $onTarget     = (random_int(1, 1000) / 1000) <= $onTargetProb;
 
         if (! $onTarget) {
-            return ['on_target' => false, 'goal' => false];
+            return ['on_target' => false, 'goal' => false, 'scorer_id' => null, 'scorer_name' => null];
         }
 
         $shotPow  = $shooter['power']    + $this->randomNoise($shooter['power']    * self::LUCK_SHOT);
@@ -475,7 +501,28 @@ class MatchSimulator
         $goalProb = $shotPow / $total;
         $goal     = (random_int(1, 1000) / 1000) <= $goalProb;
 
-        return ['on_target' => true, 'goal' => $goal];
+        // Sortear goleador ponderado pelo scorer_weight
+        $scorer = null;
+        if ($goal && $scorerPool->isNotEmpty()) {
+            $totalWeight = $scorerPool->sum('scorer_weight');
+            $rand        = (random_int(1, 10000) / 10000) * $totalWeight;
+            $cumulative  = 0;
+            foreach ($scorerPool as $candidate) {
+                $cumulative += $candidate['scorer_weight'];
+                if ($rand <= $cumulative) {
+                    $scorer = $candidate;
+                    break;
+                }
+            }
+            $scorer ??= $scorerPool->last();
+        }
+
+        return [
+            'on_target'   => true,
+            'goal'        => $goal,
+            'scorer_id'   => $scorer['id']   ?? null,
+            'scorer_name' => $scorer['name'] ?? null,
+        ];
     }
 
     // ── Helpers de narração ──────────────────────────────────────────

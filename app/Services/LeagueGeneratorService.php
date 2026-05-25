@@ -6,6 +6,7 @@ use App\Models\Competition;
 use App\Models\CompetitionPlayer;
 use App\Models\CompetitionTeam;
 use App\Models\League;
+use App\Models\LeagueTeam;
 use App\Models\State;
 use App\Models\Team;
 use App\Models\User;
@@ -146,7 +147,7 @@ class LeagueGeneratorService
                     'teams_count'      => $a1Teams->count(),
                 ]);
 
-                $this->attachTeams($compA1, $a1Teams);
+                $this->attachTeams($league, $compA1, $a1Teams);
                 $this->calendar->generate($compA1);
                 $created['state'][] = $compA1;
 
@@ -165,7 +166,7 @@ class LeagueGeneratorService
                         'teams_count'      => $a2Teams->count(),
                     ]);
 
-                    $this->attachTeams($compA2, $a2Teams);
+                    $this->attachTeams($league, $compA2, $a2Teams);
                     $this->calendar->generate($compA2);
                     $created['state'][] = $compA2;
 
@@ -187,7 +188,7 @@ class LeagueGeneratorService
                     'teams_count'      => $serieATeams->count(),
                 ]);
 
-                $this->attachTeams($serieA, $serieATeams);
+                $this->attachTeams($league, $serieA, $serieATeams);
                 $this->calendar->generate($serieA);
                 $created['national'][] = $serieA;
             }
@@ -206,7 +207,7 @@ class LeagueGeneratorService
                     'teams_count'      => $serieBTeams->count(),
                 ]);
 
-                $this->attachTeams($serieB, $serieBTeams);
+                $this->attachTeams($league, $serieB, $serieBTeams);
                 $this->calendar->generate($serieB);
                 $created['national'][] = $serieB;
             }
@@ -224,17 +225,17 @@ class LeagueGeneratorService
      */
     private function rankTeamsByState(): Collection
     {
-        $strengthByTeam = CompetitionPlayer::select('competition_team_id', DB::raw('AVG(strength) as avg_strength'))
-            ->join('competition_teams', 'competition_players.competition_team_id', '=', 'competition_teams.id')
-            ->groupBy('competition_teams.team_id', 'competition_players.competition_team_id')
-            ->pluck('avg_strength', 'competition_team_id')
+        $strengthByTeam = CompetitionPlayer::select('league_team_id', DB::raw('AVG(strength) as avg_strength'))
+            ->join('league_teams', 'competition_players.league_team_id', '=', 'league_teams.id')
+            ->groupBy('league_teams.team_id', 'competition_players.league_team_id')
+            ->pluck('avg_strength', 'league_team_id')
             ->toArray();
 
-        $teamIdByCompTeam = CompetitionTeam::pluck('team_id', 'id')->toArray();
+        $teamIdByLeagueTeam = LeagueTeam::pluck('team_id', 'id')->toArray();
 
         $strengthByTeamId = [];
-        foreach ($strengthByTeam as $compTeamId => $avg) {
-            $teamId = $teamIdByCompTeam[$compTeamId] ?? null;
+        foreach ($strengthByTeam as $leagueTeamId => $avg) {
+            $teamId = $teamIdByLeagueTeam[$leagueTeamId] ?? null;
             if ($teamId) {
                 $strengthByTeamId[$teamId][] = (float) $avg;
             }
@@ -270,36 +271,58 @@ class LeagueGeneratorService
     }
 
     /**
-     * Cria CompetitionTeam para cada time e copia os jogadores de referência.
+     * Ensures a LeagueTeam exists for each team in this league, then creates
+     * the CompetitionTeam stats record linking it to the specific competition.
+     *
+     * Players are only copied once per LeagueTeam (not duplicated per competition).
      *
      * @param Collection<Team> $teams
      */
-    private function attachTeams(Competition $competition, Collection $teams): void
+    private function attachTeams(League $league, Competition $competition, Collection $teams): void
     {
         foreach ($teams as $team) {
-            $compTeam = CompetitionTeam::create([
-                'competition_id'   => $competition->id,
-                'team_id'          => $team->id,
-                'user_id'          => null,
-                'name'             => $team->name,
-                'tolerance'        => $team->tolerance,
-                'fans'             => $team->fans_base,
-                'stadium_capacity' => $team->stadium_capacity,
-                'budget'           => $this->initialBudget($team),
-                'ticket_price'     => $this->initialTicketPrice($team),
+            // Ensure a single LeagueTeam identity record exists for this team in this league
+            $leagueTeam = LeagueTeam::firstOrCreate(
+                [
+                    'league_id' => $league->id,
+                    'team_id'   => $team->id,
+                ],
+                [
+                    'user_id'          => null,
+                    'coach_id'         => null,
+                    'name'             => $team->name,
+                    'tolerance'        => $team->tolerance,
+                    'fans'             => $team->fans_base,
+                    'stadium_capacity' => $team->stadium_capacity,
+                    'budget'           => $this->initialBudget($team),
+                    'ticket_price'     => $this->initialTicketPrice($team),
+                ]
+            );
+
+            // Create the per-competition stats pivot
+            CompetitionTeam::create([
+                'competition_id' => $competition->id,
+                'league_team_id' => $leagueTeam->id,
+                'team_id'        => $team->id,
+                'name'           => $team->name,
             ]);
 
-            $this->copyPlayers($team, $compTeam, $competition);
+            // Copy players only if this LeagueTeam has no players yet
+            if ($leagueTeam->players()->count() === 0) {
+                $this->copyPlayers($team, $leagueTeam);
+            }
         }
     }
 
     /**
-     * Copia jogadores do CompetitionTeam mais recente como referência.
+     * Copies players from the most recent LeagueTeam reference for this team.
+     * Creates CompetitionPlayer records associated with the LeagueTeam.
      */
-    private function copyPlayers(Team $team, CompetitionTeam $newCompTeam, Competition $newComp): void
+    private function copyPlayers(Team $team, LeagueTeam $newLeagueTeam): void
     {
-        $ref = CompetitionTeam::where('team_id', $team->id)
-            ->where('id', '!=', $newCompTeam->id)
+        // Look for an older LeagueTeam for the same team (from a previous season)
+        $ref = LeagueTeam::where('team_id', $team->id)
+            ->where('id', '!=', $newLeagueTeam->id)
             ->latest()
             ->first();
 
@@ -307,10 +330,9 @@ class LeagueGeneratorService
 
         $ref->players()
             ->whereIn('status', ['active', 'injured'])
-            ->each(function (CompetitionPlayer $p) use ($newCompTeam, $newComp) {
+            ->each(function (CompetitionPlayer $p) use ($newLeagueTeam) {
                 CompetitionPlayer::create([
-                    'competition_id'      => $newComp->id,
-                    'competition_team_id' => $newCompTeam->id,
+                    'league_team_id'      => $newLeagueTeam->id,
                     'player_id'           => $p->player_id,
                     'country_id'          => $p->country_id,
                     'name'                => $p->name,

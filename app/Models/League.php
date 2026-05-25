@@ -50,6 +50,11 @@ class League extends Model
         return $this->hasMany(Competition::class, 'league_id');
     }
 
+    public function leagueTeams(): HasMany
+    {
+        return $this->hasMany(LeagueTeam::class, 'league_id');
+    }
+
     // ── Helpers de status ────────────────────────────────────────────────
 
     public function isWaiting(): bool    { return $this->status === self::STATUS_WAITING; }

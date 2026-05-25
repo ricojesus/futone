@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Coach;
 use App\Models\Competition;
-use App\Models\CompetitionTeam;
 use App\Models\League;
+use App\Models\LeagueTeam;
 use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,12 +29,12 @@ class LeagueTeamController extends Controller
                 ->with('error', 'Não há competições abertas para inscrição nesta liga.');
         }
 
-        $this->guardEntry($league, $competition);
+        $this->guardEntry($league);
 
         $coaches = Coach::orderBy('name')->get();
 
-        // Modo escolha livre (único modo suportado na nova arquitetura por padrão)
-        $teams = $this->availableTeams($competition);
+        // Times CPU disponíveis na liga (sem dono ainda)
+        $teams = $this->availableTeams($league);
 
         return view('leagues.teams.create', compact('league', 'competition', 'teams', 'coaches'));
     }
@@ -50,7 +50,7 @@ class LeagueTeamController extends Controller
                 ->with('error', 'Não há competições abertas para inscrição nesta liga.');
         }
 
-        $this->guardEntry($league, $competition);
+        $this->guardEntry($league);
 
         return $this->storeChoice($request, $league, $competition);
     }
@@ -64,16 +64,28 @@ class LeagueTeamController extends Controller
             'coach_id' => 'nullable|uuid|exists:coaches,id',
         ]);
 
-        if ($competition->teams()->where('team_id', $validated['team_id'])->exists()) {
-            return back()->withErrors(['team_id' => 'Este time já está inscrito nesta competição.']);
-        }
-
         $team = Team::findOrFail($validated['team_id']);
 
-        $compTeam = $this->createCompetitionTeam($competition, $team, $validated['coach_id'] ?? null);
+        // Verifica se existe um LeagueTeam CPU para este time nesta liga
+        $leagueTeam = LeagueTeam::where('league_id', $league->id)
+            ->where('team_id', $team->id)
+            ->whereNull('user_id')
+            ->first();
+
+        if (! $leagueTeam) {
+            return back()->withErrors(['team_id' => 'Este time não está disponível nesta liga.']);
+        }
+
+        // Assume o controle do LeagueTeam
+        DB::transaction(function () use ($leagueTeam, $validated) {
+            $leagueTeam->update([
+                'user_id'  => auth()->id(),
+                'coach_id' => $validated['coach_id'] ?? null,
+            ]);
+        });
 
         return redirect()->route('leagues.show', $league)
-            ->with('success', "{$compTeam->name} inscrito com sucesso!");
+            ->with('success', "{$leagueTeam->name} inscrito com sucesso!");
     }
 
     // ── Helpers ──────────────────────────────────────────────────────
@@ -87,55 +99,33 @@ class LeagueTeamController extends Controller
     }
 
     /**
-     * Valida pré-condições de entrada na competição.
+     * Valida pré-condições de entrada na liga.
      */
-    private function guardEntry(League $league, Competition $competition): void
+    private function guardEntry(League $league): void
     {
-        if (! $competition->isWaiting()) {
-            redirect()->route('leagues.show', $league)
-                ->with('error', 'As inscrições desta competição já foram encerradas.')
-                ->throwResponse();
-        }
+        $alreadyHasTeam = LeagueTeam::where('league_id', $league->id)
+            ->where('user_id', auth()->id())
+            ->exists();
 
-        if ($competition->teams()->where('user_id', auth()->id())->exists()) {
+        if ($alreadyHasTeam) {
             redirect()->route('leagues.show', $league)
-                ->with('info', 'Você já está inscrito nesta competição.')
+                ->with('info', 'Você já está inscrito nesta liga.')
                 ->throwResponse();
         }
     }
 
     /**
-     * Retorna os times ainda não inscritos nesta competição.
+     * Retorna os times CPU disponíveis para assumir nesta liga.
      */
-    private function availableTeams(Competition $competition)
+    private function availableTeams(League $league)
     {
-        $enrolledIds = $competition->teams()->whereNotNull('team_id')->pluck('team_id');
+        $availableTeamIds = LeagueTeam::where('league_id', $league->id)
+            ->whereNull('user_id')
+            ->whereNotNull('team_id')
+            ->pluck('team_id');
 
-        return Team::whereNotIn('id', $enrolledIds)
+        return Team::whereIn('id', $availableTeamIds)
             ->orderBy('name')
             ->get();
-    }
-
-    /**
-     * Cria o registro CompetitionTeam para um usuário + time + competição.
-     */
-    private function createCompetitionTeam(Competition $competition, Team $team, ?string $coachId): CompetitionTeam
-    {
-        return CompetitionTeam::create([
-            'competition_id' => $competition->id,
-            'team_id'        => $team->id,
-            'user_id'        => auth()->id(),
-            'coach_id'       => $coachId,
-            'name'           => $team->name,
-            'satisfaction'   => 50,
-            'tolerance'      => $team->tolerance ?? 30,
-            'budget'         => 5_000_000,
-            'points'         => 0,
-            'wins'           => 0,
-            'draws'          => 0,
-            'losses'         => 0,
-            'goals_for'      => 0,
-            'goals_against'  => 0,
-        ]);
     }
 }

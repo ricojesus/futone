@@ -9,13 +9,14 @@ use App\Http\Controllers\Admin\StateController;
 use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CompetitionController;
+use App\Http\Controllers\MatchController;
 use App\Http\Controllers\LeagueController;
 use App\Http\Controllers\LeagueJoinController;
 use App\Http\Controllers\LeagueTeamController;
 use App\Http\Controllers\LineupController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserDashboardController;
-use App\Models\CompetitionTeam;
+use App\Models\LeagueTeam;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -49,9 +50,11 @@ Route::middleware('auth')->group(function () {
     Route::put('/leagues/{league}/teams/{leagueTeam}/lineup',  [LineupController::class, 'update'])->name('leagues.lineup.update');
 
     // Competitions (dentro de uma liga)
-    Route::get( '/leagues/{league}/competitions/{competition}',       [CompetitionController::class, 'show'])->name('competitions.show');
-    Route::get( '/leagues/{league}/competitions/{competition}/join',  [CompetitionController::class, 'join'])->name('competitions.join');
-    Route::post('/leagues/{league}/competitions/{competition}/join',  [CompetitionController::class, 'joinStore'])->name('competitions.join.store');
+    Route::get( '/leagues/{league}/competitions/{competition}',                    [CompetitionController::class, 'show'])->name('competitions.show');
+    Route::get( '/leagues/{league}/competitions/{competition}/join',               [CompetitionController::class, 'join'])->name('competitions.join');
+    Route::post('/leagues/{league}/competitions/{competition}/join',               [CompetitionController::class, 'joinStore'])->name('competitions.join.store');
+    Route::post('/leagues/{league}/competitions/{competition}/advance-round',      [CompetitionController::class, 'advanceRound'])->name('competitions.advance-round');
+    Route::get( '/leagues/{league}/competitions/{competition}/matches/{match}',   [MatchController::class, 'show'])->name('matches.show');
 });
 
 Route::middleware('auth')->group(function () {

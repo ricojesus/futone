@@ -15,8 +15,7 @@ class CompetitionPlayer extends Model
     protected $table = 'competition_players';
 
     protected $fillable = [
-        'competition_id',
-        'competition_team_id',
+        'league_team_id',
         'player_id',
         'country_id',
         'name',
@@ -32,6 +31,7 @@ class CompetitionPlayer extends Model
         'wage_expectation_factor',
         'form_factor',
         'fitness',
+        'goals_scored',
         'injured_until',
         'joined_at',
         'released_at',
@@ -44,14 +44,9 @@ class CompetitionPlayer extends Model
 
     // ── Relacionamentos ───────────────────────────────────────────────────
 
-    public function competition(): BelongsTo
+    public function leagueTeam(): BelongsTo
     {
-        return $this->belongsTo(Competition::class, 'competition_id');
-    }
-
-    public function competitionTeam(): BelongsTo
-    {
-        return $this->belongsTo(CompetitionTeam::class, 'competition_team_id');
+        return $this->belongsTo(LeagueTeam::class, 'league_team_id');
     }
 
     public function player(): BelongsTo

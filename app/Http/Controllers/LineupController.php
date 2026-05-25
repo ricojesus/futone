@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Competition;
 use App\Models\CompetitionLineup;
-use App\Models\CompetitionTeam;
 use App\Models\League;
+use App\Models\LeagueTeam;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class LineupController extends Controller
 {
     /**
-     * Exibe o formulário de escalação do time na competição.
+     * Exibe o formulário de escalação do time na liga.
      *
      * Route: GET /leagues/{league}/teams/{leagueTeam}/lineup
-     * The {leagueTeam} route parameter resolves to a CompetitionTeam.
+     * The {leagueTeam} route parameter resolves to a LeagueTeam record.
      */
-    public function edit(League $league, CompetitionTeam $leagueTeam)
+    public function edit(League $league, LeagueTeam $leagueTeam)
     {
         $this->authorizeManager($league, $leagueTeam);
 
@@ -42,8 +41,8 @@ class LineupController extends Controller
             ->orderByDesc('strength')
             ->get();
 
-        // Get competition for breadcrumb/context
-        $competition = $leagueTeam->competition;
+        // Get a competition for breadcrumb/context (the first one this leagueTeam participates in)
+        $competition = $leagueTeam->competitionTeams()->first()?->competition;
 
         return view('leagues.lineups.edit', compact(
             'league', 'leagueTeam', 'lineup', 'currentStarters', 'players', 'competition'
@@ -53,7 +52,7 @@ class LineupController extends Controller
     /**
      * Salva a escalação padrão do time.
      */
-    public function update(Request $request, League $league, CompetitionTeam $leagueTeam)
+    public function update(Request $request, League $league, LeagueTeam $leagueTeam)
     {
         $this->authorizeManager($league, $leagueTeam);
 
@@ -115,13 +114,11 @@ class LineupController extends Controller
 
         // ── Persiste ─────────────────────────────────────────────────
         DB::transaction(function () use ($league, $leagueTeam, $formation, $starters) {
-            $competition = $leagueTeam->competition;
-
             $lineup = $leagueTeam->lineups()->updateOrCreate(
                 ['round' => 0, 'status' => 'active'],
                 [
                     'formation'      => $formation,
-                    'competition_id' => $competition->id,
+                    'competition_id' => null, // league-level default lineup
                 ]
             );
 
@@ -148,12 +145,11 @@ class LineupController extends Controller
 
     // ── Helpers ──────────────────────────────────────────────────────
 
-    private function authorizeManager(League $league, CompetitionTeam $leagueTeam): void
+    private function authorizeManager(League $league, LeagueTeam $leagueTeam): void
     {
-        // Verify the competition team belongs to a competition within this league
-        $competition = $leagueTeam->competition;
+        // Verify the league team belongs to this league
         abort_unless(
-            $competition && $competition->league_id === $league->id,
+            $leagueTeam->league_id === $league->id,
             404
         );
         abort_unless(
