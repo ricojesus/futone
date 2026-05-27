@@ -25,6 +25,7 @@ class CompetitionMatch extends Model
         'scheduled_at',
         'played_at',
         'data',
+        'bracket_slot',
     ];
 
     protected $casts = [

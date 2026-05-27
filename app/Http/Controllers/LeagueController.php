@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Competition;
 use App\Models\League;
+use App\Models\LeagueTeam;
+use App\Services\GlobalRoundService;
 use App\Services\LeagueGeneratorService;
+use App\Services\SeasonTransitionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -101,5 +105,98 @@ class LeagueController extends Controller
 
         return redirect()->route('leagues.show', $league)
             ->with('success', 'Liga iniciada!');
+    }
+
+    /**
+     * Avança uma rodada em todas as competições da fase atual da liga.
+     * O dono pode chamar quantas vezes quiser em sequência.
+     */
+    public function advanceWeek(League $league, GlobalRoundService $globalRound)
+    {
+        abort_unless(auth()->id() === $league->owner_id, 403);
+        abort_unless($league->isInProgress(), 409, 'Liga não está em andamento.');
+
+        // Bloqueia se há partida ao vivo pendente (intervalo aguardando)
+        if ($globalRound->hasPendingLive($league)) {
+            // Redireciona para a partida ao vivo
+            $myLeagueTeam = LeagueTeam::where('league_id', $league->id)
+                ->where('user_id', auth()->id())
+                ->first();
+
+            if ($myLeagueTeam) {
+                $halftimeMatch = \App\Models\CompetitionMatch::whereHas('competition', fn($q) =>
+                    $q->where('league_id', $league->id)
+                )
+                ->where('status', 'halftime')
+                ->whereHas('homeTeam', fn($q) => $q->where('league_team_id', $myLeagueTeam->id))
+                ->orWhereHas('awayTeam', fn($q) => $q->where('league_team_id', $myLeagueTeam->id))
+                ->first();
+
+                if ($halftimeMatch) {
+                    $competition = $halftimeMatch->competition;
+                    return redirect(route('matches.halftime', [$league, $competition, $halftimeMatch]));
+                }
+            }
+
+            return back()->with('info', 'Há uma partida ao vivo aguardando o intervalo.');
+        }
+
+        $result = $globalRound->advance($league);
+
+        // Redireciona para partida ao vivo se o usuário tem um jogo no intervalo
+        if ($result['liveMatchUrl']) {
+            return redirect($result['liveMatchUrl']);
+        }
+
+        if ($result['phaseCompleted'] && $result['nextPhase']) {
+            $phaseLabels = [
+                'state'    => 'Fase Estadual',
+                'copa'     => 'Copa do Brasil',
+                'national' => 'Brasileirão',
+                'finished' => 'Temporada',
+            ];
+
+            $nextLabel = $phaseLabels[$result['nextPhase']] ?? $result['nextPhase'];
+
+            if ($result['nextPhase'] === 'finished') {
+                return redirect()->route('leagues.season-summary', $league)
+                    ->with('success', 'Temporada encerrada! Veja o resumo.');
+            }
+
+            return redirect()->route('leagues.show', $league)
+                ->with('success', "Fase estadual concluída! {$nextLabel} criado automaticamente.");
+        }
+
+        $msg = $result['competitionsAdvanced'] > 0
+            ? "{$result['competitionsAdvanced']} competições avançaram para a próxima rodada."
+            : 'Nenhuma competição disponível para avançar.';
+
+        return redirect()->route('leagues.show', $league)->with('success', $msg);
+    }
+
+    public function seasonSummary(League $league, SeasonTransitionService $transitionService)
+    {
+        $league->load(['competitions']);
+
+        $allFinished = $league->competitions->isNotEmpty()
+            && $league->competitions->every(fn($c) => $c->status === Competition::STATUS_FINISHED);
+
+        abort_unless($allFinished, 403, 'Nem todas as competições foram encerradas.');
+
+        $transitions = $transitionService->calculateTransitions($league);
+        $isOwner     = $league->owner_id === auth()->id();
+        $nextYear    = $league->season + 1;
+
+        return view('leagues.season-summary', compact('league', 'transitions', 'isOwner', 'nextYear'));
+    }
+
+    public function advanceSeason(Request $request, League $league, SeasonTransitionService $transitionService)
+    {
+        abort_unless(auth()->id() === $league->owner_id, 403);
+
+        $transitionService->advanceSeason($league);
+
+        return redirect()->route('leagues.show', $league)
+            ->with('success', "Temporada {$league->season} iniciada com sucesso!");
     }
 }

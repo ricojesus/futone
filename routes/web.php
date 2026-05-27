@@ -40,6 +40,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/leagues/{league}',        [LeagueController::class, 'show'])->name('leagues.show');
     Route::post('/leagues/{league}/start',    [LeagueController::class, 'start'])->name('leagues.start');
     Route::post('/leagues/{league}/generate', [LeagueController::class, 'generate'])->name('leagues.generate');
+    Route::post('/leagues/{league}/advance-week',   [LeagueController::class, 'advanceWeek'])->name('leagues.advance-week');
+    Route::get('/leagues/{league}/season-summary',  [LeagueController::class, 'seasonSummary'])->name('leagues.season-summary');
+    Route::post('/leagues/{league}/advance-season', [LeagueController::class, 'advanceSeason'])->name('leagues.advance-season');
 
     // Team enrollment
     Route::get('/leagues/{league}/join',   [LeagueTeamController::class, 'create'])->name('leagues.teams.create');
@@ -69,6 +72,15 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Download de templates CSV
+    Route::get('/csv-template/{file}', function (string $file) {
+        $allowed = ['times', 'campeonatos', 'jogadores'];
+        abort_unless(in_array($file, $allowed), 404);
+        $path = storage_path("app/csv-templates/{$file}.csv");
+        abort_unless(file_exists($path), 404);
+        return response()->download($path, "{$file}.csv", ['Content-Type' => 'text/csv']);
+    })->name('csv-template');
+
     Route::get('/users', [UserController::class, 'index'])->name('users');
     Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
 
@@ -76,6 +88,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/teams/create', [TeamController::class, 'create'])->name('teams.create');
     Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
     Route::post('/teams/upload', [TeamController::class, 'upload'])->name('teams.upload');
+    Route::post('/teams/upload-logos', [TeamController::class, 'uploadLogos'])->name('teams.upload-logos');
     Route::get('/teams/{team}/edit', [TeamController::class, 'edit'])->name('teams.edit');
     Route::patch('/teams/{team}', [TeamController::class, 'update'])->name('teams.update');
     Route::delete('/teams/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');

@@ -19,26 +19,37 @@
     {{-- ══ Cabeçalho ═══════════════════════════════════════════════════════════ --}}
     <div class="border-b border-slate-800 bg-slate-900">
         <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            {{-- Breadcrumb --}}
             <div class="flex items-center gap-2 mb-1 text-xs text-slate-500">
-                <a href="{{ route('dashboard') }}" class="hover:text-slate-300 transition">Dashboard</a>
-                <span>/</span>
                 <a href="{{ route('leagues.show', $league) }}" class="hover:text-slate-300 transition">{{ $league->name }}</a>
+                @if ($competition)
+                    <span>/</span>
+                    <a href="{{ $backUrl }}" class="hover:text-slate-300 transition">{{ $competition->name }}</a>
+                @endif
                 <span>/</span>
                 <span class="text-slate-400">Escalação</span>
             </div>
+
             <div class="flex items-center justify-between gap-4 flex-wrap">
                 <div>
                     <h1 class="text-2xl font-extrabold text-white">Escalação</h1>
                     <p class="mt-0.5 text-sm text-slate-400">
                         {{ $leagueTeam->name }}
-                        <span class="text-slate-600 mx-1">·</span>
-                        {{ $league->name }}
+                        @if ($competition)
+                            <span class="text-slate-600 mx-1">·</span>
+                            {{ $competition->name }}
+                        @endif
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-400">
-                        Temporada {{ $league->season }}
-                    </span>
+                    {{-- Botão Voltar --}}
+                    <a href="{{ $backUrl }}"
+                       class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-300 hover:border-slate-500 hover:text-white transition active:scale-95">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                        </svg>
+                        Voltar
+                    </a>
                     @if($lineup?->updated_at)
                         <span class="text-xs text-slate-600">
                             Salva {{ $lineup->updated_at->diffForHumans() }}
@@ -416,7 +427,7 @@
                                         @php
                                             $fitness   = (int) ($player->fitness   ?? 100);
                                             $injured   = $player->status === 'injured';
-                                            $power     = round($player->strength * ($fitness / 100) * (float) ($player->form_factor ?? 1.0));
+                                            $power     = (int) $player->strength;
 
                                             // Cores da barra de fitness
                                             $fitColor  = match(true) {

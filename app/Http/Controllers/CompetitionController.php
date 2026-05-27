@@ -10,6 +10,8 @@ use App\Models\CompetitionTeam;
 use App\Models\League;
 use App\Models\LeagueTeam;
 use App\Models\Team;
+use App\Services\CompetitionRoundService;
+use App\Services\CopaBrasilService;
 use App\Services\LiveMatchSimulator;
 use App\Services\MatchSimulator;
 use Illuminate\Http\Request;
@@ -63,8 +65,50 @@ class CompetitionController extends Controller
             ->limit(10)
             ->get();
 
+        // Verifica se o usuário tem uma partida atualmente no intervalo
+        $myHalftimeMatch = null;
+        $myHalftimeUrl   = null;
+        if ($myLeagueTeam && $myTeam) {
+            $myHalftimeMatch = \App\Models\CompetitionMatch::where('competition_id', $competition->id)
+                ->where('status', 'halftime')
+                ->where(function ($q) use ($myTeam) {
+                    $q->where('home_team_id', $myTeam->id)
+                      ->orWhere('away_team_id', $myTeam->id);
+                })
+                ->first();
+
+            if ($myHalftimeMatch) {
+                $myHalftimeUrl = route('matches.halftime', [$league, $competition, $myHalftimeMatch]);
+            }
+        }
+
+        // Dados específicos para competições knockout (Copa do Brasil)
+        $bracketPhases = collect();
+        $phaseNames    = [];
+        if ($competition->isKnockout()) {
+            $allMatches = $competition->matches()
+                ->with(['homeTeam', 'awayTeam'])
+                ->orderBy('round')
+                ->orderBy('bracket_slot')
+                ->get();
+
+            // Agrupa por fase (par de rodadas) → slot → [leg1, leg2]
+            $bracketPhases = $allMatches
+                ->groupBy(fn($m) => (int) ceil($m->round / 2))   // fase = ceil(round/2)
+                ->map(fn($phaseMatches) =>
+                    $phaseMatches->groupBy('bracket_slot')
+                        ->map(fn($slotMatches) => [
+                            'leg1' => $slotMatches->firstWhere('leg', 1),
+                            'leg2' => $slotMatches->firstWhere('leg', 2),
+                        ])
+                );
+
+            $phaseNames = CopaBrasilService::PHASE_NAMES;
+        }
+
         return view('leagues.competitions.show', compact(
-            'league', 'competition', 'matchesByRound', 'myLeagueTeam', 'myTeam', 'standings', 'isOwner', 'topScorers'
+            'league', 'competition', 'matchesByRound', 'myLeagueTeam', 'myTeam', 'standings', 'isOwner', 'topScorers',
+            'myHalftimeMatch', 'myHalftimeUrl', 'bracketPhases', 'phaseNames'
         ));
     }
 
@@ -119,7 +163,7 @@ class CompetitionController extends Controller
         $this->guardEntry($league, $competition);
 
         $coaches = Coach::orderBy('name')->get();
-        $teams   = $this->availableTeams($league);
+        $teams   = $this->availableTeams($league, $competition);
 
         return view('leagues.competitions.join', compact('league', 'competition', 'teams', 'coaches'));
     }
@@ -178,184 +222,64 @@ class CompetitionController extends Controller
      * Partidas CPU × Humano → primeiro tempo simulado, aguarda intervalo (LiveMatchSimulator)
      */
     public function advanceRound(
-        Request             $request,
-        League              $league,
-        Competition         $competition,
-        MatchSimulator      $simulator,
-        LiveMatchSimulator  $liveSimulator,
+        Request                  $request,
+        League                   $league,
+        Competition              $competition,
+        CompetitionRoundService  $roundService,
     ) {
         abort_unless($competition->league_id === $league->id, 404);
         abort_unless($league->owner_id === auth()->id(), 403);
         abort_unless($competition->isInProgress(), 409, 'Competição não está em andamento.');
 
-        $nextRound = $competition->current_round + 1;
-
-        if ($nextRound > $competition->total_rounds) {
+        if (($competition->current_round + 1) > $competition->total_rounds) {
             return back()->with('error', 'Todas as rodadas já foram executadas.');
         }
 
-        $matches = $competition->matches()
-            ->where('round', $nextRound)
-            ->whereNotIn('status', ['finished', 'halftime'])
-            ->with(['homeTeam.leagueTeam', 'awayTeam.leagueTeam'])
-            ->get();
+        $result = $roundService->advance($competition);
 
-        if ($matches->isEmpty()) {
+        if ($result['liveCount'] === 0 && $result['cpuCount'] === 0) {
             return back()->with('info', 'Todas as partidas desta rodada já foram simuladas.');
         }
 
-        // Separa partidas por tipo de motor
-        $cpuMatches  = $matches->filter(fn($m) => $this->isCpuMatch($m));
-        $liveMatches = $matches->filter(fn($m) => ! $this->isCpuMatch($m));
-
-        DB::transaction(function () use ($cpuMatches, $liveMatches, $simulator, $liveSimulator, $competition, $nextRound) {
-            // 1. Recuperação parcial de fitness antes da rodada
-            $this->applyFitnessRecovery($competition);
-
-            // ── CPU × CPU: simula tudo agora ────────────────────────
-            foreach ($cpuMatches as $match) {
-                $result = $simulator->simulate($match);
-
-                $winnerId = null;
-                if ($result['home_score'] !== $result['away_score']) {
-                    $winnerId = $result['home_score'] > $result['away_score']
-                        ? $match->home_team_id
-                        : $match->away_team_id;
-                }
-
-                $match->update([
-                    'home_score'     => $result['home_score'],
-                    'away_score'     => $result['away_score'],
-                    'winner_team_id' => $winnerId,
-                    'status'         => 'finished',
-                    'played_at'      => now(),
-                    'data'           => [
-                        'home_possession'      => $result['home_possession'],
-                        'away_possession'      => $result['away_possession'],
-                        'home_shots'           => $result['home_shots'],
-                        'away_shots'           => $result['away_shots'],
-                        'home_shots_on_target' => $result['home_shots_on_target'],
-                        'away_shots_on_target' => $result['away_shots_on_target'],
-                        'home_formation'       => $result['home_formation'],
-                        'away_formation'       => $result['away_formation'],
-                        'events'               => $result['events'],
-                    ],
-                ]);
-
-                $homeTeam = $match->homeTeam;
-                $awayTeam = $match->awayTeam;
-
-                if ($result['home_score'] > $result['away_score']) {
-                    $homeTeam->increment('wins');
-                    $homeTeam->increment('points', 3);
-                    $awayTeam->increment('losses');
-                } elseif ($result['home_score'] < $result['away_score']) {
-                    $awayTeam->increment('wins');
-                    $awayTeam->increment('points', 3);
-                    $homeTeam->increment('losses');
-                } else {
-                    $homeTeam->increment('draws');
-                    $homeTeam->increment('points', 1);
-                    $awayTeam->increment('draws');
-                    $awayTeam->increment('points', 1);
-                }
-
-                $homeTeam->increment('goals_for',      $result['home_score']);
-                $homeTeam->increment('goals_against',  $result['away_score']);
-                $awayTeam->increment('goals_for',      $result['away_score']);
-                $awayTeam->increment('goals_against',  $result['home_score']);
-            }
-
-            // ── CPU × Humano: simula primeiro tempo, aguarda intervalo ──
-            foreach ($liveMatches as $match) {
-                $liveSimulator->simulateFirstHalf($match);
-                // Status da partida → 'halftime' (salvo dentro do simulador)
-                // A rodada SÓ avança quando o segundo tempo for concluído
-            }
-
-            // A rodada avança apenas se todos os jogos da rodada estão finalizados
-            // (sem partidas em halftime pendentes)
-            $hasPendingLive = $liveMatches->isNotEmpty();
-
-            if (! $hasPendingLive) {
-                $competition->increment('current_round');
-
-                if ($competition->current_round >= $competition->total_rounds) {
-                    $competition->update(['status' => Competition::STATUS_FINISHED]);
-                }
-            }
-
-            // 2. Contabilizar gols por jogador (artilharia) — apenas CPU matches finalizados
-            $this->applyGoalsScored($cpuMatches);
-
-            // 3. Desgaste físico para os times que jogaram (CPU matches)
-            $this->applyFitnessDegradation($cpuMatches);
-        });
-
-        // Se o dono tem um time que joga ao vivo nesta rodada, redireciona para o intervalo
+        // Redireciona para partida ao vivo se o usuário tem um time que jogou
         $myLeagueTeam = LeagueTeam::where('league_id', $league->id)
             ->where('user_id', auth()->id())
             ->first();
 
-        if ($myLeagueTeam) {
+        if ($myLeagueTeam && $result['liveMatches']->isNotEmpty()) {
             $myCompTeam = CompetitionTeam::where('competition_id', $competition->id)
                 ->where('league_team_id', $myLeagueTeam->id)
                 ->first();
 
             if ($myCompTeam) {
-                $myMatch = CompetitionMatch::where('competition_id', $competition->id)
-                    ->where('round', $nextRound)
-                    ->where(function ($q) use ($myCompTeam) {
-                        $q->where('home_team_id', $myCompTeam->id)
-                          ->orWhere('away_team_id', $myCompTeam->id);
-                    })->first();
+                $myMatch = $result['liveMatches']->first(function ($m) use ($myCompTeam) {
+                    return $m->home_team_id === $myCompTeam->id
+                        || $m->away_team_id === $myCompTeam->id;
+                });
 
                 if ($myMatch) {
-                    $route = $myMatch->status === 'halftime'
-                        ? route('matches.halftime', [$league, $competition, $myMatch])
-                        : route('matches.show', [$league, $competition, $myMatch, 'replay' => 1]);
-
-                    return redirect($route);
+                    return redirect(route('matches.halftime', [$league, $competition, $myMatch]));
                 }
             }
         }
 
-        $liveCount = $liveMatches->count();
-        $cpuCount  = $cpuMatches->count();
-        $msg = $liveCount > 0
-            ? "{$cpuCount} partidas simuladas. {$liveCount} partida(s) aguardando o intervalo."
-            : "Rodada {$nextRound} simulada! {$cpuCount} partidas jogadas.";
+        $msg = $result['liveCount'] > 0
+            ? "{$result['cpuCount']} partidas simuladas. {$result['liveCount']} partida(s) aguardando o intervalo."
+            : "Rodada {$result['nextRound']} simulada! {$result['cpuCount']} partidas jogadas.";
 
         return redirect()->route('competitions.show', [$league, $competition])->with('success', $msg);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────
 
-    /**
-     * Retorna true se ambos os times da partida são CPU (sem usuário humano).
-     * Partidas com pelo menos um lado humano usam o LiveMatchSimulator.
-     */
-    private function isCpuMatch(CompetitionMatch $match): bool
-    {
-        return $match->homeTeam->leagueTeam->isCpu()
-            && $match->awayTeam->leagueTeam->isCpu();
-    }
-
-    /**
-     * Bloqueia o acesso ao formulário de inscrição se:
-     *  - a competição não está mais aguardando; ou
-     *  - o usuário já tem LeagueTeam em qualquer competição desta liga.
-     */
     private function guardEntry(League $league, Competition $competition): void
     {
-        // Bloqueia apenas competições encerradas (waiting e in_progress aceitam inscrição)
         if ($competition->isFinished()) {
             redirect()->route('competitions.show', [$league, $competition])
                 ->with('error', 'Esta competição já foi encerrada.')
                 ->throwResponse();
         }
 
-        // Checa na liga inteira via league_teams (única identidade por liga)
         $alreadyHasTeam = LeagueTeam::where('league_id', $league->id)
             ->where('user_id', auth()->id())
             ->exists();
@@ -367,127 +291,14 @@ class CompetitionController extends Controller
         }
     }
 
-    /**
-     * Incrementa goals_scored para cada jogador que marcou nesta rodada.
-     * Lê os eventos armazenados nos matches já atualizados.
-     */
-    private function applyGoalsScored(Collection $matches): void
+    private function availableTeams(League $league, Competition $competition)
     {
-        // Acumula: player_id → quantidade de gols
-        $scorerTotals = [];
+        // Somente os LeagueTeams CPU que participam DESTA competição específica
+        $availableLeagueTeamIds = CompetitionTeam::where('competition_id', $competition->id)
+            ->pluck('league_team_id');
 
-        foreach ($matches as $match) {
-            $events = $match->fresh()->data['events'] ?? [];
-            foreach ($events as $event) {
-                if (($event['type'] ?? '') === 'goal' && ! empty($event['scorer_id'])) {
-                    $scorerTotals[$event['scorer_id']] = ($scorerTotals[$event['scorer_id']] ?? 0) + 1;
-                }
-            }
-        }
-
-        foreach ($scorerTotals as $playerId => $goals) {
-            CompetitionPlayer::where('id', $playerId)->increment('goals_scored', $goals);
-        }
-    }
-
-    /**
-     * Recuperação parcial de fitness antes de cada rodada.
-     * Jogadores descansam entre rodadas, recuperando entre 8–18 pts,
-     * proporcional ao stamina (quanto mais stamina, mais rápido se recupera).
-     * Cap: 100.
-     */
-    private function applyFitnessRecovery(Competition $competition): void
-    {
-        // Todos os league_team_ids desta competição
-        $leagueTeamIds = $competition->teams()->pluck('league_team_id');
-
-        $players = CompetitionPlayer::whereIn('league_team_id', $leagueTeamIds)->get();
-
-        foreach ($players as $player) {
-            if ($player->fitness >= 100) {
-                continue;
-            }
-
-            $stamina = max(1, $player->stamina ?? 50);
-            $age     = $player->age ?? 25;
-
-            // Veteranos (≥30) recuperam mais devagar; jovens (≤21) recuperam mais rápido
-            // Fator: 1.15 aos 18, 1.0 aos 25, 0.75 aos 32, 0.60 aos 36+
-            $ageFactor = match(true) {
-                $age <= 21 => 1.15,
-                $age <= 25 => 1.00,
-                $age <= 28 => 0.90,
-                $age <= 31 => 0.78,
-                $age <= 34 => 0.65,
-                default    => 0.55,
-            };
-
-            $recovery   = (int) round(rand(8, 18) * ($stamina / 90) * $ageFactor);
-            $newFitness = min(100, $player->fitness + $recovery);
-
-            $player->update(['fitness' => $newFitness]);
-        }
-    }
-
-    /**
-     * Desgaste físico após os jogos de uma rodada.
-     * Cada time que jogou tem seus jogadores desgastados.
-     * Perda = rand(5,14) escalado pelo inverso do stamina (baixo stamina = mais cansaço).
-     * Floor: 40 (ninguém fica completamente inapto por cansaço).
-     */
-    private function applyFitnessDegradation(Collection $matches): void
-    {
-        // Coleta todos os league_team_ids que jogaram nesta rodada
-        $leagueTeamIds = collect();
-
-        foreach ($matches as $match) {
-            if ($match->homeTeam) {
-                $leagueTeamIds->push($match->homeTeam->league_team_id);
-            }
-            if ($match->awayTeam) {
-                $leagueTeamIds->push($match->awayTeam->league_team_id);
-            }
-        }
-
-        $leagueTeamIds = $leagueTeamIds->filter()->unique()->values();
-
-        if ($leagueTeamIds->isEmpty()) {
-            return;
-        }
-
-        $players = CompetitionPlayer::whereIn('league_team_id', $leagueTeamIds)->get();
-
-        foreach ($players as $player) {
-            $stamina = max(1, $player->stamina ?? 50);
-            $age     = $player->age ?? 25;
-
-            // Veteranos se desgastam mais; jovens aguentam melhor
-            // Fator: 0.85 aos 18, 1.0 aos 25, 1.15 aos 30, 1.35 aos 34+
-            $ageFactor = match(true) {
-                $age <= 21 => 0.85,
-                $age <= 25 => 1.00,
-                $age <= 28 => 1.10,
-                $age <= 31 => 1.20,
-                $age <= 34 => 1.32,
-                default    => 1.45,
-            };
-
-            // Quanto menor o stamina, mais o jogador se desgasta (1.3 − stamina/90)
-            $loss = (int) round(rand(5, 14) * (1.3 - $stamina / 90) * $ageFactor);
-            $loss = max(3, $loss); // mínimo de 3 pts de desgaste sempre
-            $newFitness = max(40, $player->fitness - $loss);
-
-            $player->update(['fitness' => $newFitness]);
-        }
-    }
-
-    /**
-     * Times CPU disponíveis para assumir nesta liga.
-     * Retorna os times do catálogo (Team) que possuem um LeagueTeam CPU nesta liga.
-     */
-    private function availableTeams(League $league)
-    {
-        $availableTeamIds = LeagueTeam::where('league_id', $league->id)
+        $availableTeamIds = LeagueTeam::whereIn('id', $availableLeagueTeamIds)
+            ->where('league_id', $league->id)
             ->whereNull('user_id')
             ->whereNotNull('team_id')
             ->pluck('team_id');
@@ -496,4 +307,5 @@ class CompetitionController extends Controller
             ->orderBy('name')
             ->get();
     }
+
 }

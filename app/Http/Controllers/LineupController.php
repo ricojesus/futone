@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Competition;
 use App\Models\CompetitionLineup;
 use App\Models\League;
 use App\Models\LeagueTeam;
@@ -41,11 +42,23 @@ class LineupController extends Controller
             ->orderByDesc('strength')
             ->get();
 
-        // Get a competition for breadcrumb/context (the first one this leagueTeam participates in)
-        $competition = $leagueTeam->competitionTeams()->first()?->competition;
+        // Competição de retorno: prioriza ?back=uuid (quando vindo da página da competição)
+        // fallback: primeira competição em andamento do time
+        $backCompetitionId = request()->query('back');
+        $competition = ($backCompetitionId
+            ? Competition::find($backCompetitionId)
+            : null)
+            ?? $leagueTeam->competitionTeams()
+                ->whereHas('competition', fn($q) => $q->where('status', 'in_progress'))
+                ->first()
+                ?->competition;
+
+        $backUrl = $competition
+            ? route('competitions.show', [$league, $competition])
+            : route('leagues.show', $league);
 
         return view('leagues.lineups.edit', compact(
-            'league', 'leagueTeam', 'lineup', 'currentStarters', 'players', 'competition'
+            'league', 'leagueTeam', 'lineup', 'currentStarters', 'players', 'competition', 'backUrl'
         ));
     }
 

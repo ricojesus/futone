@@ -17,12 +17,26 @@
 
     // Eventos de gol extraídos para exibição de artilheiros
     $goalEvents = collect($events)->filter(fn($e) => ($e['type'] ?? '') === 'goal');
+
+    // Replay do 2º tempo: começa do minuto 46
+    $replayEvents = isset($secondHalf) && $secondHalf
+        ? collect($events)->filter(fn($e) => ($e['play'] ?? 0) >= 46)->values()->all()
+        : $events;
+
+    $replayInitialHome = isset($halftimeHomeScore) ? $halftimeHomeScore : 0;
+    $replayInitialAway = isset($halftimeAwayScore) ? $halftimeAwayScore : 0;
 @endphp
 
 <x-app-layout>
 <div class="min-h-screen bg-slate-950"
     @if ($replayMode)
-        x-data="matchReplay()"
+        x-data="matchReplay({
+            events:           {{ Js::from($replayEvents) }},
+            finalHomeScore:   {{ $finalHome }},
+            finalAwayScore:   {{ $finalAway }},
+            initialHomeScore: {{ $replayInitialHome }},
+            initialAwayScore: {{ $replayInitialAway }},
+        })"
         x-init="init()"
     @endif
 >
@@ -114,18 +128,11 @@
 
                 {{-- Controls --}}
                 <div class="mt-4 flex items-center justify-center gap-3 flex-wrap">
-                    <button @click="restart()"
-                        class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-slate-400 hover:border-slate-600 hover:text-white transition">
-                        ↺ Reiniciar
-                    </button>
-                    <button @click="playing ? pause() : play()"
-                        class="inline-flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition active:scale-95"
-                        :class="finished ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-400 text-white'"
-                        :disabled="finished">
-                        <svg x-show="!playing && !finished" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                        <svg x-show="playing" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
-                        <span x-text="finished ? 'Encerrado' : (playing ? 'Pausar' : 'Continuar')">Iniciar</span>
-                    </button>
+
+                    <div x-show="finished"
+                         class="inline-flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold bg-slate-700 text-slate-400">
+                        Encerrado
+                    </div>
                     <div class="flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-800/60 p-1">
                         <template x-for="s in [1, 2, 5, 15]" :key="s">
                             <button @click="setSpeed(s)"
@@ -209,13 +216,15 @@
                         </button>
 
                         <div x-show="open" x-collapse class="space-y-2">
-                            @forelse (array_reverse($events) as $event)
+                            @forelse ($events as $event)
                                 <div class="flex gap-3 rounded-xl border px-4 py-3
                                     @if (($event['type'] ?? '') === 'goal') border-emerald-500/50 bg-emerald-500/10
+                                    @elseif (($event['type'] ?? '') === 'halftime') border-amber-500/30 bg-amber-500/5
                                     @elseif (($event['type'] ?? '') === 'shot_saved') border-amber-500/30 bg-amber-500/5
                                     @else border-slate-800/60 bg-slate-900/40 @endif">
                                     <span class="shrink-0 w-8 pt-0.5 text-right text-xs font-bold tabular-nums
                                         @if (($event['type'] ?? '') === 'goal') text-emerald-400
+                                        @elseif (($event['type'] ?? '') === 'halftime') text-amber-400
                                         @elseif (($event['type'] ?? '') === 'shot_saved') text-amber-400
                                         @else text-slate-600 @endif">
                                         {{ $event['play'] ?? '' }}'
@@ -226,6 +235,8 @@
                                             @if (! empty($event['scorer_name']))
                                                 <span class="font-semibold text-white mr-1">{{ $event['scorer_name'] }}!</span>
                                             @endif
+                                        @elseif (($event['type'] ?? '') === 'halftime')
+                                            <span class="font-bold text-amber-400 mr-1">🔔 INTERVALO</span>
                                         @elseif (($event['type'] ?? '') === 'shot_saved')
                                             <span class="font-semibold text-amber-400 mr-1 text-xs">DEFESA!</span>
                                         @elseif (($event['type'] ?? '') === 'shot_missed')
@@ -243,25 +254,30 @@
                 @else
                     {{-- ── Feed de narração animado (replay mode) ─────────── --}}
                     <div>
-                        <h2 class="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Narração</h2>
+                        <h2 class="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">
+                            Narração
+                            @if (isset($secondHalf) && $secondHalf)
+                                <span class="ml-2 font-normal normal-case text-violet-400">— 2º Tempo</span>
+                            @endif
+                        </h2>
                         <div class="space-y-2 max-h-[55vh] overflow-y-auto pr-1" id="narration-feed">
                             <template x-if="narrations.length === 0 && !playing">
                                 <div class="rounded-2xl border border-dashed border-slate-800 px-6 py-10 text-center">
-                                    <p class="text-slate-600 text-sm">Pressione ▶ para iniciar a partida</p>
+                                    <p class="text-slate-600 text-sm">Pressione ▶ para iniciar {{ isset($secondHalf) && $secondHalf ? 'o 2º tempo' : 'a partida' }}</p>
                                 </div>
                             </template>
                             <template x-for="(event, idx) in narrations" :key="idx">
                                 <div class="flex gap-3 rounded-xl border px-4 py-3"
                                      :class="{
                                          'border-emerald-500/50 bg-emerald-500/10': event.type === 'goal',
-                                         'border-amber-500/30  bg-amber-500/5':    event.type === 'shot_saved',
-                                         'border-slate-800/60  bg-slate-900/40':   event.type !== 'goal' && event.type !== 'shot_saved',
+                                         'border-amber-500/30  bg-amber-500/5':    event.type === 'shot_saved' || event.type === 'halftime',
+                                         'border-slate-800/60  bg-slate-900/40':   event.type !== 'goal' && event.type !== 'shot_saved' && event.type !== 'halftime',
                                      }">
                                     <span class="shrink-0 w-8 pt-0.5 text-right text-xs font-bold tabular-nums"
                                           :class="{
                                               'text-emerald-400': event.type === 'goal',
-                                              'text-amber-400':   event.type === 'shot_saved',
-                                              'text-slate-600':   event.type !== 'goal' && event.type !== 'shot_saved',
+                                              'text-amber-400':   event.type === 'shot_saved' || event.type === 'halftime',
+                                              'text-slate-600':   event.type !== 'goal' && event.type !== 'shot_saved' && event.type !== 'halftime',
                                           }"
                                           x-text="event.play + '\''"></span>
                                     <div class="flex-1 text-sm text-slate-300 leading-snug">
@@ -269,6 +285,7 @@
                                         <span x-show="event.type === 'goal' && event.scorer_name"
                                               x-text="event.scorer_name + '!'"
                                               class="mr-1 font-semibold text-white"></span>
+                                        <span x-show="event.type === 'halftime'" class="mr-1 font-bold text-amber-400">🔔 INTERVALO</span>
                                         <span x-show="event.type === 'shot_saved'" class="mr-1 font-semibold text-amber-400 text-xs">DEFESA!</span>
                                         <span x-show="event.type === 'shot_missed'" class="mr-1 font-semibold text-slate-500 text-xs">FORA!</span>
                                         <span x-text="event.narration"></span>
@@ -325,7 +342,8 @@
                 </div>
 
                 {{-- Outros jogos da rodada --}}
-                <div class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+                <div @if ($replayMode) x-show="finished" x-transition @endif
+                     class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
                     <p class="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">
                         Rodada {{ $match->round }}
                     </p>
@@ -373,18 +391,18 @@
 @if ($replayMode)
 @push('scripts')
 <script>
-function matchReplay() {
+function matchReplay({ events, finalHomeScore, finalAwayScore, initialHomeScore = 0, initialAwayScore = 0 }) {
     return {
-        events:        @json($events),
-        finalHomeScore: {{ $finalHome }},
-        finalAwayScore: {{ $finalAway }},
+        events,
+        finalHomeScore,
+        finalAwayScore,
 
         currentIndex:  -1,
         playing:       false,
         speed:         1,
-        homeScore:     0,
-        awayScore:     0,
-        currentMinute: 0,
+        homeScore:     initialHomeScore,
+        awayScore:     initialAwayScore,
+        currentMinute: events.length > 0 ? events[0].play : 1,
         narrations:    [],
         finished:      false,
         timer:         null,
@@ -410,9 +428,9 @@ function matchReplay() {
         restart() {
             this.pause();
             this.currentIndex  = -1;
-            this.homeScore     = 0;
-            this.awayScore     = 0;
-            this.currentMinute = 0;
+            this.homeScore     = initialHomeScore;
+            this.awayScore     = initialAwayScore;
+            this.currentMinute = this.events.length > 0 ? this.events[0].play : 1;
             this.narrations    = [];
             this.finished      = false;
             setTimeout(() => this.play(), 500);

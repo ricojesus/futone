@@ -15,11 +15,31 @@ class Championship extends Model
         'name',
         'country_id',
         'state_id',
+        'competition_type',
+        'division',
         'type',
         'legs',
         'teams_count',
         'promotion_spots',
         'relegation_spots',
+    ];
+
+    const COMPETITION_TYPE_STATE    = 'state';
+    const COMPETITION_TYPE_NATIONAL = 'national';
+    const COMPETITION_TYPE_COPA     = 'copa';
+
+    const DIVISION_FIRST  = 'first';
+    const DIVISION_SECOND = 'second';
+
+    public static array $competitionTypes = [
+        'state'    => 'Estadual',
+        'national' => 'Nacional',
+        'copa'     => 'Copa',
+    ];
+
+    public static array $divisions = [
+        'first'  => 'Primeira divisão',
+        'second' => 'Segunda divisão',
     ];
 
     public static array $types = [

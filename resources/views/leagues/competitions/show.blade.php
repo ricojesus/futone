@@ -9,6 +9,24 @@
         <div class="border-b border-sky-500/20 bg-sky-500/5 px-4 py-3 text-sm text-sky-400 text-center">{{ session('info') }}</div>
     @endif
 
+    {{-- Banner de retorno ao intervalo --}}
+    @if ($myHalftimeUrl)
+        <div class="sticky top-0 z-30 border-b border-amber-500/30 bg-amber-500/10 backdrop-blur-sm">
+            <div class="mx-auto max-w-7xl px-4 py-2.5 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2.5 text-sm text-amber-300">
+                    <span class="h-2 w-2 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+                    <span class="font-semibold">Partida no intervalo!</span>
+                    <span class="text-amber-400/70 hidden sm:inline">O segundo tempo aguarda suas substituições.</span>
+                </div>
+                <a href="{{ $myHalftimeUrl }}"
+                   class="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-1.5 text-xs font-bold text-white hover:bg-amber-400 transition active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    Voltar ao intervalo
+                </a>
+            </div>
+        </div>
+    @endif
+
     {{-- ── Polling de rodada (apenas para não-donos em competições em andamento) ── --}}
     @if (! $isOwner && $competition->isInProgress())
     <div
@@ -107,7 +125,7 @@
                         <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-400">
                             Você gerencia <strong class="text-white">{{ $myLeagueTeam->name }}</strong>
                         </div>
-                        <a href="{{ route('leagues.lineup.edit', [$league, $myLeagueTeam]) }}"
+                        <a href="{{ route('leagues.lineup.edit', [$league, $myLeagueTeam]) . '?back=' . $competition->id }}"
                             class="inline-flex items-center gap-2 rounded-xl border border-violet-500/40 bg-violet-500/10 px-4 py-2 text-sm font-semibold text-violet-400 transition hover:bg-violet-500/20 active:scale-95">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
@@ -143,6 +161,202 @@
     </div>
 
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+
+        @if ($competition->isKnockout())
+        {{-- ═══════════════════════════════════════════════════════════════ --}}
+        {{-- COPA DO BRASIL — VISTA DE BRACKET (ida + volta por confronto)  --}}
+        {{-- ═══════════════════════════════════════════════════════════════ --}}
+        <div class="grid gap-6 lg:grid-cols-3 lg:gap-x-10">
+            <div class="lg:col-span-2 space-y-8">
+                @if ($bracketPhases->isEmpty())
+                    <div class="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 px-8 py-12 text-center">
+                        <p class="text-slate-500">Bracket ainda não gerado.</p>
+                    </div>
+                @else
+                    @foreach ($bracketPhases as $phaseNum => $slots)
+                        @php
+                            $phaseName = $phaseNames[$phaseNum] ?? "Fase {$phaseNum}";
+                            // Determina se a fase está completa (todos os leg2 finalizados)
+                            $phaseComplete = $slots->every(fn($s) => $s['leg2'] && $s['leg2']->status === 'finished');
+                            $phaseActive   = ! $phaseComplete && $slots->some(
+                                fn($s) => ($s['leg1'] && $s['leg1']->status === 'finished') || ($s['leg2'] && $s['leg2']->status !== 'pending')
+                            );
+                        @endphp
+                        <div>
+                            {{-- Cabeçalho da fase --}}
+                            <div class="mb-3 flex items-center gap-3">
+                                <h2 class="text-sm font-bold uppercase tracking-widest text-white">{{ $phaseName }}</h2>
+                                @if ($phaseComplete)
+                                    <span class="rounded-full border border-slate-600 bg-slate-800 px-2.5 py-0.5 text-xs text-slate-400">Encerrada</span>
+                                @elseif ($phaseActive)
+                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Em andamento
+                                    </span>
+                                @else
+                                    <span class="rounded-full border border-slate-700 bg-slate-800/50 px-2.5 py-0.5 text-xs text-slate-500">Aguardando</span>
+                                @endif
+                            </div>
+
+                            {{-- Confrontos desta fase --}}
+                            <div class="space-y-3">
+                                @foreach ($slots as $slotNum => $confrontation)
+                                    @php
+                                        $leg1 = $confrontation['leg1'];
+                                        $leg2 = $confrontation['leg2'];
+
+                                        // teamA = mandante da ida (leg1.homeTeam)
+                                        $teamA = $leg1?->homeTeam;
+                                        $teamB = $leg1?->awayTeam;
+
+                                        // Agregado
+                                        $goalsA = ($leg1?->home_score ?? 0) + ($leg2?->away_score ?? 0);
+                                        $goalsB = ($leg1?->away_score ?? 0) + ($leg2?->home_score ?? 0);
+
+                                        $bothPlayed = $leg1?->status === 'finished' && $leg2?->status === 'finished';
+                                        $leg1Played = $leg1?->status === 'finished';
+
+                                        $isMySlot = $myTeam && $leg1 && in_array($myTeam->id, [
+                                            $leg1->home_team_id, $leg1->away_team_id,
+                                        ]);
+
+                                        // Winner highlight
+                                        $winnerIsA = $bothPlayed && $goalsA >= $goalsB;
+                                        $winnerIsB = $bothPlayed && $goalsB > $goalsA;
+                                    @endphp
+                                    <div class="rounded-2xl border {{ $isMySlot ? 'border-emerald-500/40' : 'border-slate-700' }} bg-slate-900 overflow-hidden">
+                                        {{-- Slot header --}}
+                                        <div class="flex items-center justify-between border-b border-slate-800 px-5 py-2.5">
+                                            <span class="text-xs text-slate-500">Confronto {{ $slotNum }}</span>
+                                            @if ($bothPlayed)
+                                                <span class="text-xs font-semibold text-white tabular-nums">
+                                                    Agregado:
+                                                    <span class="{{ $winnerIsA ? 'text-emerald-400' : 'text-slate-400' }}">{{ $goalsA }}</span>
+                                                    –
+                                                    <span class="{{ $winnerIsB ? 'text-emerald-400' : 'text-slate-400' }}">{{ $goalsB }}</span>
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        {{-- Linha Ida --}}
+                                        <div class="flex items-center gap-2 px-5 py-3 border-b border-slate-800/60">
+                                            <span class="shrink-0 w-8 text-[10px] uppercase tracking-wide text-slate-600">Ida</span>
+                                            <div class="flex-1 text-right">
+                                                <span class="text-sm font-medium {{ ($isMySlot && $myTeam?->id === $leg1?->home_team_id) ? 'text-emerald-400' : 'text-white' }}">
+                                                    {{ $teamA?->name ?? '—' }}
+                                                </span>
+                                            </div>
+                                            <div class="shrink-0 w-20 text-center">
+                                                @if ($leg1Played)
+                                                    <a href="{{ route('matches.show', [$league, $competition, $leg1]) }}"
+                                                       class="inline-block text-base font-bold tabular-nums text-white hover:text-emerald-400 transition">
+                                                        {{ $leg1->home_score }} × {{ $leg1->away_score }}
+                                                    </a>
+                                                @else
+                                                    <span class="text-xs font-semibold text-slate-600 tracking-widest">VS</span>
+                                                @endif
+                                            </div>
+                                            <div class="flex-1 text-left">
+                                                <span class="text-sm font-medium {{ ($isMySlot && $myTeam?->id === $leg1?->away_team_id) ? 'text-emerald-400' : 'text-white' }}">
+                                                    {{ $teamB?->name ?? '—' }}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {{-- Linha Volta --}}
+                                        <div class="flex items-center gap-2 px-5 py-3">
+                                            <span class="shrink-0 w-8 text-[10px] uppercase tracking-wide text-slate-600">Volta</span>
+                                            <div class="flex-1 text-right">
+                                                <span class="text-sm font-medium {{ ($isMySlot && $myTeam?->id === $leg2?->home_team_id) ? 'text-emerald-400' : 'text-white' }}">
+                                                    {{ $teamB?->name ?? '—' }}
+                                                </span>
+                                            </div>
+                                            <div class="shrink-0 w-20 text-center">
+                                                @if ($leg2?->status === 'finished')
+                                                    <a href="{{ route('matches.show', [$league, $competition, $leg2]) }}"
+                                                       class="inline-block text-base font-bold tabular-nums text-white hover:text-emerald-400 transition">
+                                                        {{ $leg2->home_score }} × {{ $leg2->away_score }}
+                                                    </a>
+                                                @else
+                                                    <span class="text-xs font-semibold text-slate-600 tracking-widest">VS</span>
+                                                @endif
+                                            </div>
+                                            <div class="flex-1 text-left">
+                                                <span class="text-sm font-medium {{ ($isMySlot && $myTeam?->id === $leg2?->away_team_id) ? 'text-emerald-400' : 'text-white' }}">
+                                                    {{ $teamA?->name ?? '—' }}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {{-- Classificado (só quando fase encerrada) --}}
+                                        @if ($bothPlayed)
+                                            @php
+                                                $classified = $winnerIsA ? $teamA : $teamB;
+                                                $eliminated = $winnerIsA ? $teamB : $teamA;
+                                            @endphp
+                                            <div class="border-t border-slate-800 bg-slate-800/30 px-5 py-2 flex items-center gap-2">
+                                                <span class="text-[10px] uppercase tracking-wide text-slate-500">Classificado:</span>
+                                                <span class="text-xs font-bold text-emerald-400">{{ $classified?->name }}</span>
+                                                @if ($goalsA === $goalsB)
+                                                    <span class="ml-1 text-[10px] text-slate-500">(critério de seeding)</span>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+
+            {{-- Coluna lateral: Artilheiros (sem classificação para knockout) --}}
+            <div class="lg:border-l lg:border-slate-800 lg:pl-8 space-y-8">
+                <div>
+                    <h2 class="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-400">Artilheiros</h2>
+                    @if ($topScorers->isEmpty())
+                        <div class="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 px-6 py-8 text-center">
+                            <p class="text-slate-500 text-sm">Nenhum gol marcado ainda.</p>
+                        </div>
+                    @else
+                        <div class="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-xs text-slate-500">
+                                        <th class="px-4 py-3 text-left w-6">#</th>
+                                        <th class="px-4 py-3 text-left">Jogador</th>
+                                        <th class="px-3 py-3 text-left text-slate-600">Time</th>
+                                        <th class="px-3 py-3 text-center font-bold text-white" title="Gols">G</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800">
+                                    @foreach ($topScorers as $rank => $scorer)
+                                        @php $isMyPlayer = $myLeagueTeam && $scorer->league_team_id === $myLeagueTeam->id; @endphp
+                                        <tr class="{{ $isMyPlayer ? 'bg-emerald-500/5' : 'hover:bg-slate-800/50' }} transition">
+                                            <td class="px-4 py-2.5 text-slate-500 text-xs tabular-nums">{{ $rank + 1 }}</td>
+                                            <td class="px-4 py-2.5">
+                                                <div>
+                                                    <span class="font-medium {{ $isMyPlayer ? 'text-emerald-400' : 'text-white' }}">{{ $scorer->name }}</span>
+                                                    <span class="ml-1.5 text-[10px] uppercase tracking-wide text-slate-600">
+                                                        {{ match($scorer->position) { 'forward' => 'AT', 'midfielder' => 'ME', 'defender' => 'ZA', 'goalkeeper' => 'GK', default => '—' } }}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td class="px-3 py-2.5 text-xs text-slate-500 max-w-[80px] truncate">{{ $scorer->leagueTeam?->name ?? '—' }}</td>
+                                            <td class="px-3 py-2.5 text-center font-bold tabular-nums {{ $rank === 0 ? 'text-amber-400' : 'text-white' }}">{{ $scorer->goals_scored }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>{{-- /sidebar knockout --}}
+        </div>{{-- /grid knockout --}}
+
+        @else
+        {{-- ═══════════════════════════════════════════════════════════════ --}}
+        {{-- CAMPEONATO / BRASILEIRÃO — VISTA NORMAL (rodadas + tabela)     --}}
+        {{-- ═══════════════════════════════════════════════════════════════ --}}
         <div class="grid gap-6 lg:grid-cols-3 lg:gap-x-10">
 
             {{-- Coluna principal: Agenda --}}
@@ -234,6 +448,31 @@
                             <p class="text-slate-500 text-sm">Sem times inscritos.</p>
                         </div>
                     @else
+                        @php
+                            $totalTeams      = $standings->count();
+                            $relegationSpots = (int) ($competition->relegation_spots ?? 0);
+                            $promotionSpots  = (int) ($competition->promotion_spots ?? 0);
+                            $isFinished      = $competition->isFinished();
+                            $isFirstDiv      = $competition->division === \App\Models\Competition::DIVISION_FIRST;
+                            $isSecondDiv     = $competition->division === \App\Models\Competition::DIVISION_SECOND;
+                        @endphp
+
+                        {{-- Zone legend (finished competitions only) --}}
+                        @if ($isFinished && ($relegationSpots > 0 || $promotionSpots > 0))
+                            <div class="mb-3 flex flex-wrap gap-2 text-xs">
+                                @if ($isFirstDiv && $relegationSpots > 0)
+                                    <span class="inline-flex items-center gap-1 rounded-full border border-red-500/40 bg-red-500/10 px-2.5 py-1 text-red-400 font-medium">
+                                        ↓ Zona de rebaixamento ({{ $relegationSpots }})
+                                    </span>
+                                @endif
+                                @if ($isSecondDiv && $promotionSpots > 0)
+                                    <span class="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-emerald-400 font-medium">
+                                        ↑ Zona de acesso ({{ $promotionSpots }})
+                                    </span>
+                                @endif
+                            </div>
+                        @endif
+
                         <div class="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden">
                             <table class="w-full text-sm">
                                 <thead>
@@ -250,18 +489,50 @@
                                 <tbody class="divide-y divide-slate-800">
                                     @foreach ($standings as $pos => $team)
                                         @php
-                                            $isMe = $myTeam && $team->id === $myTeam->id;
-                                            $jogos = $team->wins + $team->draws + $team->losses;
+                                            $isMe       = $myTeam && $team->id === $myTeam->id;
+                                            $jogos      = $team->wins + $team->draws + $team->losses;
+                                            $isChampion = $isFinished && $isFirstDiv && $pos === 0;
+                                            $isRelZone  = $isFinished && $isFirstDiv && $relegationSpots > 0
+                                                && $pos >= ($totalTeams - $relegationSpots);
+                                            $isPromoZone = $isFinished && $isSecondDiv && $promotionSpots > 0
+                                                && $pos < $promotionSpots;
+
+                                            if ($isChampion) {
+                                                $rowBg   = 'bg-yellow-500/10';
+                                                $textCol = 'text-yellow-300';
+                                            } elseif ($isRelZone) {
+                                                $rowBg   = 'bg-red-500/5';
+                                                $textCol = 'text-red-300';
+                                            } elseif ($isPromoZone) {
+                                                $rowBg   = 'bg-emerald-500/5';
+                                                $textCol = 'text-emerald-300';
+                                            } else {
+                                                $rowBg   = $isMe ? 'bg-emerald-500/5' : 'hover:bg-slate-800/50';
+                                                $textCol = $isMe ? 'text-emerald-400' : 'text-white';
+                                            }
                                         @endphp
-                                        <tr class="{{ $isMe ? 'bg-emerald-500/5' : 'hover:bg-slate-800/50' }} transition">
-                                            <td class="px-4 py-2.5 text-slate-500 text-xs tabular-nums">{{ $pos + 1 }}</td>
-                                            <td class="px-4 py-2.5">
-                                                <span class="font-medium {{ $isMe ? 'text-emerald-400' : 'text-white' }}">
-                                                    {{ $team->name }}
-                                                </span>
-                                                @if ($team->leagueTeam?->isCpu())
-                                                    <span class="ml-1 text-xs text-slate-600">CPU</span>
+                                        <tr class="{{ $rowBg }} transition">
+                                            <td class="px-4 py-2.5 text-slate-500 text-xs tabular-nums">
+                                                @if ($isChampion)
+                                                    <span class="text-yellow-400">👑</span>
+                                                @else
+                                                    {{ $pos + 1 }}
                                                 @endif
+                                            </td>
+                                            <td class="px-4 py-2.5">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-medium {{ $textCol }}">
+                                                        {{ $team->name }}
+                                                    </span>
+                                                    @if ($team->leagueTeam?->isCpu())
+                                                        <span class="text-xs text-slate-600">CPU</span>
+                                                    @endif
+                                                    @if ($isRelZone)
+                                                        <span class="rounded-full border border-red-500/40 bg-red-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-red-400">↓ Rebaixado</span>
+                                                    @elseif ($isPromoZone)
+                                                        <span class="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400">↑ Promovido</span>
+                                                    @endif
+                                                </div>
                                             </td>
                                             <td class="px-2 py-2.5 text-center text-slate-400 tabular-nums">{{ $jogos }}</td>
                                             <td class="px-2 py-2.5 text-center text-slate-400 tabular-nums">{{ $team->wins }}</td>
@@ -273,11 +544,27 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        {{-- Season summary link when all competitions finished --}}
+                        @php
+                            $allFinished = $competition->league->competitions->every(
+                                fn($c) => $c->status === \App\Models\Competition::STATUS_FINISHED
+                            );
+                        @endphp
+                        @if ($isFinished && $allFinished)
+                            <div class="mt-4">
+                                <a href="{{ route('leagues.season-summary', $league) }}"
+                                   class="flex w-full items-center justify-center gap-2 rounded-2xl border border-yellow-500/40 bg-yellow-500/10 px-4 py-3 text-sm font-bold text-yellow-400 hover:bg-yellow-500/20 transition active:scale-95">
+                                    🏆 Ver resumo da temporada
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                                </a>
+                            </div>
+                        @endif
                     @endif
                 </div>
 
                 {{-- Artilheiros --}}
-                <div>
+                <div class="mt-10 pt-10 border-t border-slate-800">
                     <h2 class="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-400">Artilheiros</h2>
 
                     @if ($topScorers->isEmpty())
@@ -333,9 +620,10 @@
                     @endif
                 </div>
 
-            </div>
-        </div>
-    </div>
+            </div>{{-- /sidebar league --}}
+        </div>{{-- /grid league --}}
+        @endif{{-- /isKnockout --}}
+    </div>{{-- /max-w-7xl --}}
 
 @if (! $isOwner && $competition->isInProgress())
 @push('scripts')

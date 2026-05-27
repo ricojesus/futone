@@ -13,6 +13,7 @@ class Player extends Model
     protected $fillable = [
         'name',
         'position',
+        'team_id',
         'country_id',
         'age',
         'strength',
@@ -20,6 +21,11 @@ class Player extends Model
         'potential',
         'photo',
     ];
+
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(Team::class, 'team_id');
+    }
 
     public function country(): BelongsTo
     {

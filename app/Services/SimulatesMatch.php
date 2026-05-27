@@ -75,7 +75,7 @@ trait SimulatesMatch
             'away_shots_on_target' => $state['awayShotsOnTarget'],
             'home_formation'       => $state['homeFormation'],
             'away_formation'       => $state['awayFormation'],
-            'events'               => $state['events'],
+            'events'               => collect($state['events'])->sortBy('play')->values()->all(),
         ];
     }
 

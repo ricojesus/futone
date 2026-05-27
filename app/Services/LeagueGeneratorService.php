@@ -30,12 +30,6 @@ class LeagueGeneratorService
     const STATE_A1_SLOTS = 8;
     const STATE_A2_SLOTS = 8;
 
-    const NATIONAL_A_SLOTS = 20;
-    const NATIONAL_B_SLOTS = 20;
-
-    const NATIONAL_A_PER_STATE = 2;
-    const NATIONAL_B_PER_STATE = 2;
-
     // ── Nomes dos campeonatos estaduais ──────────────────────────────────
 
     const STATE_CHAMPIONSHIP_NAMES = [
@@ -106,8 +100,11 @@ class LeagueGeneratorService
     }
 
     /**
-     * Gera todas as competições de uma temporada dentro de um League já existente.
-     * Usado quando o usuário cria a liga manualmente e aciona "Gerar competições".
+     * Gera as competições estaduais (A1 + A2) de uma temporada dentro de um League já existente.
+     *
+     * Nota: Copa do Brasil e Brasileirão NÃO são criados aqui.
+     * Eles são criados automaticamente via GlobalRoundService::transitionPhase()
+     * quando a fase anterior encerra (estaduais → copa → nacional).
      *
      * @return array{state: Competition[], national: Competition[]}
      */
@@ -122,13 +119,7 @@ class LeagueGeneratorService
 
         $created = ['state' => [], 'national' => []];
 
-        $poolSerieA = collect();
-        $poolSerieB = collect();
-
-        DB::transaction(function () use (
-            $year, $league, $stateTeams,
-            &$created, &$poolSerieA, &$poolSerieB,
-        ) {
+        DB::transaction(function () use ($year, $league, $stateTeams, &$created) {
             foreach ($stateTeams as $stateCode => $teams) {
                 $state = State::where('code', $stateCode)->first();
                 if (! $state) continue;
@@ -145,14 +136,12 @@ class LeagueGeneratorService
                     'state_id'         => $state->id,
                     'season'           => $year,
                     'teams_count'      => $a1Teams->count(),
+                    'status'           => Competition::STATUS_IN_PROGRESS,
                 ]);
 
                 $this->attachTeams($league, $compA1, $a1Teams);
                 $this->calendar->generate($compA1);
                 $created['state'][] = $compA1;
-
-                $poolSerieA = $poolSerieA->concat($a1Teams->take(self::NATIONAL_A_PER_STATE));
-                $poolSerieB = $poolSerieB->concat($a1Teams->skip(self::NATIONAL_A_PER_STATE));
 
                 // ── Estadual A2 ───────────────────────────────────────────
                 if ($a2Teams->count() >= 2) {
@@ -164,53 +153,17 @@ class LeagueGeneratorService
                         'state_id'         => $state->id,
                         'season'           => $year,
                         'teams_count'      => $a2Teams->count(),
+                        'status'           => Competition::STATUS_IN_PROGRESS,
                     ]);
 
                     $this->attachTeams($league, $compA2, $a2Teams);
                     $this->calendar->generate($compA2);
                     $created['state'][] = $compA2;
-
-                    $poolSerieB = $poolSerieB->concat($a2Teams->take(self::NATIONAL_B_PER_STATE));
                 }
             }
 
-            // ── Brasileiro Série A ────────────────────────────────────────
-            $serieATeams = $poolSerieA->unique('id')->take(self::NATIONAL_A_SLOTS);
-
-            if ($serieATeams->count() >= 2) {
-                $serieA = $this->createCompetition($league, [
-                    'name'             => "Campeonato Brasileiro Série A {$year}",
-                    'slug'             => "brasileiro-serie-a-{$year}",
-                    'competition_type' => Competition::COMPETITION_TYPE_NATIONAL,
-                    'division'         => Competition::DIVISION_FIRST,
-                    'state_id'         => null,
-                    'season'           => $year,
-                    'teams_count'      => $serieATeams->count(),
-                ]);
-
-                $this->attachTeams($league, $serieA, $serieATeams);
-                $this->calendar->generate($serieA);
-                $created['national'][] = $serieA;
-            }
-
-            // ── Brasileiro Série B ────────────────────────────────────────
-            $serieBTeams = $poolSerieB->unique('id')->take(self::NATIONAL_B_SLOTS);
-
-            if ($serieBTeams->count() >= 2) {
-                $serieB = $this->createCompetition($league, [
-                    'name'             => "Campeonato Brasileiro Série B {$year}",
-                    'slug'             => "brasileiro-serie-b-{$year}",
-                    'competition_type' => Competition::COMPETITION_TYPE_NATIONAL,
-                    'division'         => Competition::DIVISION_SECOND,
-                    'state_id'         => null,
-                    'season'           => $year,
-                    'teams_count'      => $serieBTeams->count(),
-                ]);
-
-                $this->attachTeams($league, $serieB, $serieBTeams);
-                $this->calendar->generate($serieB);
-                $created['national'][] = $serieB;
-            }
+            // Garante que a liga começa na fase estadual
+            $league->update(['current_phase' => League::PHASE_STATE]);
         });
 
         return $created;

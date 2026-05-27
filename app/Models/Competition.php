@@ -16,6 +16,11 @@ class Competition extends Model
     // ── Tipo de competição ───────────────────────────────────────────────
     const COMPETITION_TYPE_STATE    = 'state';
     const COMPETITION_TYPE_NATIONAL = 'national';
+    const COMPETITION_TYPE_COPA     = 'copa';
+
+    // ── Formato ──────────────────────────────────────────────────────────
+    const FORMAT_LEAGUE   = 'league';
+    const FORMAT_KNOCKOUT = 'knockout';
 
     // ── Divisão ──────────────────────────────────────────────────────────
     const DIVISION_FIRST  = 'first';
@@ -46,12 +51,16 @@ class Competition extends Model
         'season',
         'started_at',
         'finished_at',
+        'bracket_data',
     ];
 
     protected $casts = [
-        'started_at'  => 'datetime',
-        'finished_at' => 'datetime',
+        'started_at'   => 'datetime',
+        'finished_at'  => 'datetime',
+        'bracket_data' => 'array',
     ];
+
+    public function isKnockout(): bool { return $this->format === self::FORMAT_KNOCKOUT; }
 
     // ── Relacionamentos ───────────────────────────────────────────────────
 

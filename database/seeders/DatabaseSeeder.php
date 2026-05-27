@@ -21,5 +21,11 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Dados mestre do futebol brasileiro
+        $this->call([
+            BrazilianStatesSeeder::class,
+            BrazilianTeamsSeeder::class,
+        ]);
     }
 }

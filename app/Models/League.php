@@ -21,6 +21,11 @@ class League extends Model
     const STATUS_FINISHED    = 'finished';
     const STATUS_CANCELLED   = 'cancelled';
 
+    // ── Fases da temporada ───────────────────────────────────────────────
+    const PHASE_STATE    = 'state';
+    const PHASE_COPA     = 'copa';
+    const PHASE_NATIONAL = 'national';
+
     protected $fillable = [
         'name',
         'slug',
@@ -29,6 +34,7 @@ class League extends Model
         'invite_code',
         'status',
         'season',
+        'current_phase',
         'started_at',
         'finished_at',
     ];

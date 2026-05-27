@@ -12,13 +12,21 @@ class Team extends Model
 
     protected $fillable = [
         'name',
+        'slug',
         'country_id',
         'state_id',
         'badge',
+        'overall',
+        'state_division',
+        'national_division',
         'tolerance',
         'fans_base',
         'stadium_capacity',
     ];
+
+    // Divisões possíveis
+    const DIVISION_FIRST  = 'first';
+    const DIVISION_SECOND = 'second';
 
     public function country(): BelongsTo
     {

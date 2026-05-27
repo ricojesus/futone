@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Country;
 use App\Models\Player;
+use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class PlayerController extends Controller
@@ -57,51 +59,68 @@ class PlayerController extends Controller
         $lines  = array_map('str_getcsv', file($request->file('file')->getRealPath()));
         $header = array_map('strtolower', array_map('trim', array_shift($lines)));
 
-        // Indexa países por code para lookup rápido no CSV
+        // Lookups rápidos
         $countryIndex = Country::pluck('id', 'code')->map(fn($id) => (string) $id)->toArray();
 
-        // Campos aceitos no CSV — potential é opcional (default 75 no banco)
-        $fields   = ['name', 'position', 'country_code', 'age', 'strength', 'stamina', 'potential'];
+        // Times indexados por slug para resolver team_name → team_id
+        $teamIndex = Team::whereNotNull('slug')
+            ->pluck('id', 'slug')
+            ->map(fn($id) => (string) $id)
+            ->toArray();
+
         $imported = 0;
         $errors   = [];
 
         foreach ($lines as $i => $line) {
-            $row = array_combine($header, $line);
-
-            if (!$row) {
-                $errors[] = "Linha " . ($i + 2) . ": formato inválido.";
+            if (count($line) !== count($header)) {
+                $errors[] = "Linha " . ($i + 2) . ": número de colunas inválido.";
                 continue;
             }
 
-            $data = array_intersect_key($row, array_flip($fields));
+            $row = array_combine($header, array_map('trim', $line));
 
-            if (empty($data['name']) || empty($data['position'])) {
+            $name     = $row['name'] ?? '';
+            $position = $row['position'] ?? '';
+
+            if ($name === '' || $position === '') {
                 $errors[] = "Linha " . ($i + 2) . ": name e position são obrigatórios.";
                 continue;
             }
 
-            if (!array_key_exists($data['position'], Player::$positions)) {
-                $errors[] = "Linha " . ($i + 2) . ": position '{$data['position']}' inválida.";
+            if (! array_key_exists($position, Player::$positions)) {
+                $errors[] = "Linha " . ($i + 2) . ": position '{$position}' inválida.";
                 continue;
             }
 
-            $countryCode = strtoupper(trim($data['country_code'] ?? ''));
+            $countryCode = strtoupper($row['country_code'] ?? '');
             $countryId   = $countryIndex[$countryCode] ?? null;
 
-            // potential: opcional no CSV; se fornecido deve ser 1–99
-            $potential = isset($data['potential']) && is_numeric(trim($data['potential']))
-                ? max(1, min(99, (int) trim($data['potential'])))
+            // Resolve time pelo slug gerado a partir de team_name
+            $teamId = null;
+            if (! empty($row['team_name'])) {
+                $slug   = Str::slug($row['team_name']);
+                $teamId = $teamIndex[$slug] ?? null;
+            }
+
+            $potential = is_numeric($row['potential'] ?? null)
+                ? max(1, min(99, (int) $row['potential']))
                 : 75;
 
-            Player::create([
-                'name'       => trim($data['name']),
-                'position'   => trim($data['position']),
-                'country_id' => $countryId,
-                'age'        => is_numeric($data['age'] ?? null) ? (int) $data['age'] : null,
-                'strength'   => is_numeric($data['strength'] ?? null) ? (int) $data['strength'] : 50,
-                'stamina'    => is_numeric($data['stamina'] ?? null) ? (int) $data['stamina'] : 100,
-                'potential'  => $potential,
-            ]);
+            Player::updateOrCreate(
+                [
+                    'name'    => $name,
+                    'team_id' => $teamId,
+                ],
+                [
+                    'position'   => $position,
+                    'team_id'    => $teamId,
+                    'country_id' => $countryId,
+                    'age'        => is_numeric($row['age'] ?? null) ? (int) $row['age'] : null,
+                    'strength'   => is_numeric($row['strength'] ?? null) ? (int) $row['strength'] : 50,
+                    'stamina'    => is_numeric($row['stamina'] ?? null) ? (int) $row['stamina'] : 100,
+                    'potential'  => $potential,
+                ]
+            );
 
             $imported++;
         }

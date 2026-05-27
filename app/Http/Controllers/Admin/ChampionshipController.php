@@ -137,16 +137,33 @@ class ChampionshipController extends Controller
             $countryCode = strtoupper(trim($row['country_code'] ?? ''));
             $stateCode   = strtoupper(trim($row['state_code'] ?? ''));
 
-            Championship::create([
-                'name'             => $name,
-                'country_id'       => $countryIndex[$countryCode] ?? null,
-                'state_id'         => $stateIndex[$stateCode] ?? null,
-                'type'             => $type,
-                'legs'             => $legs,
-                'teams_count'      => is_numeric($row['teams_count'] ?? null) ? (int) $row['teams_count'] : 20,
-                'promotion_spots'  => is_numeric($row['promotion_spots'] ?? null) ? (int) $row['promotion_spots'] : null,
-                'relegation_spots' => is_numeric($row['relegation_spots'] ?? null) ? (int) $row['relegation_spots'] : null,
-            ]);
+            $competitionType = trim($row['competition_type'] ?? '');
+            if (! in_array($competitionType, ['state', 'national', 'copa'])) {
+                $competitionType = null;
+            }
+
+            $division = trim($row['division'] ?? '');
+            if (! in_array($division, ['first', 'second'])) {
+                $division = null;
+            }
+
+            Championship::updateOrCreate(
+                [
+                    'name'     => $name,
+                    'state_id' => $stateIndex[$stateCode] ?? null,
+                ],
+                [
+                    'country_id'       => $countryIndex[$countryCode] ?? null,
+                    'state_id'         => $stateIndex[$stateCode] ?? null,
+                    'competition_type' => $competitionType,
+                    'division'         => $division,
+                    'type'             => $type,
+                    'legs'             => $legs,
+                    'teams_count'      => is_numeric($row['teams_count'] ?? null) ? (int) $row['teams_count'] : 20,
+                    'promotion_spots'  => is_numeric($row['promotion_spots'] ?? null) ? (int) $row['promotion_spots'] : null,
+                    'relegation_spots' => is_numeric($row['relegation_spots'] ?? null) ? (int) $row['relegation_spots'] : null,
+                ]
+            );
 
             $imported++;
         }

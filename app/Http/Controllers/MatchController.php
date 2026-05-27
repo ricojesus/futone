@@ -43,11 +43,26 @@ class MatchController extends Controller
             ->with(['homeTeam', 'awayTeam'])
             ->get();
 
-        $replayMode = request()->boolean('replay');
+        $replayMode  = request()->boolean('replay');
+        $secondHalf  = request()->boolean('second_half');
+
+        // Quando é replay do 2º tempo, o placar inicial do replay é o do intervalo
+        $events = $match->data['events'] ?? [];
+        $halftimeHomeScore = 0;
+        $halftimeAwayScore = 0;
+        if ($secondHalf) {
+            foreach ($events as $e) {
+                if (($e['type'] ?? '') === 'goal' && ($e['play'] ?? 0) <= 45) {
+                    if (($e['team'] ?? '') === 'home') $halftimeHomeScore++;
+                    else $halftimeAwayScore++;
+                }
+            }
+        }
 
         return view('leagues.competitions.matches.show', compact(
             'league', 'competition', 'match',
-            'myLeagueTeam', 'isMyMatch', 'side', 'roundMatches', 'replayMode'
+            'myLeagueTeam', 'isMyMatch', 'side', 'roundMatches',
+            'replayMode', 'secondHalf', 'halftimeHomeScore', 'halftimeAwayScore'
         ));
     }
 
@@ -97,12 +112,26 @@ class MatchController extends Controller
                 ->first();
 
             if ($lineup) {
-                $allPlayers = $lineup->players()
-                    ->orderBy('competition_lineup_players.slot')
-                    ->get();
+                $positionOrder = ['goalkeeper' => 0, 'defender' => 1, 'midfielder' => 2, 'forward' => 3];
 
-                $starters = $allPlayers->filter(fn($p) => $p->pivot->is_starter);
-                $bench    = $allPlayers->filter(fn($p) => ! $p->pivot->is_starter);
+                // Titulares: vêm da escalação salva
+                $starters = $lineup->players()
+                    ->orderBy('competition_lineup_players.slot')
+                    ->get()
+                    ->filter(fn($p) => $p->pivot->is_starter)
+                    ->sortBy(fn($p) => $positionOrder[$p->position] ?? 99)
+                    ->values();
+
+                // Reservas: todos os jogadores ativos do time que NÃO estão entre os titulares
+                // (o save de lineup só persiste titulares, então bench vem direto do elenco)
+                $starterIds = $starters->pluck('id')->map(fn($id) => (string) $id)->all();
+
+                $bench = $myLeagueTeam->players()
+                    ->where('status', 'active')
+                    ->whereNotIn('id', $starterIds)
+                    ->orderByRaw("FIELD(position, 'goalkeeper','defender','midfielder','forward')")
+                    ->orderByDesc('strength')
+                    ->get();
             }
         }
 
@@ -194,6 +223,8 @@ class MatchController extends Controller
 
             // Artilharia e fitness (reutiliza o match fresh com eventos completos)
             $this->applyGoalsScored($match->fresh());
+            $homeTeam->load('competition');
+            $awayTeam->load('competition');
             $this->applyFitnessDegradation($homeTeam, $awayTeam);
 
             // Avança a rodada se todos os jogos daquela rodada estão finalizados
@@ -212,7 +243,7 @@ class MatchController extends Controller
         });
 
         return redirect()
-            ->route('matches.show', [$league, $competition, $match->fresh(), 'replay' => 1])
+            ->route('matches.show', [$league, $competition, $match->fresh(), 'replay' => 1, 'second_half' => 1])
             ->with('success', 'Segundo tempo concluído! Assista ao replay completo.');
     }
 
@@ -254,34 +285,61 @@ class MatchController extends Controller
             $baseLineup = $override->fresh(['lineupPlayers']);
         }
 
-        // Aplica cada substituição: swap is_starter entre out e in
+        // IDs de jogadores do time (para validação)
+        $teamPlayerIds = $leagueTeam->players()
+            ->where('status', 'active')
+            ->pluck('id')
+            ->map(fn($id) => (string) $id)
+            ->all();
+
+        // Aplica cada substituição
         foreach (array_slice($substitutions, 0, 5) as $sub) {
-            $outId = $sub['out'] ?? null;
-            $inId  = $sub['in']  ?? null;
+            $outId = (string) ($sub['out'] ?? '');
+            $inId  = (string) ($sub['in']  ?? '');
 
             if (! $outId || ! $inId || $outId === $inId) {
                 continue;
             }
 
+            // Valida que o reserva pertence ao time
+            if (! in_array($inId, $teamPlayerIds, true)) {
+                continue;
+            }
+
+            // Titular que sai
             $outRecord = $baseLineup->lineupPlayers()
                 ->where('competition_player_id', $outId)
                 ->where('is_starter', true)
                 ->first();
 
-            $inRecord = $baseLineup->lineupPlayers()
-                ->where('competition_player_id', $inId)
-                ->where('is_starter', false)
-                ->first();
-
-            if (! $outRecord || ! $inRecord) {
+            if (! $outRecord) {
                 continue;
             }
 
-            // Swap: o que estava fora entra; o que estava dentro sai
-            [$outRecord->is_starter, $inRecord->is_starter] = [false, true];
-            [$outRecord->slot, $inRecord->slot]             = [$inRecord->slot, $outRecord->slot];
+            // Reserva que entra: pode já estar na lineup (is_starter=false) ou não estar
+            $inRecord = $baseLineup->lineupPlayers()
+                ->where('competition_player_id', $inId)
+                ->first();
+
+            if ($inRecord) {
+                // Já está na lineup — faz o swap normal
+                $inRecord->is_starter = true;
+                $inRecord->slot       = $outRecord->slot;
+                $inRecord->role       = $outRecord->role;
+                $inRecord->save();
+            } else {
+                // Não está na lineup — cria como titular no slot do jogador que saiu
+                $baseLineup->lineupPlayers()->create([
+                    'competition_player_id' => $inId,
+                    'role'                  => $outRecord->role,
+                    'slot'                  => $outRecord->slot,
+                    'is_starter'            => true,
+                ]);
+            }
+
+            // Titular sai
+            $outRecord->is_starter = false;
             $outRecord->save();
-            $inRecord->save();
         }
     }
 
@@ -307,10 +365,41 @@ class MatchController extends Controller
     /**
      * Aplica desgaste físico aos jogadores dos times desta partida ao vivo.
      */
+    /**
+     * Degrada apenas os titulares que jogaram o segundo tempo (após substituições).
+     * Reservas que não entraram em campo ficam intactos.
+     */
     private function applyFitnessDegradation(CompetitionTeam $homeTeam, CompetitionTeam $awayTeam): void
     {
-        $leagueTeamIds = collect([$homeTeam->league_team_id, $awayTeam->league_team_id])->filter();
-        $players       = \App\Models\CompetitionPlayer::whereIn('league_team_id', $leagueTeamIds)->get();
+        $starterIds = collect();
+
+        foreach ([$homeTeam, $awayTeam] as $compTeam) {
+            if (! $compTeam?->league_team_id) {
+                continue;
+            }
+
+            // Busca escalação ativa para esta rodada (override com subs ou padrão)
+            $lineup = \App\Models\CompetitionLineup::where('league_team_id', $compTeam->league_team_id)
+                ->where('status', 'active')
+                ->whereIn('round', [$compTeam->competition->current_round ?? 0, 0])
+                ->orderByDesc('round')
+                ->first();
+
+            if (! $lineup) {
+                continue;
+            }
+
+            $lineup->lineupPlayers()
+                ->where('is_starter', true)
+                ->pluck('competition_player_id')
+                ->each(fn($id) => $starterIds->push($id));
+        }
+
+        if ($starterIds->isEmpty()) {
+            return;
+        }
+
+        $players = \App\Models\CompetitionPlayer::whereIn('id', $starterIds->unique())->get();
 
         foreach ($players as $player) {
             $stamina = max(1, $player->stamina ?? 50);
@@ -325,9 +414,9 @@ class MatchController extends Controller
                 default    => 1.45,
             };
 
-            $loss       = (int) round(rand(5, 14) * (1.3 - $stamina / 90) * $ageFactor);
-            $loss       = max(3, $loss);
-            $newFitness = max(40, $player->fitness - $loss);
+            $loss       = (int) round(rand(10, 18) * (1.3 - $stamina / 90) * $ageFactor);
+            $loss       = max(5, $loss);
+            $newFitness = max(35, $player->fitness - $loss);
 
             $player->update(['fitness' => $newFitness]);
         }

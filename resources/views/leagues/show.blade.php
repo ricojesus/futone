@@ -16,6 +16,27 @@
         </div>
     @endif
 
+    {{-- Banner: temporada encerrada --}}
+    @php
+        $allCompetitionsFinished = $league->competitions->isNotEmpty()
+            && $league->competitions->every(fn($c) => $c->status === \App\Models\Competition::STATUS_FINISHED);
+    @endphp
+    @if ($allCompetitionsFinished)
+        <div class="sticky top-0 z-30 border-b border-yellow-500/30 bg-yellow-500/10 backdrop-blur-sm">
+            <div class="mx-auto max-w-7xl px-4 py-2.5 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2.5 text-sm text-yellow-300">
+                    <span class="text-base">🏆</span>
+                    <span class="font-semibold">Temporada {{ $league->season }} encerrada!</span>
+                    <span class="text-yellow-400/70 hidden sm:inline">Todas as competições foram finalizadas.</span>
+                </div>
+                <a href="{{ route('leagues.season-summary', $league) }}"
+                   class="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-yellow-500 px-4 py-1.5 text-xs font-bold text-slate-900 hover:bg-yellow-400 transition active:scale-95">
+                    Ver resumo e avançar →
+                </a>
+            </div>
+        </div>
+    @endif
+
     {{-- Hero da liga --}}
     <div class="relative overflow-hidden border-b border-slate-800 bg-slate-900">
         <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.08),transparent_60%)]"></div>
@@ -72,7 +93,24 @@
                 </div>
 
                 {{-- Ações principais --}}
+                @php
+                    $phaseLabels = [
+                        'state'    => ['label' => 'Estaduais', 'icon' => '🏟', 'color' => 'blue'],
+                        'copa'     => ['label' => 'Copa do Brasil', 'icon' => '🏆', 'color' => 'amber'],
+                        'national' => ['label' => 'Brasileirão', 'icon' => '🇧🇷', 'color' => 'emerald'],
+                    ];
+                    $currentPhaseInfo = $phaseLabels[$league->current_phase] ?? null;
+                @endphp
                 <div class="flex shrink-0 flex-col gap-2 sm:items-end">
+
+                    {{-- Badge de fase atual --}}
+                    @if ($league->isInProgress() && $currentPhaseInfo)
+                        <div class="inline-flex items-center gap-1.5 rounded-full border border-slate-600 bg-slate-800 px-3 py-1 text-xs text-slate-300">
+                            <span>{{ $currentPhaseInfo['icon'] }}</span>
+                            <span class="font-semibold">{{ $currentPhaseInfo['label'] }}</span>
+                        </div>
+                    @endif
+
                     @if ($isOwner && $league->competitions->isEmpty())
                         <form action="{{ route('leagues.generate', $league) }}" method="POST">
                             @csrf
@@ -91,6 +129,18 @@
                                 onclick="return confirm('Iniciar a liga agora?')">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" /></svg>
                                 Iniciar Liga
+                            </button>
+                        </form>
+                    @elseif ($isOwner && $league->isInProgress() && !$allCompetitionsFinished)
+                        {{-- Botão principal: Avançar semana --}}
+                        <form action="{{ route('leagues.advance-week', $league) }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                class="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 active:scale-95">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061A1.125 1.125 0 0 1 3 16.811V8.69ZM12.75 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061a1.125 1.125 0 0 1-1.683-.977V8.69Z" />
+                                </svg>
+                                Avançar Semana
                             </button>
                         </form>
                     @endif
