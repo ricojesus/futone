@@ -34,20 +34,25 @@ class LeagueController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'   => 'required|string|max:100',
-            'access' => 'required|in:public,private',
-            'season' => 'required|integer|min:1900|max:2200',
+            'name'            => 'required|string|max:100',
+            'access'          => 'required|in:public,private',
+            'season'          => 'required|integer|min:1900|max:2200',
+            'team_assignment' => 'required|in:manual,auto',
+            'max_seasons'     => 'nullable|integer|min:1|max:20',
         ]);
 
         $league = DB::transaction(function () use ($validated) {
             return League::create([
-                'name'        => $validated['name'],
-                'slug'        => Str::slug($validated['name']) . '-' . Str::lower(Str::random(5)),
-                'owner_id'    => auth()->id(),
-                'type'        => $validated['access'],
-                'invite_code' => $validated['access'] === 'private' ? Str::upper(Str::random(8)) : null,
-                'status'      => League::STATUS_WAITING,
-                'season'      => (int) $validated['season'],
+                'name'            => $validated['name'],
+                'slug'            => Str::slug($validated['name']) . '-' . Str::lower(Str::random(5)),
+                'owner_id'        => auth()->id(),
+                'type'            => $validated['access'],
+                'invite_code'     => $validated['access'] === 'private' ? Str::upper(Str::random(8)) : null,
+                'status'          => League::STATUS_WAITING,
+                'season'          => (int) $validated['season'],
+                'season_start'    => (int) $validated['season'],
+                'team_assignment' => $validated['team_assignment'],
+                'max_seasons'     => $validated['max_seasons'] ?? null,
             ]);
         });
 
@@ -57,7 +62,7 @@ class LeagueController extends Controller
 
     public function show(League $league)
     {
-        $league->load(['competitions.state', 'competitions.teams', 'leagueTeams', 'owner']);
+        $league->load(['competitions.state', 'competitions.teams', 'leagueTeams', 'owner', 'members.user']);
 
         $isOwner  = $league->owner_id === auth()->id();
 

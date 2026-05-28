@@ -51,7 +51,7 @@
                     <h1 class="text-2xl font-extrabold text-white sm:text-3xl">{{ $league->name }}</h1>
 
                     @if ($league->season)
-                        <p class="mt-1 text-slate-400">Temporada {{ $league->season }}</p>
+                        <p class="mt-1 text-slate-400">{{ $league->seasonLabel() }}</p>
                     @endif
 
                     <div class="mt-3 flex flex-wrap gap-2">
@@ -89,6 +89,20 @@
                         <span class="inline-flex items-center gap-1 rounded-full border border-slate-600 bg-slate-800 px-3 py-1 text-xs text-slate-400">
                             Criada por <strong class="text-white ml-1">{{ $league->owner->name }}</strong>
                         </span>
+
+                        {{-- Tipo de atribuição --}}
+                        @if ($league->isAutoAssignment())
+                            <span class="inline-flex items-center gap-1 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs text-violet-400">
+                                🎲 Sorteio automático
+                            </span>
+                        @endif
+
+                        {{-- Duração --}}
+                        @if ($league->hasSeasonLimit())
+                            <span class="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-400">
+                                ⏱ {{ $league->max_seasons }} temporada(s)
+                            </span>
+                        @endif
                     </div>
                 </div>
 
@@ -168,6 +182,106 @@
                 <p class="mt-2 text-xs text-sky-400/70">Compartilhe este código para convidar jogadores para esta liga.</p>
             </div>
         @endif
+
+        {{-- ══ LOBBY: sorteio automático ══════════════════════════════════════ --}}
+        @if ($league->isAutoAssignment() && $league->isWaiting())
+            @php
+                $members        = $league->members()->with('user')->orderBy('created_at')->get();
+                $waitingMembers = $members->where('status', 'waiting');
+                $myMembership   = $members->firstWhere('user_id', auth()->id());
+                $myLeagueTeam   = $league->leagueTeams->firstWhere('user_id', auth()->id());
+                $alreadyInLobby = $myMembership !== null || $myLeagueTeam !== null || $isOwner;
+            @endphp
+            <div class="mb-8 rounded-2xl border border-violet-500/20 bg-violet-500/5 overflow-hidden">
+                {{-- Header do lobby --}}
+                <div class="flex items-center justify-between border-b border-violet-500/10 px-5 py-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl">🎲</span>
+                        <div>
+                            <h2 class="font-bold text-white text-sm">Lobby — Aguardando Sorteio</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">
+                                {{ $waitingMembers->count() }} jogador(es) na fila · O dono sorteia os times quando todos estiverem prontos
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Ações --}}
+                    @if ($isOwner)
+                        @if ($waitingMembers->isNotEmpty())
+                            <form action="{{ route('leagues.lobby.draw', $league) }}" method="POST">
+                                @csrf
+                                <button type="submit"
+                                    onclick="return confirm('Sortear os times para todos na fila agora?')"
+                                    class="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-violet-400 active:scale-95">
+                                    🎲 Sortear Times
+                                </button>
+                            </form>
+                        @else
+                            <span class="text-xs text-slate-600 italic">Nenhum jogador na fila ainda</span>
+                        @endif
+                    @elseif (! $alreadyInLobby)
+                        <form action="{{ route('leagues.lobby.join', $league) }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                class="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-violet-400 active:scale-95">
+                                + Entrar na fila
+                            </button>
+                        </form>
+                    @elseif ($myMembership?->isWaiting())
+                        <span class="inline-flex items-center gap-1.5 rounded-full border border-violet-500/40 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-400">
+                            <span class="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse"></span>
+                            Na fila
+                        </span>
+                    @elseif ($myMembership?->status === 'assigned' || $myLeagueTeam)
+                        <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400">
+                            ✓ Time sorteado
+                        </span>
+                    @endif
+                </div>
+
+                {{-- Lista de membros --}}
+                @if ($members->isEmpty())
+                    <div class="px-5 py-8 text-center">
+                        <p class="text-slate-600 text-sm">Nenhum jogador na fila ainda.</p>
+                        <p class="text-xs text-slate-600 mt-1">Compartilhe o código de convite para que os amigos entrem.</p>
+                    </div>
+                @else
+                    <div class="divide-y divide-violet-500/10">
+                        @foreach ($members as $member)
+                            @php
+                                $memberTeam = $league->leagueTeams->firstWhere('user_id', $member->user_id);
+                            @endphp
+                            <div class="flex items-center gap-3 px-5 py-3">
+                                {{-- Avatar inicial --}}
+                                <div class="shrink-0 h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-slate-300">
+                                    {{ strtoupper(substr($member->user->name ?? '?', 0, 1)) }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-white truncate">
+                                        {{ $member->user->name }}
+                                        @if ($member->user_id === $league->owner_id)
+                                            <span class="ml-1 text-[10px] text-slate-500">(dono)</span>
+                                        @endif
+                                    </p>
+                                    @if ($memberTeam)
+                                        <p class="text-xs text-emerald-400 truncate">⚽ {{ $memberTeam->name }}</p>
+                                    @else
+                                        <p class="text-xs text-slate-600">Aguardando sorteio…</p>
+                                    @endif
+                                </div>
+                                {{-- Status badge --}}
+                                @if ($member->status === 'assigned' || $memberTeam)
+                                    <span class="shrink-0 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">Sorteado</span>
+                                @else
+                                    <span class="shrink-0 rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold text-violet-400">Na fila</span>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        @endif
+        {{-- ════════════════════════════════════════════════════════════════════ --}}
 
         {{-- Competições --}}
         <div>

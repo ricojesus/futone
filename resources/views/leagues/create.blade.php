@@ -84,6 +84,88 @@
                 </div>
             </div>
 
+            {{-- Escolha de time --}}
+            <div class="rounded-2xl border border-slate-700 bg-slate-900 p-6">
+                <h2 class="mb-1 text-sm font-semibold uppercase tracking-widest text-slate-400">Escolha de Time</h2>
+                <p class="mb-4 text-xs text-slate-500">Como os jogadores recebem seus times nesta liga.</p>
+
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="team_assignment" value="manual" class="sr-only peer"
+                               {{ old('team_assignment', 'manual') === 'manual' ? 'checked' : '' }} />
+                        <div class="rounded-xl border border-slate-600 bg-slate-800 p-4 transition peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 h-full">
+                            <div class="flex items-start gap-3">
+                                <span class="mt-0.5 text-xl">🎯</span>
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-300 peer-checked:text-white">Escolha Livre</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">Cada jogador escolhe o próprio time ao entrar na liga.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="team_assignment" value="auto" class="sr-only peer"
+                               {{ old('team_assignment') === 'auto' ? 'checked' : '' }} />
+                        <div class="rounded-xl border border-slate-600 bg-slate-800 p-4 transition peer-checked:border-violet-500 peer-checked:bg-violet-500/10 h-full">
+                            <div class="flex items-start gap-3">
+                                <span class="mt-0.5 text-xl">🎲</span>
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-300">Sorteio Automático</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">Jogadores entram na fila e o dono sorteia os times de uma vez.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            {{-- Duração --}}
+            <div class="rounded-2xl border border-slate-700 bg-slate-900 p-6" x-data="{ custom: {{ old('max_seasons') && !in_array(old('max_seasons'), ['1','2','3','5']) ? 'true' : 'false' }} }">
+                <h2 class="mb-1 text-sm font-semibold uppercase tracking-widest text-slate-400">Duração da Liga</h2>
+                <p class="mb-4 text-xs text-slate-500">Quantas temporadas esta liga vai durar? Ao atingir o limite, a liga é encerrada automaticamente.</p>
+
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    @foreach ([null => 'Sem limite', 1 => '1 temp.', 2 => '2 temp.', 3 => '3 temp.', 5 => '5 temp.'] as $val => $label)
+                        @php $valStr = $val === null ? '' : (string)$val; @endphp
+                        <label class="cursor-pointer">
+                            <input type="radio" name="max_seasons" value="{{ $valStr }}"
+                                   class="sr-only peer"
+                                   x-on:change="custom = false"
+                                   {{ old('max_seasons', '') == $valStr && !(old('max_seasons') && !in_array(old('max_seasons'), ['','1','2','3','5'])) ? 'checked' : '' }} />
+                            <div class="rounded-xl border border-slate-600 bg-slate-800 px-3 py-2.5 text-center text-xs font-semibold transition
+                                        peer-checked:border-amber-500 peer-checked:bg-amber-500/10 peer-checked:text-amber-400
+                                        text-slate-400 hover:border-slate-500">
+                                {{ $label }}
+                            </div>
+                        </label>
+                    @endforeach
+                    {{-- Personalizado --}}
+                    <label class="cursor-pointer">
+                        <input type="radio" name="_max_seasons_custom_trigger" value="custom"
+                               class="sr-only peer"
+                               x-on:change="custom = true"
+                               {{ old('max_seasons') && !in_array(old('max_seasons'), ['','1','2','3','5']) ? 'checked' : '' }} />
+                        <div class="rounded-xl border border-slate-600 bg-slate-800 px-3 py-2.5 text-center text-xs font-semibold transition
+                                    peer-checked:border-amber-500 peer-checked:bg-amber-500/10 peer-checked:text-amber-400
+                                    text-slate-400 hover:border-slate-500">
+                            Personalizado
+                        </div>
+                    </label>
+                </div>
+
+                {{-- Campo numérico para personalizado --}}
+                <div x-show="custom" x-transition class="mt-4">
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Número de temporadas</label>
+                    <input type="number"
+                           x-on:input="$el.form.querySelector('[name=max_seasons]') && ($el.form.querySelector('[name=max_seasons]').value = $el.value)"
+                           name="max_seasons"
+                           value="{{ old('max_seasons') && !in_array(old('max_seasons'), ['','1','2','3','5']) ? old('max_seasons') : '' }}"
+                           min="1" max="20" placeholder="Ex: 7"
+                           class="w-40 rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                    <p class="mt-1 text-xs text-slate-500">Mínimo 1, máximo 20 temporadas.</p>
+                </div>
+            </div>
+
             {{-- Ações --}}
             <div class="flex items-center justify-end gap-4">
                 <a href="{{ route('leagues.index') }}"

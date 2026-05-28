@@ -12,6 +12,7 @@ use App\Http\Controllers\CompetitionController;
 use App\Http\Controllers\MatchController;
 use App\Http\Controllers\LeagueController;
 use App\Http\Controllers\LeagueJoinController;
+use App\Http\Controllers\LeagueLobbyController;
 use App\Http\Controllers\LeagueTeamController;
 use App\Http\Controllers\LineupController;
 use App\Http\Controllers\ProfileController;
@@ -43,6 +44,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/leagues/{league}/advance-week',   [LeagueController::class, 'advanceWeek'])->name('leagues.advance-week');
     Route::get('/leagues/{league}/season-summary',  [LeagueController::class, 'seasonSummary'])->name('leagues.season-summary');
     Route::post('/leagues/{league}/advance-season', [LeagueController::class, 'advanceSeason'])->name('leagues.advance-season');
+
+    // Lobby (sorteio automático de times)
+    Route::post('/leagues/{league}/lobby/join', [LeagueLobbyController::class, 'join'])->name('leagues.lobby.join');
+    Route::post('/leagues/{league}/lobby/draw', [LeagueLobbyController::class, 'draw'])->name('leagues.lobby.draw');
 
     // Team enrollment
     Route::get('/leagues/{league}/join',   [LeagueTeamController::class, 'create'])->name('leagues.teams.create');

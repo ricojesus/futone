@@ -22,6 +22,12 @@ class LeagueTeamController extends Controller
      */
     public function create(League $league)
     {
+        // Liga com sorteio automático: jogadores entram pelo lobby
+        if ($league->isAutoAssignment()) {
+            return redirect()->route('leagues.show', $league)
+                ->with('info', 'Esta liga usa sorteio automático. Aguarde o dono sortear os times.');
+        }
+
         $competition = $this->findOpenCompetition($league);
 
         if (! $competition) {

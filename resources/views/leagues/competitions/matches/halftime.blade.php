@@ -369,6 +369,13 @@
                                             $fit >= 40 => 'text-orange-400',
                                             default    => 'text-red-400',
                                         };
+                                        $ovr = (int) ($player->strength ?? 0);
+                                        $ovrLabel = match(true) {
+                                            $ovr >= 80 => 'text-amber-300',
+                                            $ovr >= 65 => 'text-emerald-400',
+                                            $ovr >= 50 => 'text-slate-300',
+                                            default    => 'text-slate-500',
+                                        };
                                     @endphp
                                     <div class="flex items-center gap-3 px-4 py-2.5"
                                          :class="isIn('{{ $player->id }}') ? 'opacity-40' : ''">
@@ -382,8 +389,14 @@
                                             } }}
                                         </span>
                                         <span class="flex-1 text-sm font-medium text-white">{{ $player->name }}</span>
+                                        {{-- OVR --}}
+                                        <div class="shrink-0 flex flex-col items-center w-9">
+                                            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-600 leading-none">OVR</span>
+                                            <span class="text-sm font-bold tabular-nums leading-tight {{ $ovrLabel }}">{{ $ovr }}</span>
+                                        </div>
+                                        {{-- Saúde --}}
                                         <div class="flex items-center gap-1.5 shrink-0">
-                                            <div class="w-16 h-1.5 rounded-full bg-slate-700/80 overflow-hidden">
+                                            <div class="w-14 h-1.5 rounded-full bg-slate-700/80 overflow-hidden">
                                                 <div class="h-full rounded-full" style="width:{{ $fit }}%; background:{{ $fitColor }};"></div>
                                             </div>
                                             <span class="text-[10px] font-medium tabular-nums {{ $fitLabel }}">{{ $fit }}%</span>

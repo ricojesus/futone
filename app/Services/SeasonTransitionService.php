@@ -117,6 +117,11 @@ class SeasonTransitionService
 
             // ── Bump league season ────────────────────────────────────────
             $league->update(['season' => $nextYear]);
+
+            // ── Auto-encerrar se atingiu o limite de temporadas ───────────
+            if ($league->fresh()->isLastSeason()) {
+                $league->update(['status' => League::STATUS_FINISHED, 'finished_at' => now()]);
+            }
         });
 
         return $league->fresh();
