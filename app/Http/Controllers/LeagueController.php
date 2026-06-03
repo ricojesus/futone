@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Competition;
 use App\Models\League;
+use App\Models\LeagueMember;
 use App\Models\LeagueTeam;
 use App\Services\GlobalRoundService;
 use App\Services\LeagueGeneratorService;
@@ -16,12 +17,30 @@ class LeagueController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
+        $userId = auth()->id();
 
-        $leagues = League::where('owner_id', $user->id)
-            ->with(['competitions', 'owner'])
+        // IDs de ligas onde o usuário é dono
+        $ownerIds = League::where('owner_id', $userId)->pluck('id');
+
+        // IDs de ligas onde o usuário tem um time (jogador)
+        $playerIds = LeagueTeam::where('user_id', $userId)->pluck('league_id');
+
+        // IDs de ligas onde o usuário está no lobby aguardando sorteio
+        $lobbyIds = LeagueMember::where('user_id', $userId)->pluck('league_id');
+
+        $allIds = $ownerIds->concat($playerIds)->concat($lobbyIds)->unique();
+
+        $leagues = League::whereIn('id', $allIds)
+            ->with(['competitions', 'owner', 'leagueTeams'])
             ->latest()
-            ->get();
+            ->get()
+            ->map(function (League $league) use ($userId) {
+                // Adiciona metadados de papel do usuário para filtro na view
+                $league->userIsOwner  = $league->owner_id === $userId;
+                $league->userIsPlayer = $league->leagueTeams
+                    ->contains('user_id', $userId);
+                return $league;
+            });
 
         return view('leagues.index', compact('leagues'));
     }

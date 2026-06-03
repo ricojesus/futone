@@ -24,6 +24,7 @@
     </div>
 
     <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+
         @if ($leagues->isEmpty())
             <div class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 px-8 py-20 text-center">
                 <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-800 text-slate-500">
@@ -43,46 +44,105 @@
                 </div>
             </div>
         @else
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                @foreach ($leagues as $league)
-                    @php
-                        $isOwner = $league->owner_id === auth()->id();
-                        $competitionCount = $league->competitions->count();
-                    @endphp
-                    <a href="{{ route('leagues.show', $league) }}"
-                        class="group flex flex-col rounded-2xl border border-slate-700 bg-slate-900 p-5 transition hover:border-emerald-500/40 hover:bg-slate-800/60">
+            {{-- Filtros --}}
+            @php
+                $totalAll        = $leagues->count();
+                $totalOwner      = $leagues->where('userIsOwner', true)->count();
+                $totalPlaying    = $leagues->where('userIsPlayer', true)->count();
+            @endphp
 
-                        <div class="mb-3 flex items-start justify-between gap-2">
-                            <h3 class="font-bold text-white leading-snug">{{ $league->name }}</h3>
-                            {{-- Status badge --}}
-                            @if ($league->isWaiting())
-                                <span class="shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-400">Aguardando</span>
-                            @elseif ($league->isInProgress())
-                                <span class="shrink-0 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-400">Em andamento</span>
-                            @else
-                                <span class="shrink-0 rounded-full border border-slate-600 bg-slate-800 px-2 py-0.5 text-xs font-semibold text-slate-400">Encerrada</span>
-                            @endif
-                        </div>
-
-                        <p class="mb-3 text-sm text-slate-400">
-                            {{ $competitionCount }} {{ $competitionCount === 1 ? 'competição' : 'competições' }}
-                            @if ($league->season)
-                                · Temporada {{ $league->season }}
-                            @endif
-                        </p>
-
-                        <div class="mt-auto flex items-center justify-between border-t border-slate-800 pt-3">
-                            <span class="text-xs text-slate-500">
-                                Criada por {{ $league->owner->name }}
+            <div
+                x-data="{ filter: 'all' }"
+                class="space-y-6"
+            >
+                {{-- Tabs de filtro --}}
+                <div class="flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-900 p-1 w-fit">
+                    @foreach ([
+                        ['key' => 'all',     'label' => 'Todas',          'count' => $totalAll],
+                        ['key' => 'owner',   'label' => 'Criadas por mim','count' => $totalOwner],
+                        ['key' => 'playing', 'label' => 'Participando',   'count' => $totalPlaying],
+                    ] as $tab)
+                        <button
+                            @click="filter = '{{ $tab['key'] }}'"
+                            :class="filter === '{{ $tab['key'] }}'
+                                ? 'bg-slate-700 text-white'
+                                : 'text-slate-500 hover:text-slate-300'"
+                            class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition">
+                            {{ $tab['label'] }}
+                            <span
+                                :class="filter === '{{ $tab['key'] }}'
+                                    ? 'bg-slate-500 text-white'
+                                    : 'bg-slate-800 text-slate-500'"
+                                class="rounded-full px-2 py-0.5 text-xs font-bold tabular-nums transition">
+                                {{ $tab['count'] }}
                             </span>
-                            <div class="flex gap-1.5">
-                                @if ($isOwner)
-                                    <span class="rounded-full bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 text-xs text-violet-400">Criador</span>
+                        </button>
+                    @endforeach
+                </div>
+
+                {{-- Grid de ligas --}}
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($leagues as $league)
+                        @php
+                            $competitionCount = $league->competitions->count();
+                        @endphp
+                        <a href="{{ route('leagues.show', $league) }}"
+                            x-show="
+                                filter === 'all' ||
+                                (filter === 'owner'   && {{ $league->userIsOwner  ? 'true' : 'false' }}) ||
+                                (filter === 'playing' && {{ $league->userIsPlayer ? 'true' : 'false' }})
+                            "
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            class="group flex flex-col rounded-2xl border border-slate-700 bg-slate-900 p-5 transition hover:border-emerald-500/40 hover:bg-slate-800/60">
+
+                            <div class="mb-3 flex items-start justify-between gap-2">
+                                <h3 class="font-bold text-white leading-snug">{{ $league->name }}</h3>
+                                {{-- Status badge --}}
+                                @if ($league->isWaiting())
+                                    <span class="shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-400">Aguardando</span>
+                                @elseif ($league->isInProgress())
+                                    <span class="shrink-0 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-400">Em andamento</span>
+                                @else
+                                    <span class="shrink-0 rounded-full border border-slate-600 bg-slate-800 px-2 py-0.5 text-xs font-semibold text-slate-400">Encerrada</span>
                                 @endif
                             </div>
-                        </div>
-                    </a>
-                @endforeach
+
+                            <p class="mb-3 text-sm text-slate-400">
+                                {{ $competitionCount }} {{ $competitionCount === 1 ? 'competição' : 'competições' }}
+                                @if ($league->season)
+                                    · {{ $league->seasonLabel() }}
+                                @endif
+                            </p>
+
+                            <div class="mt-auto flex items-center justify-between border-t border-slate-800 pt-3">
+                                <span class="text-xs text-slate-500">
+                                    {{ $league->owner->name }}
+                                </span>
+                                <div class="flex gap-1.5">
+                                    @if ($league->userIsOwner)
+                                        <span class="rounded-full bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 text-xs text-violet-400">Criador</span>
+                                    @endif
+                                    @if ($league->userIsPlayer)
+                                        <span class="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-xs text-emerald-400">Jogador</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+
+                {{-- Mensagem de vazio ao filtrar --}}
+                <p
+                    x-show="
+                        (filter === 'owner'   && {{ $totalOwner }}   === 0) ||
+                        (filter === 'playing' && {{ $totalPlaying }} === 0)
+                    "
+                    class="text-center text-sm text-slate-500 py-12">
+                    Nenhuma liga encontrada para este filtro.
+                </p>
+
             </div>
         @endif
     </div>
