@@ -36,6 +36,206 @@ Cada fase é desbloqueada automaticamente quando a anterior termina. A liga pode
 
 ---
 
+## Diagramas
+
+### Estrutura de Dados
+
+```mermaid
+erDiagram
+    User {
+        bigint id
+        string name
+        string email
+    }
+    League {
+        uuid id
+        string name
+        enum status
+        enum current_phase
+        enum team_assignment
+        int season
+        int season_start
+        int max_seasons
+    }
+    LeagueMember {
+        uuid id
+        enum status
+    }
+    LeagueTeam {
+        uuid id
+        string name
+    }
+    Competition {
+        uuid id
+        string name
+        enum competition_type
+        enum format
+        enum division
+        enum status
+        int current_round
+        int total_rounds
+    }
+    CompetitionTeam {
+        uuid id
+        string name
+        int points
+        int wins
+        int draws
+        int losses
+        int goals_for
+        int goals_against
+    }
+    CompetitionPlayer {
+        uuid id
+        string name
+        enum position
+        int strength
+        int stamina
+        int fitness
+        int age
+        int goals_scored
+        decimal form_factor
+    }
+    CompetitionMatch {
+        uuid id
+        int round
+        int leg
+        enum status
+        int home_score
+        int away_score
+        json data
+    }
+    MatchState {
+        uuid id
+        json state
+    }
+    CompetitionLineup {
+        uuid id
+        string formation
+        int round
+    }
+    CompetitionLineupPlayer {
+        uuid id
+        enum role
+        bool is_starter
+        int slot
+    }
+    State {
+        uuid id
+        string name
+        string code
+    }
+    Team {
+        uuid id
+        string name
+        string slug
+        enum state_division
+        enum national_division
+    }
+
+    User ||--o{ League : "cria (owner)"
+    User ||--o{ LeagueMember : "entra no lobby"
+    User ||--o| LeagueTeam : "gerencia"
+    League ||--o{ LeagueMember : ""
+    League ||--o{ LeagueTeam : ""
+    League ||--o{ Competition : ""
+    LeagueTeam ||--o{ CompetitionTeam : ""
+    LeagueTeam ||--o{ CompetitionPlayer : "elenco"
+    LeagueTeam ||--o{ CompetitionLineup : ""
+    Competition ||--o{ CompetitionTeam : ""
+    Competition ||--o{ CompetitionMatch : ""
+    Competition }o--|| State : "estaduais"
+    CompetitionTeam ||--o{ CompetitionPlayer : ""
+    CompetitionMatch ||--|| CompetitionTeam : "home"
+    CompetitionMatch ||--|| CompetitionTeam : "away"
+    CompetitionMatch ||--o| MatchState : "intervalo"
+    CompetitionLineup ||--o{ CompetitionLineupPlayer : ""
+    CompetitionLineupPlayer }o--|| CompetitionPlayer : ""
+    Team }o--|| State : ""
+```
+
+---
+
+### Fluxo da Temporada
+
+```mermaid
+flowchart TD
+    A([Criar Liga]) --> B{Modo de entrada}
+    B -- Escolha livre --> C[Jogadores escolhem\nseus times]
+    B -- Sorteio automático --> D[Jogadores entram\nno lobby]
+    D --> E[Dono sorteia\nos times]
+    C --> F
+    E --> F[Gerar Competições]
+
+    F --> G
+
+    subgraph ESTADUAL["🏟 Fase Estadual"]
+        G[A1 + A2 por estado\n27 estados × 2 divisões]
+        G --> H{Todas as\nrodadas concluídas?}
+        H -- Não --> I[Avançar rodada]
+        I --> H
+        H -- Sim --> J[Promoção / Rebaixamento\nA1 ↔ A2]
+    end
+
+    J --> K
+
+    subgraph COPA["🏆 Copa do Brasil"]
+        K[Bracket nacional\nida + volta]
+        K --> L{Fase\nencerrada?}
+        L -- Não --> M[Avançar rodada\ndo bracket]
+        M --> L
+    end
+
+    L -- Sim --> N
+
+    subgraph NACIONAL["🇧🇷 Brasileirão"]
+        N[Série A + Série B\nnacional]
+        N --> O{Todas as\nrodadas concluídas?}
+        O -- Não --> P[Avançar rodada]
+        P --> O
+        O -- Sim --> Q[Promoção / Rebaixamento\nSérie A ↔ Série B]
+    end
+
+    Q --> R[Resumo da Temporada]
+    R --> S{Limite de\ntemporadas atingido?}
+    S -- Sim --> T([Liga Encerrada])
+    S -- Não --> U[Nova Temporada\nseason + 1]
+    U --> G
+```
+
+---
+
+### Fluxo de uma Partida ao Vivo
+
+```mermaid
+sequenceDiagram
+    actor Dono
+    actor Jogador
+    participant Sistema
+
+    Dono->>Sistema: Avançar rodada
+    Sistema->>Sistema: CPU × CPU → simula completo (MatchSimulator)
+    Sistema->>Sistema: Humano × CPU → simula 1º tempo (LiveMatchSimulator)
+    Sistema->>Sistema: Salva em MatchState (events, scores, stats)
+    Sistema-->>Jogador: Redireciona para /halftime
+
+    Jogador->>Sistema: Acessa página do intervalo
+    Sistema-->>Jogador: Replay narrado do 1º tempo (Alpine.js)
+    Sistema-->>Jogador: Estatísticas + painel de substituições (OVR + fitness)
+
+    Jogador->>Sistema: Seleciona até 5 substituições
+    Jogador->>Sistema: POST → Iniciar 2º tempo
+
+    Sistema->>Sistema: Aplica substituições na lineup
+    Sistema->>Sistema: Simula 2º tempo (LiveMatchSimulator)
+    Sistema->>Sistema: Atualiza standings, artilharia e fitness
+    Sistema->>Sistema: status = finished
+
+    Sistema-->>Jogador: Redireciona para replay completo
+```
+
+---
+
 ## Funcionalidades
 
 ### Ligas
