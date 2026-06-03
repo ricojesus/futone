@@ -135,6 +135,29 @@ class MatchController extends Controller
             }
         }
 
+        // Detecta Human vs Human (ambos os times têm dono)
+        $homeIsHuman    = ($match->homeTeam->leagueTeam?->user_id) !== null;
+        $awayIsHuman    = ($match->awayTeam->leagueTeam?->user_id) !== null;
+        $isHumanVsHuman = $homeIsHuman && $awayIsHuman;
+
+        // Metadados de coordenação HvH
+        $myReady    = false;
+        $otherReady = false;
+        $secondsLeft = 60;
+        $statusUrl  = null;
+
+        if ($isHumanVsHuman && $side) {
+            $otherSide   = $side === 'home' ? 'away' : 'home';
+            $myReady     = (bool) ($state["{$side}_ready"]      ?? false);
+            $otherReady  = (bool) ($state["{$otherSide}_ready"] ?? false);
+            $halftimeAt  = $state['halftime_at'] ?? null;
+            $elapsed     = $halftimeAt
+                ? now()->diffInSeconds(\Carbon\Carbon::parse($halftimeAt))
+                : 0;
+            $secondsLeft = max(0, 60 - $elapsed);
+            $statusUrl   = route('matches.halftime.status', [$league, $competition, $match]);
+        }
+
         // Eventos e stats do primeiro tempo
         $events         = $state['events']           ?? [];
         $homeScore      = $state['homeScore']         ?? 0;
@@ -155,6 +178,7 @@ class MatchController extends Controller
             'events', 'homeScore', 'awayScore',
             'homeShots', 'awayShots', 'homeOnTarget', 'awayOnTarget',
             'homePossession',
+            'isHumanVsHuman', 'myReady', 'otherReady', 'secondsLeft', 'statusUrl',
         ));
     }
 
@@ -185,12 +209,61 @@ class MatchController extends Controller
 
         abort_unless($isParticipant, 403, 'Apenas o técnico do time pode iniciar o segundo tempo.');
 
-        // ── Aplicar substituições ────────────────────────────────────
-        // Formato: substitutions[0][out] = player_id, substitutions[0][in] = player_id
+        $mySide = $match->homeTeam->league_team_id === $myLeagueTeam->id ? 'home' : 'away';
+
+        // ── Detecta Human vs Human ───────────────────────────────────
+        $homeIsHuman    = ($match->homeTeam->leagueTeam?->user_id) !== null;
+        $awayIsHuman    = ($match->awayTeam->leagueTeam?->user_id) !== null;
+        $isHumanVsHuman = $homeIsHuman && $awayIsHuman;
+
         $substitutions = $request->input('substitutions', []);
 
-        if (! empty($substitutions)) {
-            $this->applySubstitutions($myLeagueTeam, $match->round, $substitutions);
+        if ($isHumanVsHuman) {
+            // ── Fluxo Human × Human ──────────────────────────────────
+            $matchState = MatchState::where('competition_match_id', $match->id)->firstOrFail();
+            $state      = $matchState->state;
+
+            // Persiste substituições e marca este lado como pronto
+            $state["{$mySide}_ready"]         = true;
+            $state["{$mySide}_substitutions"] = $substitutions;
+
+            // Verifica se o adversário já confirmou ou se o tempo esgotou
+            $otherSide      = $mySide === 'home' ? 'away' : 'home';
+            $otherReady     = (bool) ($state["{$otherSide}_ready"] ?? false);
+            $force          = $request->boolean('force');
+            $halftimeAt     = $state['halftime_at'] ?? null;
+            $elapsed        = $halftimeAt
+                ? now()->diffInSeconds(\Carbon\Carbon::parse($halftimeAt))
+                : 999;
+            $timeoutExpired = $elapsed >= 60;
+
+            // Salva o estado parcial (meu lado pronto)
+            $matchState->update(['state' => $state]);
+
+            if (! $otherReady && ! $timeoutExpired && ! $force) {
+                // Adversário ainda não confirmou e o tempo não esgotou — aguarda
+                return redirect()
+                    ->route('matches.halftime', [$league, $competition, $match])
+                    ->with('info', 'Confirmado! Aguardando o adversário terminar o intervalo…');
+            }
+
+            // Ambos prontos (ou tempo esgotou): aplica substituições dos dois lados
+            $homeLeagueTeam = $match->homeTeam->leagueTeam;
+            $awayLeagueTeam = $match->awayTeam->leagueTeam;
+            $homeSubs       = $state['home_substitutions'] ?? [];
+            $awaySubs       = $state['away_substitutions'] ?? [];
+
+            if ($homeLeagueTeam && ! empty($homeSubs)) {
+                $this->applySubstitutions($homeLeagueTeam, $match->round, $homeSubs);
+            }
+            if ($awayLeagueTeam && ! empty($awaySubs)) {
+                $this->applySubstitutions($awayLeagueTeam, $match->round, $awaySubs);
+            }
+        } else {
+            // ── Fluxo Human × CPU ────────────────────────────────────
+            if (! empty($substitutions)) {
+                $this->applySubstitutions($myLeagueTeam, $match->round, $substitutions);
+            }
         }
 
         // ── Simular segundo tempo ────────────────────────────────────
@@ -245,6 +318,41 @@ class MatchController extends Controller
         return redirect()
             ->route('matches.show', [$league, $competition, $match->fresh(), 'replay' => 1, 'second_half' => 1])
             ->with('success', 'Segundo tempo concluído! Assista ao replay completo.');
+    }
+
+    // ── Status do intervalo (polling HvH) ─────────────────────────────
+
+    public function halftimeStatus(League $league, Competition $competition, CompetitionMatch $match)
+    {
+        abort_unless($competition->league_id === $league->id, 404);
+        abort_unless($match->competition_id === $competition->id, 404);
+
+        // Partida já encerrada — redireciona o cliente para o replay
+        if ($match->status === 'finished') {
+            return response()->json([
+                'finished'  => true,
+                'match_url' => route('matches.show', [$league, $competition, $match, 'replay' => 1, 'second_half' => 1]),
+            ]);
+        }
+
+        abort_unless($match->status === 'halftime', 404);
+
+        $matchState = MatchState::where('competition_match_id', $match->id)->firstOrFail();
+        $state      = $matchState->state;
+
+        $halftimeAt  = $state['halftime_at'] ?? null;
+        $elapsed     = $halftimeAt
+            ? now()->diffInSeconds(\Carbon\Carbon::parse($halftimeAt))
+            : 0;
+        $secondsLeft = max(0, 60 - $elapsed);
+
+        return response()->json([
+            'finished'     => false,
+            'home_ready'   => (bool) ($state['home_ready'] ?? false),
+            'away_ready'   => (bool) ($state['away_ready'] ?? false),
+            'seconds_left' => $secondsLeft,
+            'can_force'    => $secondsLeft === 0,
+        ]);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────

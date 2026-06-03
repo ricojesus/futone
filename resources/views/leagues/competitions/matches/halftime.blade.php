@@ -1,10 +1,11 @@
 @php
-    $homeName    = $match->homeTeam->name;
-    $awayName    = $match->awayTeam->name;
-    $myHome      = $side === 'home';
-    $myAway      = $side === 'away';
-    $goalEvents  = collect($events)->filter(fn($e) => ($e['type'] ?? '') === 'goal');
+    $homeName       = $match->homeTeam->name;
+    $awayName       = $match->awayTeam->name;
+    $myHome         = $side === 'home';
+    $myAway         = $side === 'away';
+    $goalEvents     = collect($events)->filter(fn($e) => ($e['type'] ?? '') === 'goal');
     $awayPossession = 100 - $homePossession;
+    $opponentName   = $myHome ? $awayName : $homeName;
 @endphp
 
 <x-app-layout>
@@ -248,13 +249,71 @@
                         </div>
                     </div>
 
-                    {{-- Painel de substituições (só para o técnico do time) --}}
-                    @if ($canResume && $lineup && $starters->isNotEmpty())
+                    {{-- ══ PAINEL AGUARDANDO (HvH — já confirmei, esperando adversário) ══ --}}
+                    @if ($isHumanVsHuman && $myReady && ! $otherReady)
+                    <div
+                        x-data="hvhWaiting({
+                            secondsLeft:  {{ $secondsLeft }},
+                            statusUrl:    '{{ $statusUrl }}',
+                            resumeUrl:    '{{ route('matches.halftime.resume', [$league, $competition, $match]) }}',
+                            otherReady:   false,
+                        })"
+                        x-init="startPolling()"
+                        @destroy.window="stopPolling()"
+                    >
+                        {{-- Banner aguardando --}}
+                        <div class="mb-4 rounded-2xl border border-violet-500/30 bg-violet-500/5 px-5 py-5 text-center space-y-3">
+                            <div class="flex items-center justify-center gap-2">
+                                <span class="h-2 w-2 rounded-full bg-violet-400 animate-pulse"></span>
+                                <p class="font-bold text-violet-300 text-sm">Aguardando {{ $opponentName }}</p>
+                            </div>
+                            <p class="text-xs text-slate-500">Suas substituições foram salvas. O 2º tempo começa assim que o adversário confirmar ou o tempo esgotar.</p>
+
+                            {{-- Countdown ring --}}
+                            <div class="flex items-center justify-center gap-3">
+                                <div class="relative flex items-center justify-center w-16 h-16">
+                                    <svg class="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1e293b" stroke-width="3"/>
+                                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#7c3aed" stroke-width="3"
+                                                stroke-dasharray="100"
+                                                :stroke-dashoffset="100 - (secondsLeft / 60 * 100)"
+                                                style="transition: stroke-dashoffset 1s linear;"/>
+                                    </svg>
+                                    <span class="text-lg font-black tabular-nums text-white" x-text="secondsLeft"></span>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-xs text-slate-500 leading-snug">segundos até o<br>início automático</p>
+                                </div>
+                            </div>
+
+                            {{-- Adversário confirmou --}}
+                            <div x-show="otherReady" x-transition class="text-xs font-semibold text-emerald-400">
+                                ✓ Adversário confirmou! Iniciando…
+                            </div>
+                        </div>
+
+                        {{-- Formulário de força (auto-submit quando countdown chega a 0) --}}
+                        <form
+                            action="{{ route('matches.halftime.resume', [$league, $competition, $match]) }}"
+                            method="POST"
+                            x-ref="forceForm"
+                        >
+                            @csrf
+                            <input type="hidden" name="force" value="1">
+                        </form>
+                    </div>
+
+                    {{-- ══ PAINEL SUBSTITUIÇÕES (HvCPU ou HvH ainda não confirmado) ══ --}}
+                    @elseif ($canResume && $lineup && $starters->isNotEmpty())
                     <div
                         x-data="{
                             subs: [],
                             maxSubs: 5,
                             pendingOut: null,
+                            @if ($isHumanVsHuman)
+                            secondsLeft: {{ $secondsLeft }},
+                            countdownTimer: null,
+                            @endif
                             addSub(outId, inId) {
                                 if (this.subs.length >= this.maxSubs) return;
                                 if (this.subs.find(s => s.out === outId || s.in === inId)) return;
@@ -268,7 +327,40 @@
                             isIn(id)   { return this.subs.some(s => s.in  === id); },
                             subsCount() { return this.subs.length; },
                         }"
+                        @if ($isHumanVsHuman)
+                        x-init="
+                            countdownTimer = setInterval(() => {
+                                if (secondsLeft > 0) {
+                                    secondsLeft--;
+                                } else {
+                                    clearInterval(countdownTimer);
+                                    $refs.subsForm.requestSubmit();
+                                }
+                            }, 1000);
+                        "
+                        @endif
                     >
+                        {{-- Banner HvH: aviso de coordenação --}}
+                        @if ($isHumanVsHuman)
+                        <div class="mb-4 rounded-2xl border border-violet-500/20 bg-violet-500/5 px-4 py-3 flex items-start gap-3">
+                            <span class="text-violet-400 text-lg mt-0.5">👥</span>
+                            <div class="flex-1">
+                                <p class="text-xs font-semibold text-violet-300">Jogo entre humanos</p>
+                                <p class="text-xs text-slate-500 mt-0.5">O 2º tempo começa quando <strong class="text-slate-300">ambos</strong> confirmarem ou o tempo esgotar.</p>
+                            </div>
+                            <div class="shrink-0 text-center">
+                                <span class="text-xl font-black tabular-nums text-white" x-text="secondsLeft">{{ $secondsLeft }}</span>
+                                <p class="text-[10px] text-slate-600 leading-none">seg</p>
+                            </div>
+                        </div>
+                        @if ($otherReady)
+                        <div class="mb-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5 flex items-center gap-2">
+                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <p class="text-xs font-semibold text-emerald-400">{{ $opponentName }} já confirmou! Confirme para iniciar.</p>
+                        </div>
+                        @endif
+                        @endif
+
                         <h2 class="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">
                             Substituições
                             <span class="ml-1 font-normal text-slate-600">(máx. 5)</span>
@@ -435,7 +527,7 @@
                         <form
                             action="{{ route('matches.halftime.resume', [$league, $competition, $match]) }}"
                             method="POST"
-                            x-ref="form"
+                            x-ref="subsForm"
                         >
                             @csrf
                             <template x-for="(sub, idx) in subs" :key="idx">
@@ -446,10 +538,13 @@
                             </template>
 
                             <button type="submit"
-                                onclick="return confirm('Iniciar o segundo tempo agora?')"
                                 class="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-emerald-400 active:scale-95">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                                Iniciar 2º Tempo
+                                @if ($isHumanVsHuman)
+                                    Confirmar Intervalo
+                                @else
+                                    Iniciar 2º Tempo
+                                @endif
                             </button>
                         </form>
                     </div>
@@ -518,6 +613,77 @@
 
 @push('scripts')
 <script>
+/**
+ * Componente Alpine para o painel de espera HvH.
+ * Faz polling a cada 5s, conta regressiva e auto-submete o form de força ao chegar em 0.
+ */
+function hvhWaiting({ secondsLeft, statusUrl, resumeUrl, otherReady }) {
+    return {
+        secondsLeft,
+        otherReady,
+        statusUrl,
+        resumeUrl,
+        _countdownTimer: null,
+        _pollTimer:      null,
+
+        startPolling() {
+            // Countdown: decrementa 1 por segundo
+            this._countdownTimer = setInterval(() => {
+                if (this.secondsLeft > 0) {
+                    this.secondsLeft--;
+                } else {
+                    clearInterval(this._countdownTimer);
+                    // Tempo esgotou — força o início do 2º tempo
+                    this.$refs.forceForm.submit();
+                }
+            }, 1000);
+
+            // Poll a cada 5s para detectar se o adversário confirmou
+            this._pollTimer = setInterval(() => this.checkStatus(), 5000);
+        },
+
+        stopPolling() {
+            clearInterval(this._countdownTimer);
+            clearInterval(this._pollTimer);
+        },
+
+        async checkStatus() {
+            try {
+                const res  = await fetch(this.statusUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const data = await res.json();
+
+                if (data.finished) {
+                    // Jogo já encerrado (outro jogador triggou) → vai pro replay
+                    clearInterval(this._countdownTimer);
+                    clearInterval(this._pollTimer);
+                    window.location.href = data.match_url;
+                    return;
+                }
+
+                if (data.home_ready && data.away_ready) {
+                    // Ambos prontos — recarrega para disparar a simulação
+                    clearInterval(this._countdownTimer);
+                    clearInterval(this._pollTimer);
+                    this.$refs.forceForm.submit();
+                    return;
+                }
+
+                // Atualiza flags e contador
+                this.otherReady  = data.away_ready || data.home_ready; // quem confirmou além de mim
+                this.secondsLeft = data.seconds_left;
+
+                if (data.can_force) {
+                    clearInterval(this._countdownTimer);
+                    clearInterval(this._pollTimer);
+                    this.$refs.forceForm.submit();
+                }
+            } catch (_) {
+                // Ignora erros de rede silenciosamente
+            }
+        },
+    };
+}
+
 function halftimeReplay({ events, finalHomeScore, finalAwayScore }) {
     return {
         events,

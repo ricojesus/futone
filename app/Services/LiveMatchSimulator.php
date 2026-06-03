@@ -54,10 +54,17 @@ class LiveMatchSimulator
                            "{$state['homeTeamName']} {$state['homeScore']} × {$state['awayScore']} {$state['awayTeamName']}.",
         ];
 
-        // Persiste estado serializado
+        // Persiste estado serializado (inclui metadados para coordenação Human×Human)
+        $serialized                       = $this->serializeState($state);
+        $serialized['halftime_at']        = now()->toIso8601String();
+        $serialized['home_ready']         = false;
+        $serialized['away_ready']         = false;
+        $serialized['home_substitutions'] = [];
+        $serialized['away_substitutions'] = [];
+
         $matchState = MatchState::updateOrCreate(
             ['competition_match_id' => $match->id],
-            ['state' => $this->serializeState($state)],
+            ['state' => $serialized],
         );
 
         $match->update(['status' => 'halftime']);
