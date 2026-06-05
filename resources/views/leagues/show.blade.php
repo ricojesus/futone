@@ -157,6 +157,15 @@
                                 Avançar Semana
                             </button>
                         </form>
+                    @elseif (! $isOwner && $league->isInProgress() && ! $allCompetitionsFinished)
+                        {{-- Mensagem para jogadores não-donos --}}
+                        <div class="inline-flex items-center gap-2.5 rounded-xl border border-slate-700 bg-slate-800/60 px-5 py-3">
+                            <span class="h-2 w-2 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+                            <div class="text-left">
+                                <p class="text-xs font-semibold text-slate-300">Aguardando próxima rodada</p>
+                                <p class="text-[10px] text-slate-500 mt-0.5">O dono da liga controla o avanço das rodadas.</p>
+                            </div>
+                        </div>
                     @endif
                 </div>
             </div>
