@@ -361,19 +361,62 @@
 
             {{-- Coluna principal: Agenda --}}
             <div class="lg:col-span-2">
-                <h2 class="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-400">Agenda de Partidas</h2>
 
                 @if ($matchesByRound->isEmpty())
                     <div class="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 px-8 py-12 text-center">
                         <p class="text-slate-500">Nenhuma partida gerada ainda.</p>
                     </div>
                 @else
-                    <div class="space-y-6">
+                    @php
+                        $totalRounds    = $matchesByRound->count();
+                        $pastRoundsCount = $matchesByRound->filter(
+                            fn($matches) => $matches->every(fn($m) => $m->status === 'finished')
+                        )->count();
+                        // Se todas as rodadas já foram jogadas, começa mostrando tudo
+                        $defaultShowAll = $pastRoundsCount === $totalRounds;
+                    @endphp
+
+                    <div
+                        class="space-y-6"
+                        x-data="{ showAll: {{ $defaultShowAll ? 'true' : 'false' }} }"
+                    >
+                        {{-- Cabeçalho da agenda com toggle --}}
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-sm font-semibold uppercase tracking-widest text-slate-400">
+                                Agenda de Partidas
+                            </h2>
+                            @if ($pastRoundsCount > 0)
+                                <button
+                                    @click="showAll = !showAll"
+                                    class="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs text-slate-400 hover:border-slate-600 hover:text-white transition"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                                    </svg>
+                                    <span x-text="showAll ? 'Ocultar jogadas ({{ $pastRoundsCount }})' : 'Ver histórico ({{ $pastRoundsCount }})'"></span>
+                                </button>
+                            @endif
+                        </div>
+
                         @foreach ($matchesByRound as $round => $matches)
-                            <div class="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden">
+                            @php
+                                $isPastRound = $matches->every(fn($m) => $m->status === 'finished');
+                            @endphp
+                            <div
+                                x-show="showAll || {{ $isPastRound ? 'false' : 'true' }}"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 -translate-y-1"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                class="rounded-2xl border overflow-hidden {{ $isPastRound ? 'border-slate-800 bg-slate-900/60' : 'border-slate-700 bg-slate-900' }}"
+                            >
                                 {{-- Cabeçalho da rodada --}}
                                 <div class="flex items-center justify-between border-b border-slate-800 px-5 py-3">
-                                    <span class="text-sm font-semibold text-white">Rodada {{ $round }}</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-semibold {{ $isPastRound ? 'text-slate-500' : 'text-white' }}">Rodada {{ $round }}</span>
+                                        @if ($isPastRound)
+                                            <span class="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium text-slate-600">Concluída</span>
+                                        @endif
+                                    </div>
                                     @php $leg = $matches->first()->leg ?? 1 @endphp
                                     <span class="text-xs text-slate-500">{{ $leg === 1 ? 'Turno' : 'Returno' }}</span>
                                 </div>
