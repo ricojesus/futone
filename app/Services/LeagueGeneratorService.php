@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\Coach;
 use App\Models\Competition;
 use App\Models\CompetitionPlayer;
 use App\Models\CompetitionTeam;
 use App\Models\League;
+use App\Models\LeagueCoach;
 use App\Models\LeagueTeam;
 use App\Models\State;
 use App\Models\Team;
@@ -164,9 +166,35 @@ class LeagueGeneratorService
 
             // Garante que a liga começa na fase estadual
             $league->update(['current_phase' => League::PHASE_STATE]);
+
+            // Adiciona técnicos free agents ao pool da liga (30 aleatórios excluindo os já vinculados)
+            $this->seedFreeAgentPool($league);
         });
 
         return $created;
+    }
+
+    /**
+     * Popula o pool de técnicos livres da liga com até 30 coaches que não
+     * estejam ainda no pool (vindos dos free agents do catálogo global).
+     */
+    private function seedFreeAgentPool(League $league): void
+    {
+        $alreadyInLeague = LeagueCoach::where('league_id', $league->id)
+            ->pluck('coach_id')
+            ->toArray();
+
+        $freeAgents = Coach::whereNotIn('id', $alreadyInLeague)
+            ->inRandomOrder()
+            ->limit(30)
+            ->get();
+
+        foreach ($freeAgents as $coach) {
+            LeagueCoach::firstOrCreate(
+                ['league_id' => $league->id, 'coach_id' => $coach->id],
+                ['league_team_id' => null],   // livre desde o início
+            );
+        }
     }
 
     // ── Lógica interna ────────────────────────────────────────────────────
@@ -242,7 +270,7 @@ class LeagueGeneratorService
                 ],
                 [
                     'user_id'          => null,
-                    'coach_id'         => null,
+                    'coach_id'         => $team->coach_id,
                     'name'             => $team->name,
                     'tolerance'        => $team->tolerance,
                     'fans'             => $team->fans_base,
@@ -251,6 +279,14 @@ class LeagueGeneratorService
                     'ticket_price'     => $this->initialTicketPrice($team),
                 ]
             );
+
+            // Registra o técnico padrão do clube no pool da liga (se ainda não estiver)
+            if ($team->coach_id && $leagueTeam->wasRecentlyCreated) {
+                LeagueCoach::firstOrCreate(
+                    ['league_id' => $league->id, 'coach_id' => $team->coach_id],
+                    ['league_team_id' => $leagueTeam->id],
+                );
+            }
 
             // Create the per-competition stats pivot
             CompetitionTeam::create([

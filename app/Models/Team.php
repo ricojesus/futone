@@ -13,6 +13,7 @@ class Team extends Model
     protected $fillable = [
         'name',
         'slug',
+        'coach_id',
         'country_id',
         'state_id',
         'badge',
@@ -27,6 +28,11 @@ class Team extends Model
     // Divisões possíveis
     const DIVISION_FIRST  = 'first';
     const DIVISION_SECOND = 'second';
+
+    public function coach(): BelongsTo
+    {
+        return $this->belongsTo(Coach::class, 'coach_id');
+    }
 
     public function country(): BelongsTo
     {

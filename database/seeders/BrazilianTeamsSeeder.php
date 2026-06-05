@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Coach;
 use App\Models\Team;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -9,6 +10,7 @@ use Illuminate\Support\Str;
 
 /**
  * Importa os times brasileiros do CSV template.
+ * Cria o Coach padrão de cada time (coluna "coach" no CSV) e vincula via teams.coach_id.
  * Seguro para rodar múltiplas vezes (updateOrCreate por slug).
  */
 class BrazilianTeamsSeeder extends Seeder
@@ -67,12 +69,23 @@ class BrazilianTeamsSeeder extends Seeder
             $tolerance        = (int) ($row['tolerance'] ?? 50);
             $fansBase         = (int) ($row['fans_base'] ?? 10000);
             $stadiumCapacity  = (int) ($row['stadium_capacity'] ?? 10000);
+            $coachName        = trim($row['coach'] ?? '');
+
+            // Cria ou atualiza o técnico padrão do clube
+            $coach = null;
+            if ($coachName !== '') {
+                $coach = Coach::firstOrCreate(
+                    ['name' => $coachName],
+                    ['country_id' => null],
+                );
+            }
 
             Team::updateOrCreate(
                 ['slug' => $slug],
                 [
                     'name'              => $name,
                     'slug'              => $slug,
+                    'coach_id'          => $coach?->id,
                     'state_id'          => $stateId,
                     'country_id'        => $brazil,
                     'overall'           => max(1, min(99, $overall)),

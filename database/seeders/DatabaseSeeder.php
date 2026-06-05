@@ -25,7 +25,8 @@ class DatabaseSeeder extends Seeder
         // Dados mestre do futebol brasileiro
         $this->call([
             BrazilianStatesSeeder::class,
-            BrazilianTeamsSeeder::class,
+            BrazilianTeamsSeeder::class,   // cria coaches dos clubes via CSV
+            FreeAgentCoachesSeeder::class, // adiciona 30 técnicos livres ao catálogo
         ]);
     }
 }

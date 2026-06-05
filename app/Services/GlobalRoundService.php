@@ -26,6 +26,7 @@ class GlobalRoundService
         private readonly CalendarGeneratorService $calendar,
         private readonly CopaBrasilService        $copaBrasil,
         private readonly MatchSimulator           $simulator,
+        private readonly SatisfactionService      $satisfaction,
     ) {}
 
     /**
@@ -51,6 +52,9 @@ class GlobalRoundService
             ->where('status', Competition::STATUS_IN_PROGRESS)
             ->get();
 
+        // Mapa competition_id → rodada recém-jogada (para o SatisfactionService)
+        $roundsCompleted = [];
+
         foreach ($competitions as $competition) {
             if ($phase === League::PHASE_COPA) {
                 // Copa do Brasil: bracket knockout com CopaBrasilService
@@ -59,8 +63,11 @@ class GlobalRoundService
                 // Copa não tem live match por enquanto (Sprint 4)
             } else {
                 // Estaduais e Brasileirão: round-robin via CompetitionRoundService
+                $roundBeforeAdvance = $competition->current_round + 1; // rodada que está sendo jogada
                 $result = $this->roundService->advance($competition);
                 $advanced++;
+
+                $roundsCompleted[$competition->id] = $roundBeforeAdvance;
 
                 // Captura URL da partida ao vivo do usuário (primeira encontrada)
                 if ($liveUrl === null && isset($result['liveMatches']) && $result['liveMatches']->isNotEmpty()) {
@@ -68,6 +75,12 @@ class GlobalRoundService
                     $liveUrl   = route('matches.halftime', [$league, $competition, $liveMatch]);
                 }
             }
+        }
+
+        // Atualiza satisfação e verifica demissões após processar todas as rodadas
+        if (! empty($roundsCompleted)) {
+            $this->satisfaction->updateAfterRound($league, $roundsCompleted);
+            $this->satisfaction->checkFirings($league);
         }
 
         // Verifica se a fase inteira encerrou

@@ -96,8 +96,34 @@ class LeagueTeam extends Model
             ->first();
     }
 
+    // ── Satisfação e demissão ─────────────────────────────────────────
+
+    /**
+     * Limiar de demissão calculado a partir da tolerância do clube.
+     *
+     * tolerance=10 (exigente) → threshold≈33  demite facilmente
+     * tolerance=50 (médio)    → threshold≈20
+     * tolerance=100 (paciente)→ threshold≈5   quase nunca demite
+     */
+    public function firingThreshold(): int
+    {
+        return (int) max(5, round((110 - $this->tolerance) / 3));
+    }
+
+    /**
+     * Retorna true quando a satisfação do clube caiu abaixo do limiar de demissão.
+     * Maior tolerância = clube mais paciente = limiar mais baixo = mais difícil demitir.
+     */
     public function shouldFireCoach(): bool
     {
-        return $this->satisfaction < $this->tolerance;
+        return $this->satisfaction < $this->firingThreshold();
+    }
+
+    /**
+     * Pool de técnico desta liga: o registro LeagueCoach vinculado a este time.
+     */
+    public function leagueCoach(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(LeagueCoach::class, 'league_team_id');
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\League;
 use App\Models\LeagueMember;
 use App\Models\LeagueTeam;
+use App\Services\SatisfactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -85,13 +86,30 @@ class LeagueLobbyController extends Controller
         $membersShuffled = $waitingMembers->shuffle();
         $assigned = 0;
 
-        DB::transaction(function () use ($membersShuffled, $availableTeams, &$assigned) {
+        $satisfactionService = app(SatisfactionService::class);
+
+        DB::transaction(function () use ($membersShuffled, $availableTeams, &$assigned, $league, $satisfactionService) {
             foreach ($membersShuffled as $index => $member) {
                 $team = $availableTeams->get($index);
 
                 if (! $team) break; // Mais jogadores do que times disponíveis
 
-                $team->update(['user_id' => $member->user_id]);
+                $previousCoachId = $team->coach_id;
+
+                $team->update([
+                    'user_id'  => $member->user_id,
+                    'coach_id' => null, // humano assume; técnico vai para o mercado
+                ]);
+
+                // Libera o técnico padrão do clube para o pool de livres
+                if ($previousCoachId) {
+                    $satisfactionService->releaseCoachToPool(
+                        $league->id,
+                        $team->id,
+                        $previousCoachId
+                    );
+                }
+
                 $member->update(['status' => LeagueMember::STATUS_ASSIGNED]);
                 $assigned++;
             }

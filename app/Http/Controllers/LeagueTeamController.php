@@ -7,6 +7,7 @@ use App\Models\Competition;
 use App\Models\League;
 use App\Models\LeagueTeam;
 use App\Models\Team;
+use App\Services\SatisfactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -83,11 +84,22 @@ class LeagueTeamController extends Controller
         }
 
         // Assume o controle do LeagueTeam
-        DB::transaction(function () use ($leagueTeam, $validated) {
+        DB::transaction(function () use ($leagueTeam, $validated, $league) {
+            $previousCoachId = $leagueTeam->coach_id;
+
             $leagueTeam->update([
                 'user_id'  => auth()->id(),
-                'coach_id' => $validated['coach_id'] ?? null,
+                'coach_id' => null, // humano é o técnico; coach vai para o mercado
             ]);
+
+            // Libera o técnico padrão do clube para o pool de livres da liga
+            if ($previousCoachId) {
+                app(SatisfactionService::class)->releaseCoachToPool(
+                    $league->id,
+                    $leagueTeam->id,
+                    $previousCoachId
+                );
+            }
         });
 
         return redirect()->route('leagues.show', $league)
