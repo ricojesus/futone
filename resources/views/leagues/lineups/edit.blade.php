@@ -63,6 +63,72 @@
         </div>
     </div>
 
+    {{-- ══ Painel de satisfação ════════════════════════════════════════════════ --}}
+    @if ($league->isInProgress())
+        @php
+            $sat       = $leagueTeam->satisfaction;
+            $threshold = $leagueTeam->firingThreshold();
+            $margin    = $sat - $threshold;
+
+            [$barColor, $panelBorder, $panelBg, $statusColor, $statusLabel, $statusDesc] = match(true) {
+                $margin >= 20 => [
+                    'bg-emerald-500', 'border-slate-700', 'bg-slate-900',
+                    'text-emerald-400', '✓ Cargo seguro',
+                    'O clube está satisfeito com o seu trabalho.',
+                ],
+                $margin >= 5  => [
+                    'bg-amber-400', 'border-amber-500/30', 'bg-amber-500/5',
+                    'text-amber-400', '⚠ Atenção',
+                    'Alguns resultados negativos podem colocar o seu cargo em risco.',
+                ],
+                $margin >= 0  => [
+                    'bg-orange-500', 'border-orange-500/30', 'bg-orange-500/5',
+                    'text-orange-400', '⚠ Em risco',
+                    'Mais uma derrota pode ser suficiente para o clube te demitir.',
+                ],
+                default       => [
+                    'bg-red-500', 'border-red-500/30', 'bg-red-500/5',
+                    'text-red-400', '⛔ Demissão iminente',
+                    'O clube está muito insatisfeito. Você pode ser demitido a qualquer momento.',
+                ],
+            };
+        @endphp
+
+        <div class="border-b border-slate-800 {{ $panelBg }}">
+            <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap items-center gap-6">
+
+                    {{-- Label --}}
+                    <div class="shrink-0">
+                        <p class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-0.5">Satisfação do clube</p>
+                        <p class="text-xs {{ $statusColor }} font-semibold">{{ $statusLabel }}</p>
+                    </div>
+
+                    {{-- Barra --}}
+                    <div class="flex-1 min-w-[200px] max-w-sm">
+                        {{-- Labels topo --}}
+                        <div class="flex justify-between text-[10px] text-slate-500 mb-1">
+                            <span class="font-bold {{ $statusColor }}">{{ $sat }}<span class="font-normal">/100</span></span>
+                            <span>limiar de demissão: {{ $threshold }}</span>
+                        </div>
+                        {{-- Track --}}
+                        <div class="relative h-2.5 rounded-full bg-slate-700/80">
+                            {{-- Preenchimento --}}
+                            <div class="{{ $barColor }} h-full rounded-full transition-all duration-700"
+                                 style="width:{{ $sat }}%"></div>
+                            {{-- Linha do limiar --}}
+                            <div class="absolute top-0 h-full w-px bg-white/40 rounded-full"
+                                 style="left:{{ $threshold }}%"></div>
+                        </div>
+                        {{-- Descrição --}}
+                        <p class="mt-1.5 text-[10px] text-slate-500">{{ $statusDesc }}</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- ══ Corpo ════════════════════════════════════════════════════════════════ --}}
     <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8"
          x-data="lineupManager(

@@ -301,6 +301,56 @@
                     $myLeagueTeamInLeague = $league->leagueTeams->firstWhere('user_id', auth()->id());
                     $alreadyEnrolled = $myLeagueTeamInLeague !== null;
                 @endphp
+
+                {{-- ── Card de satisfação do clube (só para técnicos humanos em jogo) ── --}}
+                @if ($myLeagueTeamInLeague && $league->isInProgress())
+                    @php
+                        $sat       = $myLeagueTeamInLeague->satisfaction;
+                        $threshold = $myLeagueTeamInLeague->firingThreshold();
+                        $margin    = $sat - $threshold;
+
+                        [$barColor, $cardBorder, $cardBg, $statusColor, $statusLabel] = match(true) {
+                            $margin >= 20 => ['bg-emerald-500', 'border-emerald-500/20', 'bg-emerald-500/5',  'text-emerald-400', '✓ Cargo seguro'],
+                            $margin >= 5  => ['bg-amber-400',   'border-amber-500/20',   'bg-amber-500/5',    'text-amber-400',   '⚠ Atenção'],
+                            $margin >= 0  => ['bg-orange-500',  'border-orange-500/20',  'bg-orange-500/5',   'text-orange-400',  '⚠ Em risco'],
+                            default       => ['bg-red-500',     'border-red-500/30',     'bg-red-500/5',      'text-red-400',     '⛔ Demissão iminente'],
+                        };
+                    @endphp
+
+                    <div class="mb-6 rounded-2xl border {{ $cardBorder }} {{ $cardBg }} px-5 py-4">
+                        <div class="flex flex-wrap items-center justify-between gap-4">
+
+                            {{-- Identificação --}}
+                            <div class="flex items-center gap-3">
+                                <x-team-badge :team="$myLeagueTeamInLeague" size="md" />
+                                <div>
+                                    <p class="text-sm font-bold text-white leading-tight">{{ $myLeagueTeamInLeague->name }}</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">Satisfação do clube com você</p>
+                                </div>
+                            </div>
+
+                            {{-- Barra + status --}}
+                            <div class="flex items-center gap-4 min-w-[220px] flex-1 justify-end">
+                                <div class="flex-1 max-w-[180px]">
+                                    {{-- Labels --}}
+                                    <div class="flex justify-between text-[10px] text-slate-500 mb-1.5">
+                                        <span class="font-bold {{ $statusColor }}">{{ $sat }}/100</span>
+                                        <span>limiar {{ $threshold }}</span>
+                                    </div>
+                                    {{-- Barra --}}
+                                    <div class="relative h-2 rounded-full bg-slate-700/80">
+                                        <div class="{{ $barColor }} h-full rounded-full transition-all duration-500"
+                                             style="width:{{ $sat }}%"></div>
+                                        {{-- Marcador do limiar --}}
+                                        <div class="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-white/30"
+                                             style="left:{{ $threshold }}%"></div>
+                                    </div>
+                                </div>
+                                <span class="shrink-0 text-xs font-semibold {{ $statusColor }}">{{ $statusLabel }}</span>
+                            </div>
+                        </div>
+                    </div>
+                @endif
                 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($league->competitions as $competition)
                         @php

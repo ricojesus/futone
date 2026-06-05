@@ -81,7 +81,7 @@ class LeagueController extends Controller
 
     public function show(League $league)
     {
-        $league->load(['competitions.state', 'competitions.teams', 'leagueTeams', 'owner', 'members.user']);
+        $league->load(['competitions.state', 'competitions.teams', 'leagueTeams.team', 'owner', 'members.user']);
 
         $isOwner  = $league->owner_id === auth()->id();
 
