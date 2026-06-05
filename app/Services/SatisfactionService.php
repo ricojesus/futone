@@ -94,6 +94,50 @@ class SatisfactionService
     }
 
     /**
+     * Atualiza a satisfação dos dois times de uma partida ao vivo que
+     * acabou de ser finalizada (2º tempo concluído pelo humano).
+     * Também verifica demissões após a atualização.
+     */
+    public function applyLiveMatchResult(CompetitionMatch $match, League $league): void
+    {
+        $homeId = $match->homeTeam?->league_team_id;
+        $awayId = $match->awayTeam?->league_team_id;
+
+        if (! $homeId || ! $awayId) {
+            return;
+        }
+
+        $homeScore = $match->home_score ?? 0;
+        $awayScore = $match->away_score ?? 0;
+
+        $homeDelta = 0;
+        $awayDelta = 0;
+
+        if ($homeScore > $awayScore) {
+            $homeDelta = self::DELTA_WIN;
+            $awayDelta = self::DELTA_LOSS;
+        } elseif ($homeScore < $awayScore) {
+            $homeDelta = self::DELTA_LOSS;
+            $awayDelta = self::DELTA_WIN;
+        } else {
+            $homeDelta = self::DELTA_DRAW;
+            $awayDelta = self::DELTA_DRAW;
+        }
+
+        foreach ([[$homeId, $homeDelta], [$awayId, $awayDelta]] as [$id, $delta]) {
+            DB::table('league_teams')
+                ->where('id', $id)
+                ->update([
+                    'satisfaction' => DB::raw(
+                        "LEAST(100, GREATEST(1, satisfaction + ({$delta})))"
+                    ),
+                ]);
+        }
+
+        $this->checkFirings($league);
+    }
+
+    /**
      * Verifica todos os times da liga e demite técnicos cuja satisfação
      * caiu abaixo do limiar do clube.
      */
