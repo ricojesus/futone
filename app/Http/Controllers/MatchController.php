@@ -22,7 +22,7 @@ class MatchController extends Controller
         abort_unless($match->competition_id === $competition->id, 404);
         abort_unless($match->status === 'finished', 404, 'Partida ainda não disputada.');
 
-        $match->load(['homeTeam', 'awayTeam']);
+        $match->load(['homeTeam.leagueTeam.team', 'awayTeam.leagueTeam.team']);
 
         $myLeagueTeam = LeagueTeam::where('league_id', $league->id)
             ->where('user_id', auth()->id())
