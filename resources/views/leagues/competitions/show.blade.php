@@ -567,9 +567,14 @@
                                             <td class="px-4 py-2.5">
                                                 <div class="flex items-center gap-2">
                                                     <x-team-badge :team="$team" size="sm" />
-                                                    <span class="font-medium {{ $textCol }}">
-                                                        {{ $team->name }}
-                                                    </span>
+                                                    @if ($team->leagueTeam)
+                                                        <a href="{{ route('leagues.teams.show', [$league, $team->leagueTeam]) }}"
+                                                           class="font-medium {{ $textCol }} hover:underline underline-offset-2 transition">
+                                                            {{ $team->name }}
+                                                        </a>
+                                                    @else
+                                                        <span class="font-medium {{ $textCol }}">{{ $team->name }}</span>
+                                                    @endif
                                                     @if ($team->leagueTeam?->isCpu())
                                                         <span class="text-xs text-slate-600">CPU</span>
                                                     @endif

@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
     // Team enrollment
     Route::get('/leagues/{league}/join',   [LeagueTeamController::class, 'create'])->name('leagues.teams.create');
     Route::post('/leagues/{league}/teams', [LeagueTeamController::class, 'store'])->name('leagues.teams.store');
+    Route::get('/leagues/{league}/teams/{leagueTeam}', [LeagueTeamController::class, 'show'])->name('leagues.teams.show');
 
     // Lineup management — {leagueTeam} resolves to a CompetitionTeam record
     Route::get('/leagues/{league}/teams/{leagueTeam}/lineup',  [LineupController::class, 'edit'])->name('leagues.lineup.edit');

@@ -13,6 +13,59 @@ use Illuminate\Support\Facades\DB;
 
 class LeagueTeamController extends Controller
 {
+    // ── Perfil público do time (scouting) ────────────────────────────
+
+    public function show(League $league, LeagueTeam $leagueTeam)
+    {
+        abort_unless($leagueTeam->league_id === $league->id, 404);
+
+        $leagueTeam->loadMissing(['team', 'user', 'coach']);
+
+        // Escalação ativa (padrão ou da rodada atual)
+        $lineup = $leagueTeam->lineups()
+            ->where('status', 'active')
+            ->orderByDesc('round')
+            ->with(['lineupPlayers.competitionPlayer'])
+            ->first();
+
+        $positionOrder = ['goalkeeper' => 0, 'defender' => 1, 'midfielder' => 2, 'forward' => 3];
+
+        $starters = collect();
+        if ($lineup) {
+            $starters = $lineup->lineupPlayers
+                ->where('is_starter', true)
+                ->map(fn($lp) => $lp->competitionPlayer)
+                ->filter()
+                ->sortBy(fn($p) => $positionOrder[$p->position] ?? 99)
+                ->values();
+        }
+
+        // Elenco completo ordenado por posição e OVR
+        $squad = $leagueTeam->players()
+            ->where('status', 'active')
+            ->orderByRaw("FIELD(position, 'goalkeeper','defender','midfielder','forward')")
+            ->orderByDesc('strength')
+            ->get();
+
+        // Stats nas competições desta liga
+        $competitionTeams = $leagueTeam->competitionTeams()
+            ->with('competition:id,name,competition_type,division')
+            ->orderByDesc('points')
+            ->get();
+
+        // Time do usuário logado nesta liga (para saber se é "meu time")
+        $myLeagueTeam = LeagueTeam::where('league_id', $league->id)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        $isMyTeam = $myLeagueTeam && $myLeagueTeam->id === $leagueTeam->id;
+
+        return view('leagues.teams.show', compact(
+            'league', 'leagueTeam', 'lineup', 'starters', 'squad',
+            'competitionTeams', 'isMyTeam', 'myLeagueTeam',
+        ));
+    }
+
     // ── Formulário de entrada ────────────────────────────────────────
 
     /**
