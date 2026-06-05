@@ -21,6 +21,8 @@ class LineupController extends Controller
     {
         $this->authorizeManager($league, $leagueTeam);
 
+        $leagueTeam->loadMissing('team');
+
         // Escalação padrão ativa (round = 0)
         $lineup = $leagueTeam->lineups()
             ->where('status', 'active')

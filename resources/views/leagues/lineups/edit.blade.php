@@ -31,15 +31,18 @@
             </div>
 
             <div class="flex items-center justify-between gap-4 flex-wrap">
-                <div>
-                    <h1 class="text-2xl font-extrabold text-white">Escalação</h1>
-                    <p class="mt-0.5 text-sm text-slate-400">
-                        {{ $leagueTeam->name }}
-                        @if ($competition)
-                            <span class="text-slate-600 mx-1">·</span>
-                            {{ $competition->name }}
-                        @endif
-                    </p>
+                <div class="flex items-center gap-4">
+                    <x-team-badge :team="$leagueTeam" size="xl" />
+                    <div>
+                        <h1 class="text-2xl font-extrabold text-white">{{ $leagueTeam->name }}</h1>
+                        <p class="mt-0.5 text-sm text-slate-400">
+                            Escalação
+                            @if ($competition)
+                                <span class="text-slate-600 mx-1">·</span>
+                                {{ $competition->name }}
+                            @endif
+                        </p>
+                    </div>
                 </div>
                 <div class="flex items-center gap-3">
                     {{-- Botão Voltar --}}
