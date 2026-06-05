@@ -389,10 +389,11 @@
                                         @endphp
                                         <div class="flex items-center gap-2 px-5 py-3 {{ $isMyMatch ? 'bg-emerald-500/5' : '' }}">
                                             {{-- Time mandante --}}
-                                            <div class="flex-1 text-right">
+                                            <div class="flex-1 flex items-center justify-end gap-2">
                                                 <span class="text-sm font-medium {{ $isHomeMyTeam ? 'text-emerald-400' : 'text-white' }}">
                                                     {{ $match->homeTeam?->name ?? '—' }}
                                                 </span>
+                                                <x-team-badge :team="$match->homeTeam" size="xs" />
                                             </div>
 
                                             {{-- Placar / VS --}}
@@ -408,7 +409,8 @@
                                             </div>
 
                                             {{-- Time visitante --}}
-                                            <div class="flex-1 text-left">
+                                            <div class="flex-1 flex items-center gap-2">
+                                                <x-team-badge :team="$match->awayTeam" size="xs" />
                                                 <span class="text-sm font-medium {{ $isAwayMyTeam ? 'text-emerald-400' : 'text-white' }}">
                                                     {{ $match->awayTeam?->name ?? '—' }}
                                                 </span>
@@ -520,7 +522,8 @@
                                                 @endif
                                             </td>
                                             <td class="px-4 py-2.5">
-                                                <div class="flex items-center gap-1.5">
+                                                <div class="flex items-center gap-2">
+                                                    <x-team-badge :team="$team" size="sm" />
                                                     <span class="font-medium {{ $textCol }}">
                                                         {{ $team->name }}
                                                     </span>

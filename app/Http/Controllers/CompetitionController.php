@@ -27,11 +27,11 @@ class CompetitionController extends Controller
     {
         abort_unless($competition->league_id === $league->id, 404);
 
-        $competition->load(['state', 'teams.leagueTeam']);
+        $competition->load(['state', 'teams.leagueTeam.team']);
 
         // Partidas agrupadas por rodada
         $matchesByRound = $competition->matches()
-            ->with(['homeTeam', 'awayTeam'])
+            ->with(['homeTeam.leagueTeam.team', 'awayTeam.leagueTeam.team'])
             ->orderBy('round')
             ->orderBy('created_at')
             ->get()

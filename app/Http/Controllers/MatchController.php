@@ -74,7 +74,7 @@ class MatchController extends Controller
         abort_unless($match->competition_id === $competition->id, 404);
         abort_unless($match->status === 'halftime', 404, 'Esta partida não está no intervalo.');
 
-        $match->load(['homeTeam.leagueTeam', 'awayTeam.leagueTeam']);
+        $match->load(['homeTeam.leagueTeam.team', 'awayTeam.leagueTeam.team']);
 
         $matchState = MatchState::where('competition_match_id', $match->id)->firstOrFail();
         $state      = $matchState->state;

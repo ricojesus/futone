@@ -48,9 +48,12 @@
 
                 {{-- Home --}}
                 <div class="text-right space-y-1">
-                    <p class="text-xl font-extrabold sm:text-3xl leading-tight {{ $myHome ? 'text-emerald-400' : 'text-white' }}">
-                        {{ $homeName }}
-                    </p>
+                    <div class="flex items-center justify-end gap-3">
+                        <p class="text-xl font-extrabold sm:text-3xl leading-tight {{ $myHome ? 'text-emerald-400' : 'text-white' }}">
+                            {{ $homeName }}
+                        </p>
+                        <x-team-badge :team="$match->homeTeam" size="lg" />
+                    </div>
                     @if ($myHome)
                         <span class="inline-block rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">Seu time</span>
                     @endif
@@ -77,9 +80,12 @@
 
                 {{-- Away --}}
                 <div class="text-left space-y-1">
-                    <p class="text-xl font-extrabold sm:text-3xl leading-tight {{ $myAway ? 'text-emerald-400' : 'text-white' }}">
-                        {{ $awayName }}
-                    </p>
+                    <div class="flex items-center gap-3">
+                        <x-team-badge :team="$match->awayTeam" size="lg" />
+                        <p class="text-xl font-extrabold sm:text-3xl leading-tight {{ $myAway ? 'text-emerald-400' : 'text-white' }}">
+                            {{ $awayName }}
+                        </p>
+                    </div>
                     @if ($myAway)
                         <span class="inline-block rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">Seu time</span>
                     @endif
