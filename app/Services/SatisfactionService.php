@@ -54,7 +54,7 @@ class SatisfactionService
             $matches = CompetitionMatch::where('competition_id', $competitionId)
                 ->where('round', $round)
                 ->where('status', 'finished')
-                ->with(['homeTeam:id,league_team_id,home_score', 'awayTeam:id,league_team_id,away_score'])
+                ->with(['homeTeam:id,league_team_id', 'awayTeam:id,league_team_id'])
                 ->get();
 
             foreach ($matches as $match) {
