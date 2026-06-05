@@ -397,7 +397,10 @@
                             {{-- Time do usuário ou ação --}}
                             <div class="mt-auto flex items-center justify-between gap-2 border-t border-slate-800 pt-3">
                                 @if ($myTeamInComp)
-                                    <span class="text-xs text-emerald-400 font-medium truncate">⚽ {{ $myTeamInComp->name }}</span>
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        <x-team-badge :team="$myLeagueTeamInLeague" size="xs" />
+                                        <span class="text-xs text-emerald-400 font-medium truncate">{{ $myTeamInComp->name }}</span>
+                                    </div>
                                 @elseif (! $alreadyEnrolled && ! $competition->isFinished())
                                     <a href="{{ route('competitions.join', [$league, $competition]) }}"
                                         class="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition">
