@@ -33,6 +33,7 @@ class SyncTeamBadges extends Command
         'fluminense'            => 'fluminense',          // evita pegar Fluminense de Feira
         'flamengo'              => 'flamengo',            // evita pegar Flamengo-PI
         'botafogo'              => 'botafogo',            // evita pegar Botafogo-SP
+        'sao-bernardo-sp-hd'    => 'sao-bernardo',        // sufixo HD no filename
     ];
 
     /** Arquivos a ignorar (não são times jogáveis). */
