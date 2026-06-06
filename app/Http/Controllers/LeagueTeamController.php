@@ -21,21 +21,20 @@ class LeagueTeamController extends Controller
 
         $leagueTeam->loadMissing(['team', 'user', 'coach']);
 
-        // Escalação ativa (padrão ou da rodada atual)
+        // Escalação ativa — mesmo padrão usado no halftime
         $lineup = $leagueTeam->lineups()
             ->where('status', 'active')
             ->orderByDesc('round')
-            ->with(['lineupPlayers.competitionPlayer'])
             ->first();
 
         $positionOrder = ['goalkeeper' => 0, 'defender' => 1, 'midfielder' => 2, 'forward' => 3];
 
         $starters = collect();
         if ($lineup) {
-            $starters = $lineup->lineupPlayers
-                ->where('is_starter', true)
-                ->map(fn($lp) => $lp->competitionPlayer)
-                ->filter()
+            $starters = $lineup->players()
+                ->orderBy('competition_lineup_players.slot')
+                ->get()
+                ->filter(fn($p) => $p->pivot->is_starter)
                 ->sortBy(fn($p) => $positionOrder[$p->position] ?? 99)
                 ->values();
         }
