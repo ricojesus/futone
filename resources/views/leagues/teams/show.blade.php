@@ -60,11 +60,11 @@
         </div>
     </div>
 
-    <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+    <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
 
         {{-- ── Painel financeiro (apenas técnico humano do próprio time) ── --}}
         @if ($isMyTeam)
-            <div class="space-y-4">
+            <div class="space-y-4 mb-8">
             <div class="grid grid-cols-3 gap-4">
                 <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
                     <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">Saldo</p>
@@ -122,7 +122,7 @@
 
         {{-- ── Stats nas competições ───────────────────────────────────── --}}
         @if ($competitionTeams->isNotEmpty())
-            <div>
+            <div class="mb-8">
                 <h2 class="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Desempenho nas Competições</h2>
                 <div class="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden">
                     <table class="w-full text-sm">
@@ -161,7 +161,7 @@
         @endif
 
         {{-- ── Escalação titular ───────────────────────────────────────── --}}
-        <div>
+        <div class="mb-8">
             <h2 class="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">
                 Escalação Titular
                 @if ($lineup)
@@ -224,7 +224,7 @@
         </div>
 
         {{-- ── Elenco completo ─────────────────────────────────────────── --}}
-        <div x-data="{ open: false }">
+        <div x-data="{ open: false }" class="mb-8">
             <button @click="open = !open"
                 class="mb-3 flex w-full items-center justify-between text-xs font-semibold uppercase tracking-widest text-slate-500 hover:text-slate-300 transition">
                 <span>Elenco Completo <span class="font-normal text-slate-600">({{ $squad->count() }} jogadores)</span></span>
