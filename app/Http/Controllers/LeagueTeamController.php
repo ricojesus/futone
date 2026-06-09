@@ -184,6 +184,20 @@ class LeagueTeamController extends Controller
         }
     }
 
+    public function updateTicketPrice(Request $request, League $league, LeagueTeam $leagueTeam)
+    {
+        abort_unless($leagueTeam->league_id === $league->id, 404);
+        abort_unless($leagueTeam->user_id === auth()->id(), 403);
+
+        $request->validate([
+            'ticket_price' => ['required', 'integer', 'min:10', 'max:500'],
+        ]);
+
+        $leagueTeam->update(['ticket_price' => $request->ticket_price]);
+
+        return back()->with('success', 'Preço do ingresso atualizado.');
+    }
+
     /**
      * Retorna os times CPU disponíveis para assumir nesta liga.
      */

@@ -62,6 +62,62 @@
 
     <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
 
+        {{-- ── Painel financeiro (apenas técnico humano do próprio time) ── --}}
+        @if ($isMyTeam)
+            <div class="grid grid-cols-3 gap-4">
+                <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
+                    <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">Saldo</p>
+                    @php $budget = $leagueTeam->budget; @endphp
+                    <p class="text-xl font-bold {{ $budget >= 0 ? 'text-emerald-400' : 'text-red-400' }}">
+                        R$ {{ number_format(abs($budget), 0, ',', '.') }}
+                        {{ $budget < 0 ? '(negativo)' : '' }}
+                    </p>
+                </div>
+                <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
+                    <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">Satisfação da Torcida</p>
+                    @php $sat = $leagueTeam->satisfaction; @endphp
+                    <div class="flex items-center gap-3">
+                        <p class="text-xl font-bold {{ $sat >= 60 ? 'text-emerald-400' : ($sat >= 35 ? 'text-yellow-400' : 'text-red-400') }}">
+                            {{ $sat }}/100
+                        </p>
+                        <div class="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden">
+                            <div class="h-2 rounded-full {{ $sat >= 60 ? 'bg-emerald-500' : ($sat >= 35 ? 'bg-yellow-500' : 'bg-red-500') }}"
+                                 style="width: {{ $sat }}%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
+                    <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">Folha Salarial / Semana</p>
+                    @php
+                        $weeklyWage = $leagueTeam->players()->where('status', 'active')->sum('wage');
+                    @endphp
+                    <p class="text-xl font-bold text-slate-200">
+                        R$ {{ number_format($weeklyWage, 0, ',', '.') }}
+                    </p>
+                </div>
+            </div>
+
+            {{-- Preço do ingresso --}}
+            <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
+                <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">Preço do Ingresso</p>
+                <form method="POST" action="{{ route('leagues.teams.ticket-price', [$league, $leagueTeam]) }}" class="flex items-center gap-3">
+                    @csrf @method('PATCH')
+                    <span class="text-slate-400 text-sm">R$</span>
+                    <input type="number" name="ticket_price" min="10" max="500"
+                           value="{{ old('ticket_price', $leagueTeam->ticket_price) }}"
+                           class="w-28 rounded-lg bg-slate-800 border border-slate-600 px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none">
+                    <button type="submit"
+                            class="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition">
+                        Salvar
+                    </button>
+                    <span class="text-xs text-slate-500">Mín. R$10 · Máx. R$500</span>
+                </form>
+                @error('ticket_price')
+                    <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+        @endif
+
         {{-- ── Stats nas competições ───────────────────────────────────── --}}
         @if ($competitionTeams->isNotEmpty())
             <div>

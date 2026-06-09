@@ -13,10 +13,8 @@ use Illuminate\Support\Facades\Log;
 /**
  * Gerencia satisfação do clube com o técnico e executa demissões.
  *
- * Regras de variação (por partida disputada):
- *   Vitória  → +3
- *   Empate   → +1
- *   Derrota  → -5
+ * Variação depende de: resultado × local (casa/fora) × força relativa do adversário.
+ * Força relativa = média de strength dos jogadores ativos. Diferença > 8 = significativa.
  *
  * Limiar de demissão = LeagueTeam::firingThreshold()
  *   tolerance=10 (exigente) → threshold≈33
@@ -29,9 +27,24 @@ use Illuminate\Support\Facades\Log;
  */
 class SatisfactionService
 {
-    private const DELTA_WIN  =  3;
-    private const DELTA_DRAW =  1;
-    private const DELTA_LOSS = -5;
+    // Threshold de diferença de força para considerar times distintos
+    private const STRENGTH_THRESHOLD = 8;
+
+    // [resultado][local][relação_de_força: stronger|equal|weaker]
+    private const DELTAS = [
+        'win' => [
+            'home' => ['stronger' =>  8, 'equal' =>  5, 'weaker' =>  2],
+            'away' => ['stronger' => 15, 'equal' => 10, 'weaker' =>  6],
+        ],
+        'draw' => [
+            'home' => ['stronger' =>  1, 'equal' => -5, 'weaker' => -12],
+            'away' => ['stronger' =>  5, 'equal' =>  1, 'weaker' =>  -5],
+        ],
+        'loss' => [
+            'home' => ['stronger' => -10, 'equal' => -15, 'weaker' => -20],
+            'away' => ['stronger' =>  -3, 'equal' =>  -7, 'weaker' => -12],
+        ],
+    ];
 
     // ── API pública ───────────────────────────────────────────────────────
 
@@ -47,41 +60,30 @@ class SatisfactionService
             return;
         }
 
-        // Coleta todos os resultados das rodadas que acabaram
-        $deltas = [];   // league_team_id → delta acumulado
+        $deltas = [];
 
         foreach ($competitionRounds as $competitionId => $round) {
             $matches = CompetitionMatch::where('competition_id', $competitionId)
                 ->where('round', $round)
                 ->where('status', 'finished')
-                ->with(['homeTeam:id,league_team_id', 'awayTeam:id,league_team_id'])
+                ->with(['homeTeam.leagueTeam', 'awayTeam.leagueTeam'])
                 ->get();
 
             foreach ($matches as $match) {
-                $homeId = $match->homeTeam?->league_team_id;
-                $awayId = $match->awayTeam?->league_team_id;
+                $homeLeagueTeamId = $match->homeTeam?->league_team_id;
+                $awayLeagueTeamId = $match->awayTeam?->league_team_id;
 
-                if (! $homeId || ! $awayId) {
+                if (! $homeLeagueTeamId || ! $awayLeagueTeamId) {
                     continue;
                 }
 
-                $homeScore = $match->home_score ?? 0;
-                $awayScore = $match->away_score ?? 0;
+                [$homeDelta, $awayDelta] = $this->computeDeltas($match);
 
-                if ($homeScore > $awayScore) {
-                    $deltas[$homeId] = ($deltas[$homeId] ?? 0) + self::DELTA_WIN;
-                    $deltas[$awayId] = ($deltas[$awayId] ?? 0) + self::DELTA_LOSS;
-                } elseif ($homeScore < $awayScore) {
-                    $deltas[$homeId] = ($deltas[$homeId] ?? 0) + self::DELTA_LOSS;
-                    $deltas[$awayId] = ($deltas[$awayId] ?? 0) + self::DELTA_WIN;
-                } else {
-                    $deltas[$homeId] = ($deltas[$homeId] ?? 0) + self::DELTA_DRAW;
-                    $deltas[$awayId] = ($deltas[$awayId] ?? 0) + self::DELTA_DRAW;
-                }
+                $deltas[$homeLeagueTeamId] = ($deltas[$homeLeagueTeamId] ?? 0) + $homeDelta;
+                $deltas[$awayLeagueTeamId] = ($deltas[$awayLeagueTeamId] ?? 0) + $awayDelta;
             }
         }
 
-        // Aplica deltas em batch
         foreach ($deltas as $leagueTeamId => $delta) {
             DB::table('league_teams')
                 ->where('id', $leagueTeamId)
@@ -100,31 +102,16 @@ class SatisfactionService
      */
     public function applyLiveMatchResult(CompetitionMatch $match, League $league): void
     {
-        $homeId = $match->homeTeam?->league_team_id;
-        $awayId = $match->awayTeam?->league_team_id;
+        $homeLeagueTeamId = $match->homeTeam?->league_team_id;
+        $awayLeagueTeamId = $match->awayTeam?->league_team_id;
 
-        if (! $homeId || ! $awayId) {
+        if (! $homeLeagueTeamId || ! $awayLeagueTeamId) {
             return;
         }
 
-        $homeScore = $match->home_score ?? 0;
-        $awayScore = $match->away_score ?? 0;
+        [$homeDelta, $awayDelta] = $this->computeDeltas($match);
 
-        $homeDelta = 0;
-        $awayDelta = 0;
-
-        if ($homeScore > $awayScore) {
-            $homeDelta = self::DELTA_WIN;
-            $awayDelta = self::DELTA_LOSS;
-        } elseif ($homeScore < $awayScore) {
-            $homeDelta = self::DELTA_LOSS;
-            $awayDelta = self::DELTA_WIN;
-        } else {
-            $homeDelta = self::DELTA_DRAW;
-            $awayDelta = self::DELTA_DRAW;
-        }
-
-        foreach ([[$homeId, $homeDelta], [$awayId, $awayDelta]] as [$id, $delta]) {
+        foreach ([[$homeLeagueTeamId, $homeDelta], [$awayLeagueTeamId, $awayDelta]] as [$id, $delta]) {
             DB::table('league_teams')
                 ->where('id', $id)
                 ->update([
@@ -177,6 +164,61 @@ class SatisfactionService
     }
 
     // ── Internos ──────────────────────────────────────────────────────────
+
+    /**
+     * Retorna [homeDelta, awayDelta] para uma partida finalizada.
+     * Usa a tabela de 18 combinações: resultado × local × força relativa.
+     */
+    private function computeDeltas(CompetitionMatch $match): array
+    {
+        $homeScore = $match->home_score ?? 0;
+        $awayScore = $match->away_score ?? 0;
+
+        $result = match (true) {
+            $homeScore > $awayScore => 'win',
+            $homeScore < $awayScore => 'loss',
+            default                 => 'draw',
+        };
+
+        $homeStrength = $this->avgStrength($match->homeTeam?->league_team_id);
+        $awayStrength = $this->avgStrength($match->awayTeam?->league_team_id);
+        $diff         = $homeStrength - $awayStrength;
+
+        // Relação do adversário na perspectiva do time da casa
+        $homeOpponentRel = match (true) {
+            $diff < -self::STRENGTH_THRESHOLD => 'stronger',
+            $diff >  self::STRENGTH_THRESHOLD => 'weaker',
+            default                           => 'equal',
+        };
+
+        $awayOpponentRel = match ($homeOpponentRel) {
+            'stronger' => 'weaker',
+            'weaker'   => 'stronger',
+            default    => 'equal',
+        };
+
+        $awayResult = match ($result) {
+            'win'  => 'loss',
+            'loss' => 'win',
+            default => 'draw',
+        };
+
+        $homeDelta = self::DELTAS[$result]['home'][$homeOpponentRel];
+        $awayDelta = self::DELTAS[$awayResult]['away'][$awayOpponentRel];
+
+        return [$homeDelta, $awayDelta];
+    }
+
+    private function avgStrength(?string $leagueTeamId): float
+    {
+        if (! $leagueTeamId) {
+            return 50.0;
+        }
+
+        return (float) \App\Models\CompetitionPlayer::where('league_team_id', $leagueTeamId)
+            ->where('status', 'active')
+            ->avg('strength') ?? 50.0;
+    }
 
     private function fireCoach(LeagueTeam $leagueTeam, League $league): void
     {

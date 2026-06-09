@@ -155,7 +155,7 @@ class MatchEngine
 
     private function dispute(array $home, array $away, string $sector): array
     {
-        $homeForce = $this->sectorForce($home, $sector) + rand(0, 15);
+        $homeForce = $this->sectorForce($home, $sector) + rand(0, 15) + 3;
         $awayForce = $this->sectorForce($away, $sector) + rand(0, 15);
 
         return $homeForce >= $awayForce ? $home : $away;

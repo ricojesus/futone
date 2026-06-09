@@ -15,6 +15,7 @@ class SeasonTransitionService
 {
     public function __construct(
         private readonly CalendarGeneratorService $calendar,
+        private readonly FinancialService         $financial,
     ) {}
 
     /**
@@ -123,6 +124,9 @@ class SeasonTransitionService
                 $league->update(['status' => League::STATUS_FINISHED, 'finished_at' => now()]);
             }
         });
+
+        // Paga cota de TV da nova temporada
+        $this->financial->payTvQuotas($league->fresh());
 
         return $league->fresh();
     }

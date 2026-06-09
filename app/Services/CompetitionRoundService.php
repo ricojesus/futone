@@ -21,6 +21,7 @@ class CompetitionRoundService
     public function __construct(
         private readonly MatchSimulator     $simulator,
         private readonly LiveMatchSimulator $liveSimulator,
+        private readonly FinancialService   $financial,
     ) {}
 
     /**
@@ -123,6 +124,8 @@ class CompetitionRoundService
                 $homeTeam->increment('goals_against', $result['away_score']);
                 $awayTeam->increment('goals_for',     $result['away_score']);
                 $awayTeam->increment('goals_against', $result['home_score']);
+
+                $this->financial->processMatchRevenue($match->fresh());
             }
 
             // 3. CPU × Humano — primeiro tempo, aguarda intervalo

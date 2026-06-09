@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\LeaguePlayer;
+use App\Models\CompetitionPlayer;
 
 class MarketValueService
 {
@@ -26,7 +26,7 @@ class MarketValueService
      *
      *   market_value = base × age_factor × pos_mult
      */
-    public function calculate(LeaguePlayer $player): int
+    public function calculate(CompetitionPlayer $player): int
     {
         $base          = (($player->strength + $player->stamina) / 2) * 10_000;
         $ageFactor     = $this->ageFactor($player->age);
@@ -69,7 +69,7 @@ class MarketValueService
      * wage_expectation_factor (0.80–1.20) representa a "personalidade" financeira
      * do jogador — sorteado uma vez na criação e desconhecido pelo manager.
      */
-    public function minimumWage(LeaguePlayer $player): int
+    public function minimumWage(CompetitionPlayer $player): int
     {
         $marketValue = $player->market_value > 0
             ? $player->market_value
@@ -93,7 +93,7 @@ class MarketValueService
      * Recalcula e persiste o market_value de um jogador.
      * Chamado ao final de cada rodada pelo game engine.
      */
-    public function refresh(LeaguePlayer $player): int
+    public function refresh(CompetitionPlayer $player): int
     {
         $value = $this->calculate($player);
         $player->update(['market_value' => $value]);
@@ -105,7 +105,7 @@ class MarketValueService
      * Visível ao manager como referência: "aceita a partir de ~R$ X".
      * Usa factor = 1.00 (centro da distribuição).
      */
-    public function estimatedMinWage(LeaguePlayer $player): int
+    public function estimatedMinWage(CompetitionPlayer $player): int
     {
         $marketValue = $player->market_value > 0
             ? $player->market_value

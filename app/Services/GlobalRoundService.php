@@ -27,6 +27,7 @@ class GlobalRoundService
         private readonly CopaBrasilService        $copaBrasil,
         private readonly MatchSimulator           $simulator,
         private readonly SatisfactionService      $satisfaction,
+        private readonly FinancialService         $financial,
     ) {}
 
     /**
@@ -82,6 +83,9 @@ class GlobalRoundService
             $this->satisfaction->updateAfterRound($league, $roundsCompleted);
             $this->satisfaction->checkFirings($league);
         }
+
+        // Desconta salários semanais de todos os times da liga
+        $this->financial->deductWeeklySalaries($league);
 
         // Verifica se a fase inteira encerrou
         $phaseCompleted = $league->competitions()

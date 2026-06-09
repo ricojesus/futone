@@ -8,6 +8,7 @@ use App\Models\CompetitionTeam;
 use App\Models\League;
 use App\Models\LeagueTeam;
 use App\Models\MatchState;
+use App\Services\FinancialService;
 use App\Services\LiveMatchSimulator;
 use App\Services\SatisfactionService;
 use Illuminate\Http\Request;
@@ -318,8 +319,9 @@ class MatchController extends Controller
 
         // Atualiza satisfação com o resultado da partida ao vivo (que estava em halftime
         // quando GlobalRoundService::advance() chamou SatisfactionService)
-        $freshMatch = $match->fresh(['homeTeam', 'awayTeam']);
+        $freshMatch = $match->fresh(['homeTeam.leagueTeam', 'awayTeam.leagueTeam', 'competition']);
         app(SatisfactionService::class)->applyLiveMatchResult($freshMatch, $league);
+        app(FinancialService::class)->processMatchRevenue($freshMatch);
 
         return redirect()
             ->route('matches.show', [$league, $competition, $match->fresh(), 'replay' => 1, 'second_half' => 1])

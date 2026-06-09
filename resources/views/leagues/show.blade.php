@@ -360,6 +360,29 @@
                         </div>
                     </div>
                 @endif
+
+                {{-- ── Atalhos do técnico ──────────────────────────────────────── --}}
+                @if ($myLeagueTeamInLeague && $league->isInProgress())
+                    <div class="mb-6 flex flex-wrap gap-2">
+                        <a href="{{ route('leagues.teams.show', [$league, $myLeagueTeamInLeague]) }}"
+                           class="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:border-slate-600 hover:text-white transition">
+                            Meu Time
+                        </a>
+                        <a href="{{ route('leagues.lineup.edit', [$league, $myLeagueTeamInLeague]) }}"
+                           class="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:border-slate-600 hover:text-white transition">
+                            Escalação
+                        </a>
+                        <a href="{{ route('leagues.transfers.index', $league) }}"
+                           class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition">
+                            Mercado de Transferências
+                        </a>
+                        <a href="{{ route('leagues.transfers.offers', $league) }}"
+                           class="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:border-slate-600 hover:text-white transition">
+                            Minhas Propostas
+                        </a>
+                    </div>
+                @endif
+
                 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($league->competitions as $competition)
                         @php

@@ -16,6 +16,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
+// FinancialService injetado via construtor
+
 /**
  * Gera as competições de uma temporada completa dentro de uma League (mundo):
  *
@@ -66,6 +68,7 @@ class LeagueGeneratorService
 
     public function __construct(
         private readonly CalendarGeneratorService $calendar,
+        private readonly FinancialService         $financial,
     ) {}
 
     // ── API pública ───────────────────────────────────────────────────────
@@ -170,6 +173,9 @@ class LeagueGeneratorService
             // Adiciona técnicos free agents ao pool da liga (30 aleatórios excluindo os já vinculados)
             $this->seedFreeAgentPool($league);
         });
+
+        // Paga cota de TV para todos os times após gerar as competições
+        $this->financial->payTvQuotas($league);
 
         return $created;
     }
@@ -341,7 +347,10 @@ class LeagueGeneratorService
 
     private function initialBudget(Team $team): int
     {
-        return (int) min(100_000_000, max(2_000_000, $team->fans_base * 0.5));
+        $isFirst = $team->national_division === 'first'
+            || ($team->national_division === 'none' && $team->state_division === 'first');
+
+        return $isFirst ? 15_000_000 : 7_500_000;
     }
 
     private function initialTicketPrice(Team $team): int

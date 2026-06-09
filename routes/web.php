@@ -15,6 +15,7 @@ use App\Http\Controllers\LeagueJoinController;
 use App\Http\Controllers\LeagueLobbyController;
 use App\Http\Controllers\LeagueTeamController;
 use App\Http\Controllers\LineupController;
+use App\Http\Controllers\TransferController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserDashboardController;
 use App\Models\LeagueTeam;
@@ -53,6 +54,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/leagues/{league}/join',   [LeagueTeamController::class, 'create'])->name('leagues.teams.create');
     Route::post('/leagues/{league}/teams', [LeagueTeamController::class, 'store'])->name('leagues.teams.store');
     Route::get('/leagues/{league}/teams/{leagueTeam}', [LeagueTeamController::class, 'show'])->name('leagues.teams.show');
+    Route::patch('/leagues/{league}/teams/{leagueTeam}/ticket-price', [LeagueTeamController::class, 'updateTicketPrice'])->name('leagues.teams.ticket-price');
+
+    // Mercado de transferências
+    Route::get( '/leagues/{league}/transfers',                              [TransferController::class, 'index'])->name('leagues.transfers.index');
+    Route::get( '/leagues/{league}/transfers/offers',                       [TransferController::class, 'offers'])->name('leagues.transfers.offers');
+    Route::get( '/leagues/{league}/transfers/{player}',                     [TransferController::class, 'show'])->name('leagues.transfers.show');
+    Route::post('/leagues/{league}/transfers',                              [TransferController::class, 'store'])->name('leagues.transfers.store');
+    Route::post('/leagues/{league}/transfers/offers/{offer}/respond',       [TransferController::class, 'respond'])->name('leagues.transfers.respond');
 
     // Lineup management — {leagueTeam} resolves to a CompetitionTeam record
     Route::get('/leagues/{league}/teams/{leagueTeam}/lineup',  [LineupController::class, 'edit'])->name('leagues.lineup.edit');
