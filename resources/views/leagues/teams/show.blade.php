@@ -77,14 +77,12 @@
                 <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
                     <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">Satisfação da Torcida</p>
                     @php $sat = $leagueTeam->satisfaction; @endphp
-                    <div class="flex items-center gap-3">
-                        <p class="text-xl font-bold {{ $sat >= 60 ? 'text-emerald-400' : ($sat >= 35 ? 'text-yellow-400' : 'text-red-400') }}">
-                            {{ $sat }}/100
-                        </p>
-                        <div class="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden">
-                            <div class="h-2 rounded-full {{ $sat >= 60 ? 'bg-emerald-500' : ($sat >= 35 ? 'bg-yellow-500' : 'bg-red-500') }}"
-                                 style="width: {{ $sat }}%"></div>
-                        </div>
+                    <p class="text-xl font-bold mb-2 {{ $sat >= 60 ? 'text-emerald-400' : ($sat >= 35 ? 'text-yellow-400' : 'text-red-400') }}">
+                        {{ $sat }}/100
+                    </p>
+                    <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                        <div class="h-2 rounded-full {{ $sat >= 60 ? 'bg-emerald-500' : ($sat >= 35 ? 'bg-yellow-500' : 'bg-red-500') }}"
+                             style="width: {{ $sat }}%"></div>
                     </div>
                 </div>
                 <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
