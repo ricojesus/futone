@@ -309,7 +309,7 @@ class TransferService
                 if ($competition) {
                     CompetitionTransaction::create([
                         'competition_team_id' => $buyerCompTeam->id,
-                        'type'                => 'expense',
+                        'type'                => 'transfer_fee_out',
                         'amount'              => -$fee,
                         'description'         => "Compra: {$player->name}",
                         'round'               => $round,
@@ -325,7 +325,7 @@ class TransferService
                 if ($sellerCompTeam) {
                     CompetitionTransaction::create([
                         'competition_team_id' => $sellerCompTeam->id,
-                        'type'                => 'income',
+                        'type'                => 'transfer_fee_in',
                         'amount'              => $fee,
                         'description'         => "Venda: {$player->name}",
                         'round'               => $round,

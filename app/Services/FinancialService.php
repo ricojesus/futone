@@ -48,7 +48,7 @@ class FinancialService
 
                     CompetitionTransaction::create([
                         'competition_team_id' => $competitionTeam->id,
-                        'type'                => 'income',
+                        'type'                => 'prize_money',
                         'amount'              => $quota,
                         'description'         => 'Cota de TV — ' . $competition->name,
                         'round'               => 0,
@@ -113,7 +113,7 @@ class FinancialService
 
         CompetitionTransaction::create([
             'competition_team_id' => $homeCompTeam->id,
-            'type'                => 'income',
+            'type'                => 'match_revenue',
             'amount'              => $revenue,
             'description'         => "Bilheteria — {$attendance} torcedores × R\$ {$ticketPrice}",
             'round'               => $match->round,
