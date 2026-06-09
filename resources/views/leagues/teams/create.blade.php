@@ -46,13 +46,7 @@
                                     : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'"
                                 class="flex items-center gap-3 rounded-xl border p-3 text-left transition w-full">
                                 {{-- Badge --}}
-                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-800 overflow-hidden border border-slate-700">
-                                    @if ($team->badge)
-                                        <img src="{{ asset('storage/' . $team->badge) }}" alt="{{ $team->name }}" class="h-full w-full object-contain p-1" />
-                                    @else
-                                        <span class="text-xs font-bold text-slate-400">{{ strtoupper(substr($team->name, 0, 2)) }}</span>
-                                    @endif
-                                </div>
+                                <x-team-badge :team="$team" size="md" />
                                 <div class="min-w-0 flex-1">
                                     <p class="text-sm font-semibold text-white truncate">{{ $team->name }}</p>
                                     <p class="text-xs text-slate-500">
