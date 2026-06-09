@@ -64,6 +64,7 @@
 
         {{-- ── Painel financeiro (apenas técnico humano do próprio time) ── --}}
         @if ($isMyTeam)
+            <div class="space-y-4">
             <div class="grid grid-cols-3 gap-4">
                 <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
                     <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">Saldo</p>
@@ -98,7 +99,7 @@
             </div>
 
             {{-- Preço do ingresso --}}
-            <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
+            <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4 mt-4">
                 <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">Preço do Ingresso</p>
                 <form method="POST" action="{{ route('leagues.teams.ticket-price', [$league, $leagueTeam]) }}" class="flex items-center gap-3">
                     @csrf @method('PATCH')
@@ -116,6 +117,7 @@
                     <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
                 @enderror
             </div>
+            </div>{{-- /space-y-4 --}}
         @endif
 
         {{-- ── Stats nas competições ───────────────────────────────────── --}}
