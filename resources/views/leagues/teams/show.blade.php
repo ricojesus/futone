@@ -65,7 +65,7 @@
         {{-- ── Painel financeiro (apenas técnico humano do próprio time) ── --}}
         @if ($isMyTeam)
             <div class="space-y-4 mb-8">
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
                     <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">Saldo</p>
                     @php $budget = $leagueTeam->budget; @endphp
@@ -93,6 +93,13 @@
                     <p class="text-xl font-bold text-slate-200">
                         R$ {{ number_format($weeklyWage, 0, ',', '.') }}
                     </p>
+                </div>
+                <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
+                    <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">Capacidade do Estádio</p>
+                    <p class="text-xl font-bold text-slate-200">
+                        {{ number_format($leagueTeam->stadium_capacity, 0, ',', '.') }}
+                    </p>
+                    <p class="text-xs text-slate-600 mt-0.5">torcedores</p>
                 </div>
             </div>
 
