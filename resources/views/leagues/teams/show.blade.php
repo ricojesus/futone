@@ -160,124 +160,68 @@
             </div>
         @endif
 
-        {{-- ── Escalação titular ───────────────────────────────────────── --}}
+        {{-- ── Elenco ───────────────────────────────────────────────────── --}}
+        @php $starterIds = $starters->pluck('id')->flip(); @endphp
         <div class="mb-8">
             <h2 class="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">
-                Escalação Titular
+                Elenco
+                <span class="ml-2 normal-case font-normal text-slate-600">{{ $squad->count() }} jogadores</span>
                 @if ($lineup)
-                    <span class="ml-2 normal-case font-normal text-slate-600">{{ $lineup->formation }}</span>
+                    <span class="ml-1 normal-case font-normal text-slate-600">· {{ $lineup->formation }}</span>
                 @endif
             </h2>
 
-            @if ($starters->isEmpty())
-                <div class="rounded-2xl border border-dashed border-slate-800 px-6 py-10 text-center">
-                    <p class="text-slate-600 text-sm">Nenhuma escalação definida.</p>
-                </div>
-            @else
-                <div class="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden">
-                    <div class="divide-y divide-slate-800/60">
-                        @foreach ($starters as $player)
-                            @php
-                                $ovr      = (int) ($player->strength ?? 0);
-                                $fit      = (int) ($player->fitness  ?? 100);
-                                $ovrColor = match(true) {
-                                    $ovr >= 80 => 'text-amber-300',
-                                    $ovr >= 65 => 'text-emerald-400',
-                                    $ovr >= 50 => 'text-slate-300',
-                                    default    => 'text-slate-500',
-                                };
-                                $fitColor = match(true) {
-                                    $fit >= 80 => '#10b981',
-                                    $fit >= 60 => '#f59e0b',
-                                    $fit >= 40 => '#f97316',
-                                    default    => '#ef4444',
-                                };
-                                $fitLabel = match(true) {
-                                    $fit >= 80 => 'text-emerald-400',
-                                    $fit >= 60 => 'text-amber-400',
-                                    $fit >= 40 => 'text-orange-400',
-                                    default    => 'text-red-400',
-                                };
-                            @endphp
-                            <div class="flex items-center gap-3 px-5 py-3">
-                                <span class="shrink-0 w-7 text-center text-[10px] font-bold uppercase text-slate-600 bg-slate-800 rounded px-1 py-0.5">
-                                    {{ $positionLabel[$player->position] ?? '—' }}
-                                </span>
-                                <span class="flex-1 text-sm font-medium text-white">{{ $player->name }}</span>
-                                {{-- OVR --}}
-                                <div class="shrink-0 flex flex-col items-center w-9">
-                                    <span class="text-[9px] font-semibold uppercase tracking-wide text-slate-600 leading-none">OVR</span>
-                                    <span class="text-sm font-bold tabular-nums leading-tight {{ $ovrColor }}">{{ $ovr }}</span>
-                                </div>
-                                {{-- Fitness --}}
-                                <div class="flex items-center gap-1.5 shrink-0">
-                                    <div class="w-14 h-1.5 rounded-full bg-slate-700/80 overflow-hidden">
-                                        <div class="h-full rounded-full" style="width:{{ $fit }}%; background:{{ $fitColor }};"></div>
-                                    </div>
-                                    <span class="text-[10px] font-medium tabular-nums {{ $fitLabel }} w-7">{{ $fit }}%</span>
-                                </div>
+            <div class="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden">
+                <div class="divide-y divide-slate-800/60">
+                    @forelse ($squad as $player)
+                        @php
+                            $isStarter = $starterIds->has($player->id);
+                            $ovr       = (int) ($player->strength ?? 0);
+                            $fit       = (int) ($player->fitness  ?? 100);
+                            $ovrColor  = match(true) {
+                                $ovr >= 80 => 'text-amber-300',
+                                $ovr >= 65 => 'text-emerald-400',
+                                $ovr >= 50 => 'text-slate-300',
+                                default    => 'text-slate-500',
+                            };
+                            $fitColor = match(true) {
+                                $fit >= 80 => '#10b981',
+                                $fit >= 60 => '#f59e0b',
+                                $fit >= 40 => '#f97316',
+                                default    => '#ef4444',
+                            };
+                            $fitLabel = match(true) {
+                                $fit >= 80 => 'text-emerald-400',
+                                $fit >= 60 => 'text-amber-400',
+                                $fit >= 40 => 'text-orange-400',
+                                default    => 'text-red-400',
+                            };
+                        @endphp
+                        <div class="flex items-center gap-3 px-5 py-3 {{ $isStarter ? '' : 'opacity-60' }}">
+                            <span class="shrink-0 w-7 text-center text-[10px] font-bold uppercase rounded px-1 py-0.5
+                                {{ $isStarter ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-600' }}">
+                                {{ $positionLabel[$player->position] ?? '—' }}
+                            </span>
+                            <span class="flex-1 text-sm {{ $isStarter ? 'font-semibold text-white' : 'text-slate-400' }}">
+                                {{ $player->name }}
+                            </span>
+                            @if ($isStarter)
+                                <span class="shrink-0 text-[9px] font-bold uppercase tracking-wide text-emerald-500/70">TIT</span>
+                            @endif
+                            <div class="shrink-0 flex flex-col items-center w-9">
+                                <span class="text-[9px] font-semibold uppercase tracking-wide text-slate-600 leading-none">OVR</span>
+                                <span class="text-sm font-bold tabular-nums leading-tight {{ $ovrColor }}">{{ $ovr }}</span>
                             </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-        </div>
-
-        {{-- ── Elenco completo ─────────────────────────────────────────── --}}
-        <div x-data="{ open: false }" class="mb-8">
-            <button @click="open = !open"
-                class="mb-3 flex w-full items-center justify-between text-xs font-semibold uppercase tracking-widest text-slate-500 hover:text-slate-300 transition">
-                <span>Elenco Completo <span class="font-normal text-slate-600">({{ $squad->count() }} jogadores)</span></span>
-                <svg class="h-4 w-4 transition-transform" :class="open ? 'rotate-180' : ''"
-                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                </svg>
-            </button>
-
-            <div x-show="open" x-collapse>
-                <div class="rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden">
-                    <div class="divide-y divide-slate-800/40">
-                        @foreach ($squad as $player)
-                            @php
-                                $ovr      = (int) ($player->strength ?? 0);
-                                $fit      = (int) ($player->fitness  ?? 100);
-                                $ovrColor = match(true) {
-                                    $ovr >= 80 => 'text-amber-300',
-                                    $ovr >= 65 => 'text-emerald-400',
-                                    $ovr >= 50 => 'text-slate-300',
-                                    default    => 'text-slate-500',
-                                };
-                                $fitColor = match(true) {
-                                    $fit >= 80 => '#10b981',
-                                    $fit >= 60 => '#f59e0b',
-                                    $fit >= 40 => '#f97316',
-                                    default    => '#ef4444',
-                                };
-                                $fitLabel = match(true) {
-                                    $fit >= 80 => 'text-emerald-400',
-                                    $fit >= 60 => 'text-amber-400',
-                                    $fit >= 40 => 'text-orange-400',
-                                    default    => 'text-red-400',
-                                };
-                            @endphp
-                            <div class="flex items-center gap-3 px-5 py-2.5">
-                                <span class="shrink-0 w-7 text-center text-[10px] font-bold uppercase text-slate-600 bg-slate-800 rounded px-1 py-0.5">
-                                    {{ $positionLabel[$player->position] ?? '—' }}
-                                </span>
-                                <span class="flex-1 text-sm text-white">{{ $player->name }}</span>
-                                <div class="shrink-0 flex flex-col items-center w-9">
-                                    <span class="text-[9px] font-semibold uppercase tracking-wide text-slate-600 leading-none">OVR</span>
-                                    <span class="text-sm font-bold tabular-nums leading-tight {{ $ovrColor }}">{{ $ovr }}</span>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <div class="w-14 h-1.5 rounded-full bg-slate-700/80 overflow-hidden">
+                                    <div class="h-full rounded-full" style="width:{{ $fit }}%; background:{{ $fitColor }};"></div>
                                 </div>
-                                <div class="flex items-center gap-1.5 shrink-0">
-                                    <div class="w-14 h-1.5 rounded-full bg-slate-700/80 overflow-hidden">
-                                        <div class="h-full rounded-full" style="width:{{ $fit }}%; background:{{ $fitColor }};"></div>
-                                    </div>
-                                    <span class="text-[10px] font-medium tabular-nums {{ $fitLabel }} w-7">{{ $fit }}%</span>
-                                </div>
+                                <span class="text-[10px] font-medium tabular-nums {{ $fitLabel }} w-7">{{ $fit }}%</span>
                             </div>
-                        @endforeach
-                    </div>
+                        </div>
+                    @empty
+                        <div class="px-6 py-10 text-center text-slate-600 text-sm">Nenhum jogador no elenco.</div>
+                    @endforelse
                 </div>
             </div>
         </div>
