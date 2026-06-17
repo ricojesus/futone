@@ -26,6 +26,8 @@ class CompetitionMatch extends Model
         'played_at',
         'data',
         'bracket_slot',
+        'attendance',
+        'match_revenue',
     ];
 
     protected $casts = [

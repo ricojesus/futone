@@ -23,8 +23,8 @@
         ? collect($events)->filter(fn($e) => ($e['play'] ?? 0) >= 46)->values()->all()
         : $events;
 
-    $replayInitialHome = isset($halftimeHomeScore) ? $halftimeHomeScore : 0;
-    $replayInitialAway = isset($halftimeAwayScore) ? $halftimeAwayScore : 0;
+    $replayInitialHome = $halftimeHomeScore ?? 0;
+    $replayInitialAway = $halftimeAwayScore ?? 0;
 @endphp
 
 <x-app-layout>
@@ -124,6 +124,23 @@
                     @endif
                 </div>
             </div>
+
+            {{-- Público e receita --}}
+            @if ($match->attendance)
+                <div class="mt-5 flex items-center justify-center">
+                    <div class="px-10 text-center">
+                        <p class="text-2xl font-black text-white tabular-nums">{{ number_format($match->attendance, 0, ',', '.') }}</p>
+                        <p class="mt-0.5 text-xs font-medium uppercase tracking-widest text-slate-500">Público</p>
+                    </div>
+                    @if ($match->match_revenue)
+                        <div class="h-10 w-px bg-slate-800"></div>
+                        <div class="px-10 text-center">
+                            <p class="text-2xl font-black text-emerald-400 tabular-nums">R$ {{ number_format($match->match_revenue, 0, ',', '.') }}</p>
+                            <p class="mt-0.5 text-xs font-medium uppercase tracking-widest text-slate-500">Bilheteria</p>
+                        </div>
+                    @endif
+                </div>
+            @endif
 
             {{-- Progress bar (replay mode only) --}}
             @if ($replayMode)

@@ -34,10 +34,15 @@
     // Resolve badge: Team → badge direto
     //                LeagueTeam → team->badge
     //                CompetitionTeam → leagueTeam->team->badge
-    $badge = $team?->badge                           // Team
-          ?? $team?->team?->badge                    // LeagueTeam (team_id FK)
-          ?? $team?->leagueTeam?->team?->badge       // CompetitionTeam
-          ?? null;
+    $badgePath = $team?->badge
+              ?? $team?->team?->badge
+              ?? $team?->leagueTeam?->team?->badge
+              ?? null;
+
+    // Codifica o nome do arquivo para suportar espaços e caracteres especiais (ex: "São Paulo.png")
+    $badge = $badgePath
+        ? dirname($badgePath) . '/' . rawurlencode(basename($badgePath))
+        : null;
 
     // Iniciais para o placeholder (máx 2 letras)
     $words    = array_filter(explode(' ', $name));

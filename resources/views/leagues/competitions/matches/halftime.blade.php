@@ -92,6 +92,16 @@
                 </div>
             </div>
 
+            {{-- Público --}}
+            @if ($match->attendance)
+                <div class="mt-5 flex items-center justify-center">
+                    <div class="text-center">
+                        <p class="text-2xl font-black text-white tabular-nums">{{ number_format($match->attendance, 0, ',', '.') }}</p>
+                        <p class="mt-0.5 text-xs font-medium uppercase tracking-widest text-slate-500">Público</p>
+                    </div>
+                </div>
+            @endif
+
             {{-- Barra de progresso do replay --}}
             <div x-show="!replayDone" class="mt-5 mx-auto max-w-xs">
                 <div class="flex items-center gap-3 mb-1.5">

@@ -80,9 +80,30 @@ class FinancialService
     }
 
     /**
-     * Calcula público e receita de bilheteria para uma partida finalizada.
-     * Apenas o time da casa recebe receita. Chamado sem transação própria
-     * para poder ser usado dentro de transações existentes.
+     * Calcula e grava o público esperado no início da partida.
+     * Chamado no simulateFirstHalf para que a info apareça já no 1º tempo.
+     */
+    public function calculateAndStoreAttendance(CompetitionMatch $match): void
+    {
+        $homeCompTeam = $match->homeTeam;
+        if (! $homeCompTeam) return;
+
+        $leagueTeam = $homeCompTeam->leagueTeam;
+        if (! $leagueTeam) return;
+
+        $attendance  = $this->attendanceFor($leagueTeam, $match->competition);
+        $ticketPrice = max(1, $leagueTeam->ticket_price);
+
+        CompetitionMatch::where('id', $match->id)->update([
+            'attendance'    => $attendance,
+            'match_revenue' => $attendance * $ticketPrice,
+        ]);
+    }
+
+    /**
+     * Calcula receita de bilheteria para uma partida finalizada e credita ao time da casa.
+     * Usa o público já calculado no 1º tempo (ou recalcula se ausente).
+     * Chamado sem transação própria para poder ser usado dentro de transações existentes.
      */
     public function processMatchRevenue(CompetitionMatch $match): void
     {
@@ -92,20 +113,9 @@ class FinancialService
         $leagueTeam = $homeCompTeam->leagueTeam;
         if (! $leagueTeam) return;
 
-        $capacity    = $leagueTeam->stadium_capacity;
-        $satisfaction = $leagueTeam->satisfaction;
-        $ticketPrice  = max(1, $leagueTeam->ticket_price);
-
-        $compWeight = $this->competitionWeight($match->competition);
-
-        // Ocupação base: satisfação × peso da competição
-        $satFactor  = $satisfaction / 100;
-        $pricePenalty = max(0, ($ticketPrice - 50) / 200) * (1 - $satFactor);
-        $occupation   = $satFactor * $compWeight * (1 - $pricePenalty);
-        $occupation   = max(0.05, min(1.0, $occupation));
-
-        $attendance = (int) round($capacity * $occupation);
-        $revenue    = $attendance * $ticketPrice;
+        $ticketPrice = max(1, $leagueTeam->ticket_price);
+        $attendance  = $match->attendance ?? $this->attendanceFor($leagueTeam, $match->competition);
+        $revenue     = $attendance * $ticketPrice;
 
         if ($revenue <= 0) return;
 
@@ -118,6 +128,26 @@ class FinancialService
             'description'         => "Bilheteria — {$attendance} torcedores × R\$ {$ticketPrice}",
             'round'               => $match->round,
         ]);
+
+        CompetitionMatch::where('id', $match->id)->update([
+            'attendance'    => $attendance,
+            'match_revenue' => $revenue,
+        ]);
+    }
+
+    private function attendanceFor(LeagueTeam $leagueTeam, Competition $competition): int
+    {
+        $capacity     = $leagueTeam->stadium_capacity;
+        $satisfaction = $leagueTeam->satisfaction;
+        $ticketPrice  = max(1, $leagueTeam->ticket_price);
+        $compWeight   = $this->competitionWeight($competition);
+
+        $satFactor    = $satisfaction / 100;
+        $pricePenalty = max(0, ($ticketPrice - 50) / 200) * (1 - $satFactor);
+        $occupation   = $satFactor * $compWeight * (1 - $pricePenalty);
+        $occupation   = max(0.05, min(1.0, $occupation));
+
+        return (int) round($capacity * $occupation);
     }
 
     private function competitionWeight(Competition $competition): float

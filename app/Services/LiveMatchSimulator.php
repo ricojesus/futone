@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\CompetitionMatch;
 use App\Models\MatchState;
 use Illuminate\Support\Collection;
+use App\Services\FinancialService;
 
 /**
  * Motor CPU × Humano — simula a partida em duas metades.
@@ -21,7 +22,8 @@ class LiveMatchSimulator
     private const HALFTIME_PLAY = 45;
 
     public function __construct(
-        private readonly MatchNarrator $narrator = new MatchNarrator(),
+        private readonly MatchNarrator   $narrator   = new MatchNarrator(),
+        private readonly FinancialService $financial = new FinancialService(),
     ) {}
 
     // ── API pública ──────────────────────────────────────────────────
@@ -68,6 +70,7 @@ class LiveMatchSimulator
         );
 
         $match->update(['status' => 'halftime']);
+        $this->financial->calculateAndStoreAttendance($match);
 
         return $matchState;
     }
