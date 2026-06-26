@@ -1,0 +1,491 @@
+name,state,country_code,overall,state_division,national_division,tolerance,fans_base,stadium_capacity,coach
+Flamengo,RJ,BRA,87,first,first,75,40000000,78000,Filipe Luís
+Palmeiras,SP,BRA,85,first,first,72,25000000,45000,Abel Ferreira
+Atlético Mineiro,MG,BRA,84,first,first,70,20000000,47000,Gabriel Milito
+Botafogo,RJ,BRA,82,first,first,70,18000000,30000,Artur Jorge
+Corinthians,SP,BRA,80,first,first,65,28000000,49000,Ramón Díaz
+Internacional,RS,BRA,80,first,first,67,22000000,50000,Roger Machado
+Grêmio,RS,BRA,79,first,first,66,20000000,55000,Renato Gaúcho
+Fluminense,RJ,BRA,78,first,first,63,14000000,78000,Mano Menezes
+São Paulo,SP,BRA,78,first,first,62,19000000,72000,Luís Zubeldía
+Cruzeiro,MG,BRA,77,first,first,63,18000000,62000,Fernando Diniz
+Bahia,BA,BRA,76,first,first,62,12000000,50000,Rogério Ceni
+Vasco da Gama,RJ,BRA,75,first,first,60,14000000,20000,Rafael Paiva
+Fortaleza,CE,BRA,77,first,first,63,11000000,60000,Juan Pablo Vojvoda
+Santos,SP,BRA,74,first,first,57,13000000,16200,Pedro Caixinha
+Athletico Paranaense,PR,BRA,74,first,first,58,10000000,40000,Cuca
+Red Bull Bragantino,SP,BRA,73,first,first,55,3000000,20000,Fernando Seabra
+Sport Recife,PE,BRA,72,first,first,57,9000000,30000,Mariano Soso
+Juventude,RS,BRA,68,first,first,52,2000000,20000,Jair Ventura
+Mirassol,SP,BRA,66,first,first,50,600000,15000,Mozart Santos
+Novorizontino,SP,BRA,66,first,first,50,700000,13000,Eduardo Baptista
+Cuiabá,MT,BRA,67,first,second,52,2500000,44000,Petit
+Atlético Goianiense,GO,BRA,68,first,second,53,4000000,15000,Umberto Louzer
+Criciúma,SC,BRA,67,first,second,52,3000000,19000,Cláudio Tencati
+Vitória,BA,BRA,68,first,second,54,9000000,37000,Thiago Carpini
+Coritiba,PR,BRA,68,first,second,53,7000000,40000,Jorginho
+América Mineiro,MG,BRA,65,first,second,50,4000000,18000,Fabiano Soares
+Guarani,SP,BRA,64,first,second,50,2500000,20000,Marcelo Vilar
+Ponte Preta,SP,BRA,65,first,second,50,2800000,20000,Nelsinho Baptista
+Goiás,GO,BRA,65,first,second,50,4000000,12000,Márcio Zanardi
+Chapecoense,SC,BRA,64,first,second,48,3000000,22000,Gilson Kleina
+Operário Ferroviário,PR,BRA,63,first,second,48,800000,10000,Gerson Gusmão
+CRB,AL,BRA,63,first,second,48,3000000,20000,Daniel Paulista
+CSA,AL,BRA,62,first,second,47,2500000,16000,Luís Carlos Cruz
+Ceará,CE,BRA,70,first,second,55,8000000,63000,Vagner Mancini
+Remo,PA,BRA,63,first,second,48,4000000,45000,Paulo Bonamigo
+Sampaio Corrêa,MA,BRA,62,first,second,47,3000000,15000,Léo Condé
+ABC FC,RN,BRA,62,first,second,47,3000000,20000,Moacir Júnior
+Tombense,MG,BRA,61,first,second,45,600000,8000,Eugênio Souza
+Brusque,SC,BRA,62,first,second,46,700000,8000,Luizinho Vieira
+Ituano,SP,BRA,62,first,second,46,400000,12000,Marcinho Guerreiro
+São Bernardo FC,SP,BRA,63,first,none,46,500000,15000,Márcio Zanardi
+Inter de Limeira,SP,BRA,60,first,none,43,250000,10000,Paulo Comelli
+Água Santa,SP,BRA,61,first,none,44,300000,8000,Luizinho Vieira
+Portuguesa,SP,BRA,62,first,none,46,1500000,10000,Caio Zanardi
+Botafogo SP,SP,BRA,60,first,none,43,400000,15000,Paulo Roberto
+Ferroviária,SP,BRA,59,first,none,41,250000,10000,Elano
+Votuporanguense,SP,BRA,57,first,none,39,150000,6000,Rogério Corrêa
+XV de Piracicaba,SP,BRA,57,first,none,39,350000,12000,Roberto Fonseca
+Marília AC,SP,BRA,56,first,none,38,250000,10000,Thiago Oliveira
+Taubaté FC,SP,BRA,55,first,none,38,250000,8000,Caetano Júnior
+Rio Claro FC,SP,BRA,53,second,none,36,180000,6000,Carlos Braga
+Mogi Mirim EC,SP,BRA,54,second,none,36,220000,8000,Marcelo Veiga
+Noroeste FC,SP,BRA,53,second,none,36,220000,10000,Eduardo Souza
+Bandeirante EC,SP,BRA,51,second,none,34,120000,5000,Valdir Santos
+Barretos EC,SP,BRA,50,second,none,33,110000,6000,Sandro Oliveira
+Nacional SP,SP,BRA,52,second,none,35,250000,7000,Pedro Augusto
+Capivariano FC,SP,BRA,50,second,none,33,90000,5000,Roberto Lima
+Comercial Ribeirão Preto,SP,BRA,51,second,none,34,180000,8000,Cícero Santos
+Primavera EC,SP,BRA,50,second,none,33,110000,6000,Elias Gomes
+Catanduva FC,SP,BRA,49,second,none,32,90000,5000,Márcio Souza
+Linense FC,SP,BRA,51,second,none,34,170000,8000,Eduardo Moraes
+São José FC SP,SP,BRA,53,second,none,36,220000,8000,Thiago Carvalho
+União Barbarense,SP,BRA,50,second,none,33,130000,6000,Luís Felipe
+Grêmio Barueri,SP,BRA,52,second,none,35,170000,6000,Anderson Costa
+Oeste FC,SP,BRA,54,second,none,36,280000,10000,Reginaldo Oliveira
+Atlético Sorocaba,SP,BRA,50,second,none,33,110000,6000,Paulo Santos
+Portuguesa Santista,SP,BRA,52,second,none,35,220000,8000,Sérgio Sousa
+Jabaquara AC,SP,BRA,49,second,none,32,100000,6000,Carlos Mendes
+Olímpia FC,SP,BRA,49,second,none,32,80000,5000,Roberto Carlos
+Bangu AC,RJ,BRA,60,first,none,43,600000,18000,Rogério Gonçalves
+Madureira EC,RJ,BRA,59,first,none,41,450000,8000,Luís Carlos
+Resende FC,RJ,BRA,58,first,none,40,350000,10000,Luís Filipe
+Portuguesa RJ,RJ,BRA,57,first,none,39,250000,8000,Carlos Antônio
+Nova Iguaçu FC,RJ,BRA,60,first,none,43,600000,8000,Carlos Sant'anna
+Volta Redonda FC,RJ,BRA,61,first,none,44,700000,12000,Rogério Corrêa
+Audax Rio,RJ,BRA,58,first,none,40,250000,6000,Thiago Lima
+Boavista SC,RJ,BRA,57,first,none,39,250000,6000,Paulo Rangel
+América Rio,RJ,BRA,57,first,none,39,350000,8000,Carlos Felippe
+Mesquita FC,RJ,BRA,56,first,none,38,250000,6000,Danilo Santos
+Campo Grande AC,RJ,BRA,56,first,none,38,250000,5000,Marcelo Alves
+Cabofriense FC,RJ,BRA,55,first,none,37,180000,5000,Roberto Souza
+Americano FC RJ,RJ,BRA,55,first,none,37,250000,8000,Paulo Cesar
+Friburguense AC,RJ,BRA,52,second,none,35,170000,5000,Ricardo Santos
+Olaria AC,RJ,BRA,53,second,none,36,220000,6000,Marcelo Trindade
+São Cristóvão FC,RJ,BRA,54,second,none,36,300000,8000,Alexandre Costa
+Macaé Esportivo,RJ,BRA,52,second,none,35,170000,6000,Rodrigo Lima
+Barra Mansa FC,RJ,BRA,51,second,none,34,140000,5000,Eduardo Vieira
+Angra dos Reis FC,RJ,BRA,50,second,none,33,110000,4000,Luís Henrique
+Petrópolis FC,RJ,BRA,50,second,none,33,110000,5000,Carlos Eduardo
+Itaguaí FC,RJ,BRA,49,second,none,32,90000,4000,Antônio Lima
+São Gonçalo FC,RJ,BRA,49,second,none,32,90000,4000,Paulo Braga
+Duque de Caxias FC,RJ,BRA,51,second,none,34,180000,6000,Marcos Lima
+Athletic Club,MG,BRA,62,first,none,46,500000,6000,Lucas Gonçalves
+Villa Nova AC,MG,BRA,58,first,none,40,350000,10000,Paulinho Kobayashi
+Caldense EC,MG,BRA,57,first,none,39,300000,8000,Paulo Brito
+Uberlândia FC,MG,BRA,58,first,none,40,350000,10000,Eduardo Moraes
+Betim Futebol,MG,BRA,56,first,none,38,250000,6000,Rodrigo Oliveira
+Boa Esporte Clube,MG,BRA,57,first,none,39,350000,10000,Cláudio Tencati
+Coimbra SC,MG,BRA,56,first,none,38,250000,6000,Marco Antônio
+Aymorés EC,MG,BRA,54,first,none,36,170000,5000,Carlos Rosa
+Ipatinga FC,MG,BRA,55,first,none,37,250000,8000,Nédio Borges
+Democrata GV,MG,BRA,54,first,none,36,170000,6000,Paulo Sérgio
+Pouso Alegre FC,MG,BRA,55,first,none,37,250000,6000,Claudinho
+Patrocinense FC,MG,BRA,54,first,none,36,170000,5000,Luís Antônio
+Uberaba SC,MG,BRA,51,second,none,34,170000,6000,Eduardo Lima
+Democrata SL,MG,BRA,52,second,none,35,220000,8000,Paulo Gonçalves
+Formiga EC,MG,BRA,50,second,none,33,130000,6000,Carlos Moreira
+Mamoré FC,MG,BRA,49,second,none,32,90000,4000,Roberto Faria
+Tupynambás FC,MG,BRA,51,second,none,34,170000,6000,Luís Carlos Martins
+Serranense FC,MG,BRA,49,second,none,32,90000,4000,André Santos
+Itabirito FC,MG,BRA,50,second,none,33,110000,5000,Rogério Alves
+Guarani Divinópolis,MG,BRA,50,second,none,33,110000,5000,Danilo Barcelos
+Nacional FC MG,MG,BRA,49,second,none,32,90000,4000,Márcio Andrade
+Araguari AC,MG,BRA,48,second,none,31,70000,4000,Carlos Braga
+Caxias EC,RS,BRA,63,first,none,47,1100000,20000,Luís Carlos Winck
+Ypiranga EC RS,RS,BRA,61,first,none,44,550000,10000,Claudinho
+Brasil de Pelotas,RS,BRA,60,first,none,43,650000,12000,Marcelo Cabrera
+São José FC RS,RS,BRA,59,first,none,41,450000,8000,Pintado
+Aimoré EC,RS,BRA,58,first,none,40,350000,8000,Paulo Henrique
+Esportivo Bento,RS,BRA,57,first,none,39,280000,6000,Roberto Alvez
+Novo Hamburgo FC,RS,BRA,59,first,none,41,450000,8000,Márcio Flores
+São Luiz FC RS,RS,BRA,57,first,none,39,230000,6000,Gabriel Santos
+Glória EC RS,RS,BRA,56,first,none,38,170000,5000,Carlos Lima
+Veranópolis EC,RS,BRA,56,first,none,37,170000,5000,Leandro Oliveira
+Pelotas FC,RS,BRA,58,first,none,40,380000,8000,Eduardo Silveira
+São Paulo FC RS,RS,BRA,55,first,none,37,220000,6000,Márcio Venancio
+Gaúcho FC,RS,BRA,52,second,none,35,220000,8000,Luís Henrique
+Santa Cruz RS,RS,BRA,51,second,none,34,170000,6000,Carlos Alberto
+Lajeadense FC,RS,BRA,51,second,none,34,170000,5000,Eduardo Ramos
+Guarany Bagé,RS,BRA,51,second,none,34,170000,6000,Paulo Henrique Neto
+Passo Fundo EC,RS,BRA,50,second,none,33,110000,5000,Carlos Figueira
+Cruzeiro Sul RS,RS,BRA,49,second,none,32,90000,4000,Rodrigo Santos
+Avenida FC RS,RS,BRA,50,second,none,33,110000,5000,André Lima
+Guarani Venâncio,RS,BRA,50,second,none,33,110000,4000,Roberto Pires
+Igrejinha EC,RS,BRA,48,second,none,31,70000,3000,Luís Machado
+Santarritense RS,RS,BRA,48,second,none,31,70000,3000,Eduardo Braga
+Maringá FC,PR,BRA,62,first,none,46,700000,12000,Claudinho
+Paraná Clube,PR,BRA,63,first,none,47,2800000,20000,Pintado
+Toledo FC,PR,BRA,58,first,none,40,350000,8000,Eduardo Santos
+Cascavel CR,PR,BRA,60,first,none,43,550000,10000,Luís Felipe
+FC Cascavel,PR,BRA,59,first,none,41,450000,8000,Carlos Mota
+Londrina FC,PR,BRA,64,first,none,48,2200000,20000,Claudinho Gomes
+Azuriz FC,PR,BRA,56,first,none,38,170000,5000,Roberto Braga
+Rio Branco AC PR,PR,BRA,57,first,none,39,350000,8000,Anderson Moraes
+Pinheirense EC,PR,BRA,55,first,none,37,170000,5000,Márcio Rocha
+Foz do Iguaçu FC,PR,BRA,56,first,none,38,250000,6000,Eduardo Lopes
+Apucarana Sports,PR,BRA,54,first,none,36,170000,5000,Carlos Silva
+Nacional FC PR,PR,BRA,54,first,none,36,140000,5000,Roberto Lima
+Pinhais EC,PR,BRA,51,second,none,34,110000,4000,Luís Santos
+Andraus FC,PR,BRA,49,second,none,32,90000,4000,Rodrigo Lima
+Paranavaí AC,PR,BRA,51,second,none,34,170000,6000,Roberto Silva
+Campo Mourão FC,PR,BRA,51,second,none,34,170000,5000,Eduardo Carneiro
+Esportivo Guarapuava,PR,BRA,50,second,none,33,110000,5000,Marcelo Santos
+Cianorte FC,PR,BRA,52,second,none,35,220000,6000,Paulo Gomes
+Marechal FC,PR,BRA,48,second,none,31,70000,3000,Carlos Eduardo
+Grêmio PR,PR,BRA,50,second,none,33,100000,4000,Márcio Leite
+Juazeirense FC,BA,BRA,59,first,none,41,450000,8000,Vinícius Simões
+Jacobina FC,BA,BRA,55,first,none,37,220000,5000,Carlos Matos
+Bahia de Feira,BA,BRA,58,first,none,40,350000,8000,Felipe Lima
+Jequié FC,BA,BRA,56,first,none,38,250000,6000,Roberto Moura
+Atlético Glória BA,BA,BRA,54,first,none,36,170000,5000,Eduardo Pires
+Doce Mel FC,BA,BRA,54,first,none,36,170000,5000,Marcelo Costa
+Conquista FC,BA,BRA,55,first,none,37,220000,6000,Luís Silva
+Catuense FC,BA,BRA,53,first,none,35,140000,5000,Paulo Ferreira
+Galícia EC,BA,BRA,53,first,none,35,170000,5000,Carlos Braga
+Serrano FC BA,BA,BRA,52,first,none,35,140000,5000,Roberto Pires
+Alagoinhas AC,BA,BRA,57,first,none,39,300000,8000,André Lima
+Fluminense BA,BA,BRA,52,first,none,35,140000,5000,Márcio Silva
+Poções FC,BA,BRA,50,second,none,33,90000,4000,Rodrigo Almeida
+Ipiaú EC,BA,BRA,49,second,none,32,80000,3000,Eduardo Nunes
+Itabuna FC,BA,BRA,50,second,none,33,90000,4000,Luís Ferreira
+Senhor do Bonfim FC,BA,BRA,50,second,none,33,90000,4000,Roberto Costa
+Vera Cruz BA,BA,BRA,49,second,none,32,80000,4000,Carlos Mendes
+Colo Colo BA,BA,BRA,48,second,none,31,70000,3000,Paulo César
+Camacã FC,BA,BRA,48,second,none,31,60000,3000,Marcelo Rocha
+Riachão do Jacuípe FC,BA,BRA,48,second,none,31,60000,3000,Eduardo Santos
+Avaí FC,SC,BRA,65,first,none,49,3200000,18000,Enderson Moreira
+Figueirense FC,SC,BRA,64,first,none,48,2600000,20000,Marcelo Cabo
+Joinville EC,SC,BRA,62,first,none,46,2200000,12000,Luís Carlos
+Hercílio Luz FC,SC,BRA,58,first,none,40,350000,8000,Luís Felipe
+Inter de Lages,SC,BRA,57,first,none,39,280000,6000,Marcelo Silva
+Marcílio Dias,SC,BRA,57,first,none,39,300000,6000,Eduardo Souza
+Metropolitano SC,SC,BRA,56,first,none,38,230000,5000,Carlos Pereira
+Concórdia AC,SC,BRA,56,first,none,37,230000,5000,Roberto Mattos
+Camboriú FC,SC,BRA,55,first,none,37,170000,5000,Paulo Gonçalves
+Caravaggio FC,SC,BRA,54,first,none,36,170000,5000,Luís Alberto
+Jaraguá FC,SC,BRA,54,first,none,36,170000,5000,André Lopes
+Atlético SC,SC,BRA,57,first,none,39,300000,8000,Roberto Bernardes
+Tubarão SC,SC,BRA,51,second,none,34,170000,5000,Rodrigo Santos
+Içara EC,SC,BRA,50,second,none,33,110000,4000,Carlos Silva
+Blumenau FC,SC,BRA,51,second,none,34,170000,5000,Eduardo Lima
+São José EC SC,SC,BRA,52,second,none,35,220000,6000,Paulo Moreira
+Chapecó EC,SC,BRA,50,second,none,33,110000,4000,Marcelo Cardoso
+Joaçaba EC,SC,BRA,50,second,none,33,110000,4000,Rodrigo Pires
+São Miguel do Oeste FC,SC,BRA,49,second,none,32,80000,3000,Carlos Ramos
+Palhoça EC,SC,BRA,49,second,none,32,80000,3000,Paulo César
+Ferroviário CE,CE,BRA,60,first,none,43,550000,10000,Paulinho Kobayashi
+Floresta EC,CE,BRA,58,first,none,40,350000,8000,Marcelo Costa
+Iguatu FC,CE,BRA,57,first,none,39,250000,6000,Carlos Lima
+Caucaia FC,CE,BRA,55,first,none,37,170000,5000,Eduardo Santos
+Guarany Sobral,CE,BRA,56,first,none,38,230000,6000,Roberto Marques
+Atlético CE,CE,BRA,54,first,none,36,170000,5000,Luís Oliveira
+Icasa EC,CE,BRA,57,first,none,39,350000,8000,Paulo Henrique
+Tirol CE,CE,BRA,56,first,none,38,280000,6000,Márcio Alves
+Horizonte FC,CE,BRA,55,first,none,37,230000,6000,Carlos Pereira
+Barbalha FC,CE,BRA,53,first,none,35,140000,5000,Roberto Moura
+Guarany Juazeiro,CE,BRA,53,first,none,35,140000,5000,Eduardo Braga
+Crato EC,CE,BRA,52,first,none,35,130000,5000,Marcelo Lima
+Quixadá FC,CE,BRA,50,second,none,33,90000,4000,Eduardo Silva
+Sobral FC,CE,BRA,51,second,none,34,110000,4000,Carlos Braga
+Guarany Camocim,CE,BRA,49,second,none,32,80000,3000,Paulo Lima
+Limoeiro EC CE,CE,BRA,49,second,none,32,80000,3000,André Santos
+Russas FC,CE,BRA,48,second,none,31,70000,3000,Roberto Gonçalves
+Canindé FC,CE,BRA,48,second,none,31,70000,3000,Eduardo Moraes
+Pacajus FC,CE,BRA,48,second,none,31,60000,3000,Rodrigo Lima
+Maracanã EC CE,CE,BRA,49,second,none,32,80000,3000,Carlos Santos
+Náutico PE,PE,BRA,66,first,none,50,5500000,20000,Luis Carlos Cruz
+Santa Cruz PE,PE,BRA,64,first,none,49,6500000,60000,Daniel Paulista
+Retrô FC,PE,BRA,60,first,none,43,450000,6000,Carlos Pimentel
+Salgueiro FC,PE,BRA,58,first,none,40,400000,8000,Marcelo Vilar
+Afogados FC,PE,BRA,56,first,none,38,280000,6000,Luís Felipe
+Central SC PE,PE,BRA,57,first,none,39,350000,6000,Robson Santos
+Petrolina FC,PE,BRA,55,first,none,37,230000,5000,Carlos Melo
+Caruaru City FC,PE,BRA,54,first,none,36,170000,5000,Roberto Melo
+Flamengo PE,PE,BRA,53,first,none,35,140000,5000,Eduardo Lima
+Ypiranga PE,PE,BRA,54,first,none,36,170000,5000,Paulo Souza
+Íbis Sport Club,PE,BRA,49,second,none,32,90000,4000,Carlos Alves
+Vera Cruz PE,PE,BRA,50,second,none,33,90000,4000,Luís Santos
+Arcoverde FC,PE,BRA,50,second,none,33,90000,4000,Márcio Silva
+Atlético Pernambucano,PE,BRA,49,second,none,32,80000,3000,Eduardo Braga
+Belo Jardim EC,PE,BRA,49,second,none,32,80000,3000,Paulo Melo
+Petrolândia FC,PE,BRA,48,second,none,31,70000,3000,Rodrigo Alves
+Limoeiro FC PE,PE,BRA,48,second,none,31,70000,3000,Carlos Ferreira
+Decisão EC PE,PE,BRA,50,second,none,33,90000,4000,Roberto Ferreira
+Vila Nova FC,GO,BRA,64,first,none,48,3000000,18000,Allan Aal
+Aparecidense FC,GO,BRA,59,first,none,41,450000,8000,Carlos Pimentel
+Anápolis FC,GO,BRA,57,first,none,39,300000,6000,Luis Henrique
+Iporá EC,GO,BRA,55,first,none,37,170000,5000,Marcelo Costa
+CRAC GO,GO,BRA,56,first,none,38,230000,6000,Paulo Brito
+Grêmio Anápolis,GO,BRA,55,first,none,37,200000,5000,Roberto Carlos
+Catalão EC,GO,BRA,54,first,none,36,170000,5000,Eduardo Gomes
+Trindade EC,GO,BRA,55,first,none,37,200000,6000,Carlos Lima
+Rio Verde FC,GO,BRA,56,first,none,38,250000,6000,Marcelo Braga
+Ceres FC,GO,BRA,54,first,none,36,170000,5000,Rodrigo Santos
+Goianésia EC,GO,BRA,51,second,none,34,130000,5000,Eduardo Lima
+Jaraguá EC GO,GO,BRA,50,second,none,33,110000,4000,Paulo Silva
+Jatai FC,GO,BRA,50,second,none,33,110000,4000,Carlos Moura
+Goiatuba EC,GO,BRA,49,second,none,32,80000,3000,Roberto Braga
+Itumbiara EC,GO,BRA,50,second,none,33,110000,5000,Luís Rodrigues
+Nova Horizonte GO,GO,BRA,49,second,none,32,80000,3000,Marcelo Silva
+São Simão FC,GO,BRA,48,second,none,31,70000,3000,Eduardo Costa
+Caldas Novas FC,GO,BRA,49,second,none,32,80000,4000,Paulo Santos
+Luverdense EC,MT,BRA,62,first,none,46,700000,12000,Paulo Roberto
+Mixto EC,MT,BRA,59,first,none,41,450000,10000,Claudinho
+Nova Mutum FC,MT,BRA,58,first,none,40,350000,8000,Márcio Lima
+Sinop FC,MT,BRA,57,first,none,39,300000,6000,Eduardo Santos
+Dom Bosco MT,MT,BRA,56,first,none,38,250000,6000,Roberto Silva
+Operário MT,MT,BRA,55,first,none,37,200000,5000,Carlos Mota
+Unio FC MT,MT,BRA,54,first,none,36,170000,5000,Marcelo Rocha
+AE Sorriso,MT,BRA,54,first,none,36,170000,5000,Paulo Alves
+Primavera FC MT,MT,BRA,53,first,none,35,140000,5000,Roberto Santos
+Poconé EC,MT,BRA,52,first,none,35,130000,5000,Eduardo Lima
+Guarantã FC,MT,BRA,50,second,none,33,90000,4000,Carlos Braga
+Alta Floresta FC,MT,BRA,49,second,none,32,80000,3000,Luís Oliveira
+Real Ariquemes MT,MT,BRA,49,second,none,32,80000,3000,Roberto Moura
+Várzea Grande FC,MT,BRA,51,second,none,34,110000,5000,Márcio Costa
+Cacerense FC,MT,BRA,50,second,none,33,90000,4000,Eduardo Gomes
+Rondonópolis HR,MT,BRA,51,second,none,34,120000,5000,Paulo Santos
+Operário MS,MS,BRA,60,first,none,43,550000,8000,Luís Carlos
+Costa Rica FC,MS,BRA,58,first,none,40,350000,6000,Roberto Lima
+Aquidauanense FC,MS,BRA,56,first,none,38,250000,5000,Carlos Braga
+Comercial FC MS,MS,BRA,57,first,none,39,300000,8000,Eduardo Pires
+Cene FC,MS,BRA,55,first,none,37,200000,5000,Marcelo Santos
+Naviraiense FC,MS,BRA,54,first,none,36,170000,5000,Paulo Mota
+Corumbaense FC,MS,BRA,56,first,none,38,250000,6000,Roberto Costa
+Ivinhema FC,MS,BRA,53,first,none,35,140000,5000,Carlos Lima
+Novo FC MS,MS,BRA,52,first,none,35,130000,5000,Eduardo Moraes
+Ladário FC,MS,BRA,51,first,none,34,110000,4000,Luís Braga
+Maracaju FC,MS,BRA,50,second,none,33,90000,4000,Rodrigo Silva
+Paranaíba FC,MS,BRA,50,second,none,33,90000,4000,Paulo Alves
+Ponta Porã FC,MS,BRA,51,second,none,34,110000,5000,Marcelo Lima
+Três Lagoas FC,MS,BRA,51,second,none,34,110000,5000,Carlos Santos
+Dourados AC,MS,BRA,52,second,none,35,130000,6000,Eduardo Braga
+Coxim FC,MS,BRA,49,second,none,32,80000,3000,Roberto Gomes
+Moto Club,MA,BRA,63,first,none,47,3500000,20000,Paulo Bonamigo
+Maranhão AC,MA,BRA,61,first,none,44,2500000,18000,Léo Condé
+Imperatriz EC,MA,BRA,59,first,none,41,600000,10000,Carlos Pimentel
+Pinheiro FC,MA,BRA,56,first,none,38,250000,6000,Roberto Santos
+Bacabal FC,MA,BRA,54,first,none,36,170000,5000,Eduardo Lima
+Tuntum FC,MA,BRA,52,first,none,35,130000,5000,Carlos Braga
+Balsas FC,MA,BRA,52,first,none,35,130000,5000,Luís Oliveira
+Atlético Maranhense,MA,BRA,53,first,none,35,140000,5000,Márcio Santos
+Santa Inês FC,MA,BRA,51,first,none,34,110000,4000,Paulo Costa
+Açailândia FC,MA,BRA,50,first,none,33,90000,4000,Roberto Alves
+Ribamar FC,MA,BRA,50,second,none,33,90000,4000,Carlos Silva
+Codó FC,MA,BRA,49,second,none,32,80000,3000,Eduardo Moraes
+Timon FC,MA,BRA,50,second,none,33,90000,4000,Rodrigo Lima
+Caxias MA,MA,BRA,49,second,none,32,80000,3000,Marcelo Braga
+Pedreiras FC,MA,BRA,48,second,none,31,70000,3000,Paulo Lima
+Santa Luzia MA,MA,BRA,48,second,none,31,70000,3000,Roberto Santos
+Paysandu SC,PA,BRA,68,first,none,53,7000000,45000,Hélio dos Anjos
+Tuna Luso,PA,BRA,60,first,none,43,550000,10000,Carlos Pimentel
+Águia de Marabá,PA,BRA,59,first,none,41,450000,8000,Paulo Roberto
+Cametá FC,PA,BRA,56,first,none,38,250000,5000,Marcelo Costa
+Bragantino PA,PA,BRA,57,first,none,39,300000,6000,Roberto Braga
+Castanhal EC,PA,BRA,58,first,none,40,350000,8000,Eduardo Santos
+São Francisco PA,PA,BRA,54,first,none,36,170000,5000,Carlos Lima
+Independente PA,PA,BRA,56,first,none,38,250000,6000,Luís Felipe
+Paragominas FC,PA,BRA,54,first,none,36,170000,5000,Rodrigo Alves
+Santa Rosa PA,PA,BRA,52,first,none,35,130000,5000,Paulo Silva
+Ananindeua FC,PA,BRA,52,second,none,35,130000,5000,Eduardo Braga
+Itupiranga FC,PA,BRA,50,second,none,33,90000,4000,Carlos Santos
+Marabá FC,PA,BRA,51,second,none,34,110000,4000,Roberto Lima
+Belém FC,PA,BRA,52,second,none,35,130000,5000,Márcio Pires
+Parauapebas FC,PA,BRA,50,second,none,33,90000,4000,Eduardo Costa
+Santarém FC,PA,BRA,51,second,none,34,110000,5000,Paulo Gomes
+Botafogo PB,PB,BRA,65,first,none,49,4000000,25000,Evaristo Piza
+Campinense FC,PB,BRA,62,first,none,46,2500000,18000,Paulo Roberto
+Sousa EC,PB,BRA,59,first,none,41,500000,10000,Roberto Braga
+Nacional JP,PB,BRA,57,first,none,39,300000,8000,Carlos Lima
+Treze FC,PB,BRA,60,first,none,43,1000000,20000,Daniel Paulista
+Serra Branca FC,PB,BRA,54,first,none,36,170000,5000,Eduardo Pires
+Auto Esporte PB,PB,BRA,55,first,none,37,220000,6000,Luís Oliveira
+Atlético Cajazeiras,PB,BRA,53,first,none,35,140000,5000,Márcio Santos
+Perilima FC,PB,BRA,51,first,none,34,110000,4000,Paulo Costa
+Atlético Paraibano,PB,BRA,51,first,none,34,110000,4000,Roberto Alves
+Esporte Patos PB,PB,BRA,50,second,none,33,90000,4000,Carlos Silva
+Guarabira FC,PB,BRA,50,second,none,33,90000,4000,Eduardo Moraes
+Esperança EC PB,PB,BRA,49,second,none,32,80000,3000,Rodrigo Lima
+Atlético Princesa Isabel,PB,BRA,49,second,none,32,80000,3000,Marcelo Braga
+Pombal FC,PB,BRA,48,second,none,31,70000,3000,Paulo Lima
+João Pessoa FC,PB,BRA,50,second,none,33,90000,4000,Roberto Santos
+ABC RN,RN,BRA,63,first,none,47,3200000,20000,Moacir Júnior
+América RN,RN,BRA,62,first,none,46,3000000,20000,Itamar Schülle
+Alecrim FC,RN,BRA,58,first,none,40,600000,8000,Eduardo Santos
+Baraúnas FC,RN,BRA,56,first,none,38,250000,6000,Rodrigo Lima
+Potiguar Mossoró,RN,BRA,55,first,none,37,200000,5000,Carlos Braga
+Globo FC,RN,BRA,57,first,none,39,300000,8000,Roberto Pires
+Força e Luz FC,RN,BRA,53,first,none,35,140000,5000,Paulo Alves
+Santa Cruz RN,RN,BRA,53,first,none,35,140000,5000,Eduardo Lima
+Potiguar EC,RN,BRA,52,first,none,35,130000,5000,Luís Costa
+Ceará Mirim FC,RN,BRA,51,first,none,34,110000,4000,Márcio Santos
+Assu FC,RN,BRA,50,second,none,33,90000,4000,Roberto Silva
+Mossoroense FC,RN,BRA,50,second,none,33,90000,4000,Carlos Ferreira
+São Gonçalo RN,RN,BRA,49,second,none,32,80000,3000,Eduardo Braga
+Touros FC,RN,BRA,48,second,none,31,70000,3000,Rodrigo Alves
+Porto FC RN,RN,BRA,48,second,none,31,70000,3000,Marcelo Gomes
+Crato FC RN,RN,BRA,49,second,none,32,80000,3000,Paulo Costa
+Murici FC,AL,BRA,60,first,none,43,550000,8000,Carlos Pimentel
+ASA Arapiraca,AL,BRA,59,first,none,41,450000,8000,Paulo Roberto
+Coruripe FC,AL,BRA,58,first,none,40,350000,6000,Roberto Braga
+Penedense FC,AL,BRA,56,first,none,38,250000,5000,Eduardo Santos
+Ferroviário AL,AL,BRA,54,first,none,36,170000,5000,Carlos Lima
+Jaciobá FC,AL,BRA,52,first,none,35,130000,5000,Luís Oliveira
+Desportivo Aliança,AL,BRA,53,first,none,35,140000,5000,Márcio Braga
+Leão Arapiraca,AL,BRA,51,first,none,34,110000,4000,Paulo Costa
+Náutico AL,AL,BRA,51,first,none,34,110000,4000,Roberto Alves
+Ipanema FC AL,AL,BRA,50,first,none,33,90000,4000,Eduardo Silva
+Santos AL,AL,BRA,49,second,none,32,80000,3000,Carlos Santos
+Grêmio AL,AL,BRA,49,second,none,32,80000,3000,Rodrigo Lima
+Independente AL,AL,BRA,48,second,none,31,70000,3000,Paulo Braga
+Igaci FC,AL,BRA,48,second,none,31,70000,3000,Marcelo Costa
+Delmiro Gouveia FC,AL,BRA,48,second,none,31,60000,3000,Eduardo Pires
+Palmeira dos Índios FC,AL,BRA,49,second,none,32,80000,3000,Roberto Lima
+Rio Branco ES,ES,BRA,63,first,none,47,2000000,15000,Paulo Roberto
+Real Noroeste ES,ES,BRA,60,first,none,43,550000,8000,Carlos Pimentel
+Desportiva Ferroviária,ES,BRA,58,first,none,40,400000,8000,Roberto Braga
+Nova Venécia FC,ES,BRA,56,first,none,38,250000,5000,Eduardo Santos
+Atlético Aracruz,ES,BRA,55,first,none,37,200000,5000,Carlos Lima
+Linhares FC,ES,BRA,55,first,none,37,200000,5000,Luís Oliveira
+São Mateus FC,ES,BRA,54,first,none,36,170000,5000,Márcio Braga
+Cachoeiro FC,ES,BRA,53,first,none,35,140000,5000,Paulo Costa
+Estrela do Norte ES,ES,BRA,52,first,none,35,130000,5000,Roberto Alves
+Vitória ES,ES,BRA,56,first,none,38,300000,8000,Eduardo Silva
+Aquidaban ES,ES,BRA,50,second,none,33,90000,4000,Carlos Santos
+Colatina FC,ES,BRA,50,second,none,33,90000,4000,Rodrigo Pires
+Guarapari FC,ES,BRA,49,second,none,32,80000,3000,Paulo Braga
+Viana FC ES,ES,BRA,49,second,none,32,80000,3000,Marcelo Costa
+Barra de São Francisco FC,ES,BRA,48,second,none,31,70000,3000,Eduardo Lima
+Alegre FC ES,ES,BRA,48,second,none,31,70000,3000,Roberto Moura
+Confiança FC,SE,BRA,62,first,none,46,2000000,15000,Moacir Júnior
+Sergipe EC,SE,BRA,60,first,none,43,1500000,12000,Paulo Bonamigo
+Itabaiana FC,SE,BRA,58,first,none,40,400000,8000,Carlos Lima
+Freipaulistano,SE,BRA,55,first,none,37,200000,5000,Roberto Braga
+Lagarto FC,SE,BRA,54,first,none,36,170000,5000,Eduardo Santos
+Dorense FC,SE,BRA,53,first,none,35,140000,5000,Carlos Pimentel
+Estanciano EC,SE,BRA,52,first,none,35,130000,5000,Luís Oliveira
+Guarany SE,SE,BRA,51,first,none,34,110000,4000,Márcio Braga
+Nossa Senhora FC,SE,BRA,50,first,none,33,90000,4000,Paulo Costa
+Carmópolis FC,SE,BRA,49,first,none,32,80000,4000,Roberto Alves
+Aracaju FC,SE,BRA,50,second,none,33,90000,4000,Eduardo Silva
+São Cristóvão SE,SE,BRA,49,second,none,32,80000,3000,Carlos Santos
+Propriá FC,SE,BRA,48,second,none,31,70000,3000,Rodrigo Lima
+Lagartão FC,SE,BRA,48,second,none,31,70000,3000,Paulo Braga
+Simão Dias FC,SE,BRA,48,second,none,31,60000,3000,Marcelo Costa
+Tobias Barreto FC,SE,BRA,47,second,none,30,60000,3000,Eduardo Pires
+River AC PI,PI,BRA,62,first,none,46,2000000,15000,Alexandre Oliveira
+Fluminense PI,PI,BRA,60,first,none,43,1000000,12000,Carlos Lima
+Altos FC,PI,BRA,59,first,none,41,550000,10000,Roberto Braga
+4 de Julho FC,PI,BRA,57,first,none,39,300000,8000,Eduardo Santos
+Corisabbá FC,PI,BRA,54,first,none,36,170000,5000,Carlos Pimentel
+Parnahyba SC,PI,BRA,53,first,none,35,140000,5000,Luís Oliveira
+Barras FC,PI,BRA,52,first,none,35,130000,5000,Márcio Braga
+Timon FC PI,PI,BRA,51,first,none,34,110000,4000,Paulo Costa
+Picos FC,PI,BRA,49,second,none,32,80000,3000,Roberto Alves
+Piauí EC,PI,BRA,50,second,none,33,90000,4000,Eduardo Silva
+Dom Pedro FC PI,PI,BRA,48,second,none,31,70000,3000,Carlos Santos
+Campo Maior FC,PI,BRA,49,second,none,32,80000,3000,Rodrigo Lima
+Esperantinópolis PI,PI,BRA,47,second,none,30,60000,3000,Paulo Braga
+Oeirense FC,PI,BRA,47,second,none,30,60000,3000,Marcelo Costa
+Brasiliense FC,DF,BRA,63,first,none,47,2500000,20000,Eduardo Baptista
+Gama EC,DF,BRA,62,first,none,46,2000000,18000,Sérgio Sousa
+Ceilândia EC,DF,BRA,58,first,none,40,500000,8000,Carlos Lima
+Sobradinho FC,DF,BRA,55,first,none,37,300000,6000,Márcio Braga
+Real Brasília FC,DF,BRA,56,first,none,38,350000,8000,Paulo Costa
+Brasília FC,DF,BRA,57,first,none,39,400000,8000,Roberto Alves
+Atlético Ceilandense,DF,BRA,53,first,none,35,170000,5000,Eduardo Silva
+Grêmio Brasiliense,DF,BRA,52,first,none,35,150000,5000,Carlos Santos
+Botafogo DF,DF,BRA,51,second,none,34,130000,5000,Rodrigo Lima
+Formosa EC,DF,BRA,50,second,none,33,110000,4000,Paulo Braga
+Paranoá FC,DF,BRA,50,second,none,33,100000,4000,Marcelo Costa
+Taguatinga EC,DF,BRA,51,second,none,34,130000,5000,Eduardo Pires
+SEFC DF,DF,BRA,49,second,none,32,90000,3000,Roberto Lima
+Luziânia FC,DF,BRA,50,second,none,33,100000,4000,Luís Braga
+Nacional FC AM,AM,BRA,62,first,none,46,2500000,20000,Paulo Roberto
+São Raimundo AM,AM,BRA,60,first,none,43,1800000,15000,Carlos Pimentel
+Fast Clube,AM,BRA,58,first,none,40,800000,12000,Roberto Braga
+Manaus FC,AM,BRA,61,first,none,44,2000000,15000,Eduardo Santos
+Rio Negro AM,AM,BRA,55,first,none,37,400000,8000,Carlos Lima
+Princesa do Solimões,AM,BRA,54,first,none,36,300000,6000,Luís Oliveira
+Penarol AM,AM,BRA,52,first,none,35,200000,5000,Márcio Braga
+Iranduba FC,AM,BRA,51,first,none,34,150000,5000,Paulo Costa
+Parintins FC,AM,BRA,49,second,none,32,100000,4000,Roberto Alves
+Humaitá FC AM,AM,BRA,49,second,none,32,90000,4000,Eduardo Silva
+Amazonas FC,AM,BRA,53,second,none,35,300000,6000,Carlos Santos
+Tefé EC,AM,BRA,48,second,none,31,70000,3000,Rodrigo Lima
+Ji-Paraná FC,RO,BRA,59,first,none,41,500000,8000,Paulo Roberto
+Rondoniense SC,RO,BRA,57,first,none,39,350000,6000,Carlos Lima
+Real Ariquemes,RO,BRA,56,first,none,38,280000,6000,Roberto Braga
+Porto Velho FC,RO,BRA,58,first,none,40,400000,8000,Eduardo Santos
+União Cacoalense,RO,BRA,54,first,none,36,200000,5000,Carlos Pimentel
+Genus FC,RO,BRA,53,first,none,35,170000,5000,Luís Oliveira
+Costa Esmeralda FC,RO,BRA,52,first,none,35,150000,5000,Márcio Braga
+Pimenteiras FC,RO,BRA,51,first,none,34,130000,4000,Paulo Costa
+Vilhena FC,RO,BRA,50,second,none,33,110000,4000,Roberto Alves
+Cacoal FC,RO,BRA,49,second,none,32,90000,3000,Eduardo Silva
+Guajará Mirim FC,RO,BRA,49,second,none,32,90000,3000,Carlos Santos
+Colorado EC RO,RO,BRA,48,second,none,31,70000,3000,Rodrigo Lima
+Rio Branco AC,AC,BRA,62,first,none,46,1500000,12000,Paulo Roberto
+Galvez EC,AC,BRA,60,first,none,43,1000000,10000,Carlos Lima
+Atlético AC,AC,BRA,57,first,none,39,400000,6000,Roberto Braga
+Plácido de Castro FC,AC,BRA,54,first,none,36,200000,5000,Eduardo Santos
+Independente AC,AC,BRA,53,first,none,35,170000,5000,Carlos Pimentel
+Andirá EC AC,AC,BRA,51,first,none,34,130000,4000,Luís Oliveira
+Humaitá FC,AC,BRA,50,second,none,33,110000,4000,Márcio Braga
+Adesg AC,AC,BRA,49,second,none,32,90000,3000,Paulo Costa
+Brasileia FC,AC,BRA,48,second,none,31,70000,3000,Roberto Alves
+Cruzeiro AC,AC,BRA,48,second,none,31,70000,3000,Eduardo Silva
+São Raimundo RR,RR,BRA,60,first,none,43,1000000,10000,Paulo Roberto
+Nacional FC RR,RR,BRA,58,first,none,40,600000,8000,Carlos Lima
+Rio Negro RR,RR,BRA,55,first,none,37,300000,6000,Roberto Braga
+Real Roraima FC,RR,BRA,53,first,none,35,200000,5000,Eduardo Santos
+Boa Vista FC,RR,BRA,54,first,none,36,250000,6000,Carlos Pimentel
+Atlético Roraima,RR,BRA,51,first,none,34,150000,4000,Luís Oliveira
+Atlético Boa Vista,RR,BRA,50,second,none,33,110000,4000,Márcio Braga
+Pacaraima FC,RR,BRA,48,second,none,31,80000,3000,Paulo Costa
+Rorainópolis FC,RR,BRA,47,second,none,30,70000,3000,Roberto Alves
+Iracema FC RR,RR,BRA,47,second,none,30,60000,3000,Eduardo Silva
+Trem EC,AP,BRA,60,first,none,43,1000000,10000,Paulo Roberto
+Santos FC AP,AP,BRA,58,first,none,40,600000,8000,Carlos Lima
+Arsenal AP,AP,BRA,56,first,none,38,350000,6000,Roberto Braga
+Ypiranga AP,AP,BRA,54,first,none,36,250000,5000,Eduardo Santos
+Penarol AP,AP,BRA,53,first,none,35,200000,5000,Carlos Pimentel
+Porto Santana FC,AP,BRA,51,first,none,34,150000,4000,Luís Oliveira
+Santana EC AP,AP,BRA,50,first,none,33,130000,4000,Márcio Braga
+São José AP,AP,BRA,50,second,none,33,110000,4000,Paulo Costa
+Macapá FC,AP,BRA,49,second,none,32,90000,3000,Roberto Alves
+Pedra Branca AP,AP,BRA,47,second,none,30,70000,3000,Eduardo Silva
+Palmas FC,TO,BRA,62,first,none,46,1500000,12000,Paulo Roberto
+Tocantinópolis FC,TO,BRA,59,first,none,41,500000,8000,Carlos Lima
+Atlético Guaraí,TO,BRA,56,first,none,38,300000,6000,Roberto Braga
+Araguaína FC,TO,BRA,57,first,none,39,350000,6000,Eduardo Santos
+Gurupi EC,TO,BRA,54,first,none,36,200000,5000,Carlos Pimentel
+Paraíso FC TO,TO,BRA,53,first,none,35,170000,5000,Luís Oliveira
+Cametá TO,TO,BRA,51,first,none,34,130000,4000,Márcio Braga
+União Esportiva TO,TO,BRA,50,first,none,33,110000,4000,Paulo Costa
+Colinas FC TO,TO,BRA,49,second,none,32,90000,3000,Roberto Alves
+Miracema FC TO,TO,BRA,48,second,none,31,80000,3000,Eduardo Silva
+Dianópolis FC,TO,BRA,48,second,none,31,70000,3000,Carlos Santos
+Itaguatins FC,TO,BRA,47,second,none,30,60000,3000,Rodrigo Lima

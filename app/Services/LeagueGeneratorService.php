@@ -31,8 +31,8 @@ class LeagueGeneratorService
 {
     // ── Configuração das divisões ────────────────────────────────────────
 
-    const STATE_A1_SLOTS = 8;
-    const STATE_A2_SLOTS = 8;
+    const STATE_A1_SLOTS = 20;
+    const STATE_A2_SLOTS = 20;
 
     // ── Nomes dos campeonatos estaduais ──────────────────────────────────
 

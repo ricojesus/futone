@@ -1,0 +1,401 @@
+name,team_name,position,country_code,age,strength,stamina,potential
+Rossi,Flamengo,goalkeeper,ARG,28,84,78,86
+Hugo Souza,Flamengo,goalkeeper,BRA,25,78,80,84
+Léo Ortiz,Flamengo,defender,BRA,28,82,78,84
+Fabrício Bruno,Flamengo,defender,BRA,28,80,78,84
+David Luiz,Flamengo,defender,BRA,37,80,65,80
+Ayrton Lucas,Flamengo,defender,BRA,27,78,82,82
+Léo Pereira,Flamengo,defender,BRA,28,80,76,82
+Viña,Flamengo,defender,URU,27,74,76,76
+Gerson,Flamengo,midfielder,BRA,27,86,78,88
+De la Cruz,Flamengo,midfielder,URU,26,84,80,88
+Pulgar,Flamengo,midfielder,CHI,30,78,76,80
+Arrascaeta,Flamengo,midfielder,URU,30,86,74,86
+Matheus Gonçalves,Flamengo,midfielder,BRA,20,74,82,90
+Allan,Flamengo,midfielder,BRA,33,76,74,76
+Pedro,Flamengo,forward,BRA,27,88,76,90
+Gabigol,Flamengo,forward,BRA,27,84,72,84
+Luiz Araújo,Flamengo,forward,BRA,27,80,78,84
+Everton Cebolinha,Flamengo,forward,BRA,28,80,78,82
+Plata,Flamengo,forward,ECU,24,78,80,84
+Carlinhos,Flamengo,forward,BRA,22,74,82,88
+Weverton,Palmeiras,goalkeeper,BRA,36,84,70,84
+Marcelo Lomba,Palmeiras,goalkeeper,BRA,38,74,65,74
+Marcos Rocha,Palmeiras,defender,BRA,35,74,68,74
+Murilo,Palmeiras,defender,BRA,25,80,80,86
+Gustavo Gómez,Palmeiras,defender,PAR,31,84,74,84
+Piquerez,Palmeiras,defender,URU,27,78,82,82
+Vitor Reis,Palmeiras,defender,BRA,19,72,80,92
+Mayke,Palmeiras,defender,BRA,32,74,72,74
+Vanderlan,Palmeiras,defender,BRA,22,70,82,86
+Zé Rafael,Palmeiras,midfielder,BRA,31,78,80,80
+Richard Ríos,Palmeiras,midfielder,COL,23,80,84,88
+Aníbal Moreno,Palmeiras,midfielder,ARG,26,78,82,84
+Raphael Veiga,Palmeiras,midfielder,BRA,29,84,76,86
+Caio Paulista,Palmeiras,midfielder,BRA,27,72,82,78
+Estêvão,Palmeiras,forward,BRA,17,86,78,96
+Flaco López,Palmeiras,forward,ARG,24,82,76,86
+Rony,Palmeiras,forward,BRA,29,78,76,80
+Felipe Anderson,Palmeiras,forward,BRA,31,82,74,82
+Facundo Torres,Palmeiras,forward,URU,23,78,80,86
+Bruno Rodrigues,Palmeiras,forward,BRA,29,74,74,76
+Everson,Atlético Mineiro,goalkeeper,BRA,33,82,72,82
+Matheus Mendes,Atlético Mineiro,goalkeeper,BRA,24,74,80,84
+Guilherme Arana,Atlético Mineiro,defender,BRA,27,80,78,84
+Mariano,Atlético Mineiro,defender,BRA,31,76,72,78
+Junior Alonso,Atlético Mineiro,defender,PAR,32,80,74,80
+Lyanco,Atlético Mineiro,defender,BRA,27,76,76,80
+Rubens,Atlético Mineiro,defender,BRA,24,72,82,84
+Battaglia,Atlético Mineiro,midfielder,ARG,27,78,80,82
+Scarpa,Atlético Mineiro,midfielder,BRA,30,82,74,84
+Otávio,Atlético Mineiro,midfielder,PRT,29,80,76,82
+Igor Gomes,Atlético Mineiro,midfielder,BRA,27,76,80,80
+Bernard,Atlético Mineiro,midfielder,BRA,32,78,72,80
+Cadu,Atlético Mineiro,midfielder,BRA,23,74,82,86
+Hulk,Atlético Mineiro,forward,BRA,38,80,62,80
+Paulinho,Atlético Mineiro,forward,BRA,24,82,80,88
+Vargas,Atlético Mineiro,forward,CHI,34,76,68,76
+Deyverson,Atlético Mineiro,forward,BRA,33,74,70,74
+Rómulo Otero,Atlético Mineiro,forward,VEN,31,76,72,76
+Alan Kardec,Atlético Mineiro,forward,BRA,35,72,65,72
+Cauan,Atlético Mineiro,forward,BRA,22,72,82,86
+John,Botafogo,goalkeeper,BRA,25,82,80,86
+Gatito Fernández,Botafogo,goalkeeper,PRY,34,78,68,78
+Alexander Barboza,Botafogo,defender,URU,29,80,76,82
+Adryelson,Botafogo,defender,BRA,26,78,78,82
+Cuiabano,Botafogo,defender,BRA,23,74,82,84
+Bastos,Botafogo,defender,AGO,31,76,72,78
+Lucas Halter,Botafogo,defender,BRA,25,76,78,80
+Hugo Botafogo,Botafogo,defender,BRA,24,72,80,82
+Marlon Freitas,Botafogo,midfielder,BRA,30,80,80,82
+Gregore,Botafogo,midfielder,BRA,29,76,80,80
+Thiago Almada,Botafogo,midfielder,ARG,23,84,82,90
+Eduardo,Botafogo,midfielder,BRA,27,76,80,80
+Danilo Barbosa,Botafogo,midfielder,BRA,29,78,78,82
+Allan Loureiro,Botafogo,midfielder,BRA,30,72,76,74
+Savarino,Botafogo,forward,VEN,25,82,80,86
+Luiz Henrique,Botafogo,forward,BRA,24,82,82,88
+Tiquinho Soares,Botafogo,forward,BRA,31,80,72,82
+Igor Jesus,Botafogo,forward,BRA,22,82,82,88
+Jeffinho,Botafogo,forward,BRA,24,76,80,84
+Vitinho Botafogo,Botafogo,forward,BRA,30,78,74,80
+Cássio,Corinthians,goalkeeper,BRA,37,82,70,82
+Matheus Donelli,Corinthians,goalkeeper,BRA,22,72,80,86
+Fagner,Corinthians,defender,BRA,35,76,68,76
+Gustavo Henrique,Corinthians,defender,BRA,32,78,72,78
+Félix Torres,Corinthians,defender,ECU,26,80,78,84
+André Ramalho,Corinthians,defender,BRA,31,76,72,78
+Hugo Melo,Corinthians,defender,BRA,24,72,78,80
+Fábio Santos,Corinthians,defender,BRA,38,70,62,70
+Maycon,Corinthians,midfielder,BRA,27,76,80,80
+Renato Augusto,Corinthians,midfielder,BRA,36,82,65,82
+Rodrigo Garro,Corinthians,midfielder,ARG,26,80,78,85
+Raniele,Corinthians,midfielder,BRA,26,74,80,78
+Charles,Corinthians,midfielder,BRA,26,72,78,76
+Breno Bidon,Corinthians,midfielder,BRA,18,72,82,90
+Yuri Alberto,Corinthians,forward,BRA,23,82,75,88
+Romero,Corinthians,forward,PAR,32,78,70,78
+Memphis Depay,Corinthians,forward,NLD,30,86,72,86
+Wesley Ribeiro,Corinthians,forward,BRA,22,74,78,84
+Talles Magno,Corinthians,forward,BRA,23,76,78,84
+Pedro Raul,Corinthians,forward,BRA,26,76,76,78
+Rochet,Internacional,goalkeeper,URU,30,84,74,86
+Anthoni,Internacional,goalkeeper,BRA,22,72,80,84
+Vitão,Internacional,defender,BRA,25,78,78,84
+Mercado,Internacional,defender,ARG,36,76,65,76
+Bernabéi,Internacional,defender,ARG,23,76,82,86
+Clayton Sampaio,Internacional,defender,BRA,28,72,76,76
+Iago Maidana,Internacional,defender,BRA,26,74,78,80
+Rômulo Internacional,Internacional,midfielder,BRA,28,72,78,76
+Thaciano Internacional,Internacional,midfielder,BRA,27,74,76,78
+Maurício,Internacional,midfielder,BRA,22,80,82,88
+Alan Patrick,Internacional,midfielder,BRA,31,82,72,84
+Fernando,Internacional,midfielder,BRA,34,74,70,74
+Gustavo Prado,Internacional,midfielder,BRA,22,72,80,84
+Wesley Internacional,Internacional,forward,BRA,22,80,84,90
+Rafael Borré,Internacional,forward,COL,29,80,78,82
+Enner Valencia,Internacional,forward,ECU,34,80,68,80
+Lucca,Internacional,forward,BRA,24,74,80,82
+Wanderson,Internacional,forward,BRA,32,74,72,74
+Bruno Gomes,Internacional,defender,BRA,24,72,80,82
+Gustavo Sousa,Internacional,midfielder,BRA,23,72,80,82
+Grando,Grêmio,goalkeeper,BRA,26,76,78,82
+Caíque Grêmio,Grêmio,goalkeeper,BRA,27,74,78,80
+Pedro Geromel,Grêmio,defender,BRA,36,78,65,78
+Reinaldo,Grêmio,defender,BRA,34,74,68,74
+Kannemann,Grêmio,defender,ARG,32,80,72,80
+Fábio Grêmio,Grêmio,defender,BRA,32,74,74,76
+João Pedro Grêmio,Grêmio,defender,BRA,23,72,80,82
+Villasanti,Grêmio,midfielder,PAR,27,78,80,84
+Dodi,Grêmio,midfielder,BRA,32,76,74,76
+Pepê,Grêmio,midfielder,BRA,27,78,80,82
+Cristaldo,Grêmio,midfielder,ARG,28,80,76,82
+Edenilson,Grêmio,midfielder,BRA,34,74,70,74
+Isaque,Grêmio,midfielder,BRA,21,72,82,86
+Gustavo Nunes,Grêmio,forward,BRA,22,78,80,86
+Renato Portaluppi Jr,Grêmio,forward,BRA,24,76,78,82
+André Henrique,Grêmio,forward,BRA,25,74,78,80
+Diego Costa Grêmio,Grêmio,forward,BRA,23,72,80,82
+Nathan Fernandes,Grêmio,forward,BRA,22,72,80,84
+Lucas Besozzi,Grêmio,forward,URU,26,74,78,80
+Monsalve,Grêmio,midfielder,COL,22,74,82,86
+Fábio,Fluminense,goalkeeper,BRA,43,78,65,78
+Vitor Eudes,Fluminense,goalkeeper,BRA,24,72,80,82
+Nino,Fluminense,defender,BRA,27,78,76,82
+Samuel Xavier,Fluminense,defender,BRA,30,72,74,74
+Alexsander,Fluminense,defender,BRA,21,72,82,86
+Diogo Barbosa,Fluminense,defender,BRA,32,72,70,72
+Manoel,Fluminense,defender,BRA,31,74,72,74
+Marlon,Fluminense,defender,BRA,26,74,78,80
+André,Fluminense,midfielder,BRA,23,82,84,90
+Martinelli,Fluminense,midfielder,BRA,22,78,82,86
+Ganso,Fluminense,midfielder,BRA,34,82,64,82
+Nonato,Fluminense,midfielder,BRA,27,72,80,78
+Lima Fluminense,Fluminense,midfielder,BRA,28,74,78,78
+Jhon Arias,Fluminense,midfielder,COL,26,82,80,86
+John Kennedy,Fluminense,forward,BRA,22,80,78,88
+Germán Cano,Fluminense,forward,ARG,36,84,68,84
+Kauã Elias,Fluminense,forward,BRA,19,76,82,92
+Kevin Serna,Fluminense,forward,COL,28,76,78,80
+Isaías,Fluminense,forward,BRA,27,72,76,76
+Renato Fluminense,Fluminense,forward,BRA,25,72,78,78
+Rafael,São Paulo,goalkeeper,BRA,35,82,68,82
+Young São Paulo,São Paulo,goalkeeper,BRA,26,74,80,82
+Arboleda,São Paulo,defender,ECU,32,80,70,80
+Alan Franco,São Paulo,defender,ECU,27,78,76,80
+Welington,São Paulo,defender,BRA,24,74,80,82
+Igor Vinícius,São Paulo,defender,BRA,26,72,80,76
+Ferraresi,São Paulo,defender,VEN,22,76,80,84
+Paulinho Boia,São Paulo,defender,BRA,24,72,78,80
+Alisson,São Paulo,midfielder,BRA,31,78,76,80
+Rodrigo Nestor,São Paulo,midfielder,BRA,25,76,78,82
+Luiz Gustavo,São Paulo,midfielder,BRA,37,74,65,74
+Galoppo,São Paulo,midfielder,ARG,25,76,78,82
+Bobadilla,São Paulo,midfielder,PRY,26,76,78,80
+Lucas Moura,São Paulo,forward,BRA,32,80,72,82
+Calleri,São Paulo,forward,ARG,31,82,70,82
+Ferreirinha,São Paulo,forward,BRA,26,78,78,82
+Wellington Rato,São Paulo,forward,BRA,29,76,76,78
+André Silva SP,São Paulo,forward,PRT,29,76,74,78
+Erison,São Paulo,forward,BRA,26,74,78,78
+Jamal Lewis,São Paulo,midfielder,BRA,22,72,82,84
+Cássio Cruzeiro,Cruzeiro,goalkeeper,BRA,37,82,68,82
+Anderson Batatais,Cruzeiro,goalkeeper,BRA,28,76,78,80
+Zé Ivaldo,Cruzeiro,defender,BRA,28,78,78,82
+Jonathan Cruzeiro,Cruzeiro,defender,BRA,31,74,72,76
+Lucas Villalba,Cruzeiro,defender,ARG,26,74,78,80
+William Cruzeiro,Cruzeiro,defender,BRA,31,72,72,74
+Marcelinho Cruzeiro,Cruzeiro,defender,BRA,26,72,80,78
+Matheus Pereira,Cruzeiro,midfielder,BRA,28,82,76,84
+Lucas Silva,Cruzeiro,midfielder,BRA,32,74,74,76
+Lucas Romero,Cruzeiro,midfielder,ARG,30,76,76,78
+Barreal,Cruzeiro,midfielder,ARG,25,78,80,84
+Ramiro,Cruzeiro,midfielder,BRA,32,72,72,72
+Stênio,Cruzeiro,midfielder,BRA,22,72,82,86
+Kaio Jorge,Cruzeiro,forward,BRA,22,78,80,86
+Mateus Vital,Cruzeiro,forward,BRA,26,74,78,80
+Edu Cruzeiro,Cruzeiro,forward,BRA,24,76,80,82
+Lautaro Díaz,Cruzeiro,forward,ARG,27,76,78,80
+Rafa Bilu,Cruzeiro,forward,BRA,23,74,80,84
+Juan Dinenno,Cruzeiro,forward,ARG,28,76,74,78
+Gabriel Veron,Cruzeiro,forward,BRA,22,74,80,84
+Marcos Felipe,Bahia,goalkeeper,BRA,28,80,78,82
+Adriel,Bahia,goalkeeper,BRA,24,74,80,84
+Kanu,Bahia,defender,BRA,28,80,76,82
+Gabriel Xavier,Bahia,defender,BRA,24,76,80,84
+Gilberto Bahia,Bahia,defender,BRA,33,74,70,74
+Iago Borduchi,Bahia,defender,BRA,22,72,82,84
+David Duarte,Bahia,defender,BRA,29,76,74,78
+Biel Azevedo,Bahia,defender,BRA,23,72,82,84
+Everton Ribeiro,Bahia,midfielder,BRA,35,78,66,78
+Jean Lucas,Bahia,midfielder,BRA,26,78,80,82
+Cauly,Bahia,midfielder,BRA,27,80,78,84
+Luciano Juba,Bahia,midfielder,BRA,26,76,80,82
+Nicolás Acevedo,Bahia,midfielder,URU,28,76,78,80
+Thaciano,Bahia,midfielder,BRA,28,76,76,78
+Biel,Bahia,forward,BRA,22,76,82,88
+Everaldo,Bahia,forward,BRA,32,76,70,76
+Rafael Ratão,Bahia,forward,BRA,29,76,76,78
+Ademir,Bahia,forward,BRA,28,74,78,78
+Cadu Bahia,Bahia,forward,BRA,20,72,82,86
+Acácio,Bahia,forward,BRA,23,72,80,82
+Léo Jardim,Vasco da Gama,goalkeeper,BRA,28,78,78,82
+Keiller,Vasco da Gama,goalkeeper,BRA,28,72,76,76
+João Victor Vasco,Vasco da Gama,defender,BRA,25,76,78,80
+Léo Vasco,Vasco da Gama,defender,BRA,32,74,72,74
+Gary Medel,Vasco da Gama,defender,CHI,37,72,65,72
+Paulo Henrique Vasco,Vasco da Gama,defender,BRA,22,72,82,84
+Puma Rodríguez,Vasco da Gama,defender,URU,30,74,74,76
+Lucas Piton,Vasco da Gama,defender,BRA,24,74,80,80
+Hugo Moura,Vasco da Gama,midfielder,BRA,25,74,80,82
+Galdames,Vasco da Gama,midfielder,CHI,28,76,78,80
+Praxedes,Vasco da Gama,midfielder,BRA,24,74,82,84
+Coutinho,Vasco da Gama,midfielder,BRA,32,84,70,84
+Mateus Carvalho,Vasco da Gama,midfielder,BRA,22,72,82,84
+Payet,Vasco da Gama,midfielder,FRA,37,80,60,80
+David Vasco,Vasco da Gama,forward,BRA,27,80,78,84
+Vegetti,Vasco da Gama,forward,ARG,33,80,68,80
+Leandrinho,Vasco da Gama,forward,BRA,20,72,82,88
+Emerson Rodríguez,Vasco da Gama,forward,COL,22,74,80,84
+Adson,Vasco da Gama,forward,BRA,24,74,80,82
+Maicon Vasco,Vasco da Gama,midfielder,BRA,36,72,62,72
+João Ricardo,Fortaleza,goalkeeper,BRA,36,80,68,80
+Santos Fortaleza,Fortaleza,goalkeeper,BRA,27,74,78,80
+Brítez,Fortaleza,defender,ARG,29,76,76,78
+Titi,Fortaleza,defender,BRA,27,80,78,84
+Kuscevic,Fortaleza,defender,CHI,26,76,78,80
+Moisés,Fortaleza,defender,BRA,28,72,78,76
+Tinga,Fortaleza,defender,BRA,36,70,65,70
+Léo Duarte,Fortaleza,defender,BRA,28,76,74,78
+Hércules,Fortaleza,midfielder,BRA,24,76,82,86
+Pochettino,Fortaleza,midfielder,URU,24,76,80,84
+Calebe,Fortaleza,midfielder,BRA,24,74,80,82
+Zé Welison,Fortaleza,midfielder,BRA,29,72,78,74
+Kervin Andrade,Fortaleza,midfielder,VEN,23,74,80,82
+Imanol Machuca,Fortaleza,forward,ARG,23,74,80,82
+Lucero,Fortaleza,forward,ARG,31,80,70,82
+Breno Lopes,Fortaleza,forward,BRA,29,74,76,76
+Renato Kayzer,Fortaleza,forward,BRA,26,76,78,80
+Pikachu,Fortaleza,defender,BRA,33,70,68,70
+Marinho,Fortaleza,forward,BRA,33,74,70,74
+Magan,Fortaleza,midfielder,FRA,26,74,80,80
+Gabriel Brazão,Santos,goalkeeper,BRA,25,76,80,82
+João Paulo,Santos,goalkeeper,BRA,32,78,74,78
+Messias,Santos,defender,BRA,26,74,80,78
+Gil Santos,Santos,defender,BRA,36,74,65,74
+Joaquim,Santos,defender,BRA,23,74,80,84
+JP Chermont,Santos,defender,BRA,20,72,82,86
+Gabriel Inocêncio,Santos,defender,BRA,22,72,80,82
+Diego Pituca,Santos,midfielder,BRA,30,76,76,78
+Giuliano,Santos,midfielder,BRA,34,76,66,76
+Willian Santos,Santos,midfielder,BRA,36,76,68,76
+Luan Santos,Santos,midfielder,BRA,28,72,74,74
+Otero,Santos,midfielder,VEN,32,74,68,74
+Escobar,Santos,midfielder,ECU,25,72,80,80
+Soteldo,Santos,forward,VEN,27,82,76,84
+Guilherme Santos,Santos,forward,BRA,21,76,80,86
+Miguelito,Santos,forward,ECU,20,76,82,88
+Rwan Cruz,Santos,forward,BRA,22,74,80,86
+Lucas Braga,Santos,forward,BRA,28,74,78,78
+Furch,Santos,forward,ARG,34,76,68,76
+Léo Baptistão,Santos,forward,ESP,32,72,70,72
+Léo Linck,Athletico Paranaense,goalkeeper,BRA,22,78,82,88
+Mycael,Athletico Paranaense,goalkeeper,BRA,21,74,82,88
+Thiago Heleno,Athletico Paranaense,defender,BRA,35,74,65,74
+Khellven,Athletico Paranaense,defender,BRA,25,72,80,80
+Matheus Felipe,Athletico Paranaense,defender,BRA,23,72,82,84
+Kaique Rocha,Athletico Paranaense,defender,BRA,22,74,82,86
+Abner Athletico,Athletico Paranaense,defender,BRA,23,72,82,84
+Cuello,Athletico Paranaense,forward,ARG,23,74,80,84
+Fernandinho,Athletico Paranaense,midfielder,BRA,39,76,62,76
+Alex Santana,Athletico Paranaense,midfielder,BRA,33,74,72,74
+Christian,Athletico Paranaense,midfielder,BRA,26,74,80,82
+Erick Athletico,Athletico Paranaense,midfielder,BRA,23,78,82,86
+Zapelli,Athletico Paranaense,midfielder,ARG,23,72,80,82
+Vitor Bueno,Athletico Paranaense,midfielder,BRA,30,72,74,74
+Canobbio,Athletico Paranaense,forward,URU,25,78,80,84
+Pablo Athletico,Athletico Paranaense,forward,BRA,33,74,68,74
+Di Yorio,Athletico Paranaense,forward,ARG,26,76,78,80
+Gamarra,Athletico Paranaense,forward,BRA,24,76,80,84
+Nikão,Athletico Paranaense,forward,BRA,32,76,72,78
+Felipinho Athletico,Athletico Paranaense,midfielder,BRA,22,72,82,84
+Cleiton,Red Bull Bragantino,goalkeeper,BRA,28,80,78,82
+Lucão Bragantino,Red Bull Bragantino,goalkeeper,BRA,26,72,78,78
+Luan Cândido,Red Bull Bragantino,defender,BRA,22,72,82,86
+Pedro Henrique Bragantino,Red Bull Bragantino,defender,BRA,26,76,78,80
+Guilherme Lopes,Red Bull Bragantino,defender,BRA,27,74,78,78
+Nathan Mendes,Red Bull Bragantino,defender,BRA,22,72,82,86
+Jadsom Silva,Red Bull Bragantino,midfielder,BRA,27,74,80,80
+Jhon Jhon,Red Bull Bragantino,midfielder,BRA,23,76,82,86
+Eric Ramires,Red Bull Bragantino,midfielder,BRA,24,74,80,82
+Hyoran,Red Bull Bragantino,midfielder,BRA,31,74,74,76
+Lucas Evangelista,Red Bull Bragantino,midfielder,BRA,27,76,78,80
+Arthur Sousa,Red Bull Bragantino,midfielder,BRA,24,72,80,82
+Helinho,Red Bull Bragantino,forward,BRA,23,76,82,88
+Eduardo Sasha,Red Bull Bragantino,forward,BRA,33,74,68,74
+Thiago Borbas,Red Bull Bragantino,forward,BRA,23,74,80,84
+Raul Bragantino,Red Bull Bragantino,forward,BRA,22,76,82,86
+Gustavinho,Red Bull Bragantino,forward,BRA,21,72,82,86
+Henry Mosquera,Red Bull Bragantino,forward,COL,22,74,82,86
+Lalá,Red Bull Bragantino,forward,BRA,22,72,80,84
+Andrés Hurtado,Red Bull Bragantino,forward,COL,22,72,80,84
+Caíque França,Sport Recife,goalkeeper,BRA,26,76,80,82
+Rafael Pascoal,Sport Recife,goalkeeper,BRA,30,70,74,72
+Chico Sport,Sport Recife,defender,BRA,27,74,78,78
+Luciano Castán,Sport Recife,defender,BRA,34,72,68,72
+Allyson,Sport Recife,defender,BRA,23,72,80,82
+Igor Cariús,Sport Recife,defender,BRA,26,72,78,78
+Dalbert,Sport Recife,defender,BRA,30,70,72,72
+Eduardo Sport,Sport Recife,defender,BRA,25,72,78,78
+Lucas Lima Sport,Sport Recife,midfielder,BRA,33,76,68,76
+Fábio Matheus,Sport Recife,midfielder,BRA,25,72,80,80
+Gustavo Oliveira,Sport Recife,midfielder,BRA,25,74,80,82
+Vinicius Melo,Sport Recife,midfielder,BRA,22,72,82,84
+Romarinho,Sport Recife,midfielder,BRA,32,72,70,72
+Fabrício Daniel,Sport Recife,forward,BRA,24,74,80,82
+Barletta,Sport Recife,forward,BRA,25,74,80,82
+Luciano Sport,Sport Recife,forward,BRA,31,76,72,78
+Italo Sport,Sport Recife,forward,BRA,25,72,78,80
+Paulinho Moccelin,Sport Recife,forward,BRA,23,72,80,82
+Matheus Nascimento,Sport Recife,forward,BRA,20,74,82,86
+Henrique Luvannor,Sport Recife,forward,BRA,30,72,68,72
+Gabriel Vasconcelos,Juventude,goalkeeper,BRA,28,74,76,78
+Gustavo Juventude,Juventude,goalkeeper,BRA,31,72,72,74
+Rodrigo Sam,Juventude,defender,BRA,27,72,78,76
+Danilo Boza,Juventude,defender,BRA,26,70,78,76
+William Machado,Juventude,defender,BRA,25,70,78,76
+Diego Lopes Juventude,Juventude,defender,BRA,28,70,76,74
+Wesley Juventude,Juventude,defender,BRA,30,68,70,68
+Óscar Ruiz,Juventude,midfielder,COL,24,72,80,80
+Nenê,Juventude,midfielder,BRA,40,74,58,74
+Mandaca,Juventude,midfielder,BRA,27,72,78,78
+Lucas Uchôa,Juventude,midfielder,BRA,24,70,80,80
+Luís Oyama,Juventude,midfielder,BRA,26,72,78,78
+Edinho Juventude,Juventude,midfielder,BRA,26,70,78,76
+Gilberto Juventude,Juventude,forward,BRA,31,74,70,74
+Erick Farias,Juventude,forward,BRA,29,72,72,74
+Isidro Pitta,Juventude,forward,PAN,24,72,80,80
+Ewerthon Juventude,Juventude,forward,BRA,25,70,78,80
+Brunão,Juventude,forward,BRA,22,72,80,82
+Thiaguinho Juventude,Juventude,forward,BRA,24,70,80,80
+Alan Ruschel,Juventude,defender,BRA,33,68,66,68
+Alex Muralha,Mirassol,goalkeeper,BRA,35,76,68,76
+Cleber Mirassol,Mirassol,goalkeeper,BRA,27,70,78,76
+Daniel Borges,Mirassol,defender,BRA,32,70,70,70
+Luizão Mirassol,Mirassol,defender,BRA,27,70,76,72
+Warley,Mirassol,defender,BRA,25,70,78,76
+Reniê,Mirassol,defender,BRA,29,68,74,70
+Yago Mirassol,Mirassol,defender,BRA,30,68,72,70
+Neto Moura,Mirassol,midfielder,BRA,28,72,78,76
+Danielzinho,Mirassol,midfielder,BRA,25,70,80,78
+Gabriel Mirassol,Mirassol,midfielder,BRA,30,68,74,70
+Chico Kim,Mirassol,midfielder,BRA,27,70,78,76
+Régis,Mirassol,midfielder,BRA,35,68,65,68
+Dalberto,Mirassol,midfielder,BRA,24,70,80,80
+Alesson,Mirassol,forward,BRA,25,72,78,78
+Fabrício Oya,Mirassol,forward,BRA,25,70,78,78
+Léo Gamalho,Mirassol,forward,BRA,30,72,68,72
+Iury,Mirassol,forward,BRA,23,70,80,80
+Waguininho,Mirassol,forward,BRA,22,68,80,80
+Lucas Barcelos,Mirassol,midfielder,BRA,26,68,78,74
+Eduardo Person,Mirassol,midfielder,BRA,28,68,76,72
+Giovanni,Novorizontino,goalkeeper,BRA,30,72,74,74
+Lucas Frigeri,Novorizontino,goalkeeper,BRA,27,68,76,74
+Rodolfo Novorizontino,Novorizontino,defender,BRA,28,70,76,74
+Reverson,Novorizontino,defender,BRA,29,68,74,70
+Wálber,Novorizontino,defender,BRA,30,68,74,70
+Guilherme Novorizontino,Novorizontino,defender,BRA,25,68,78,74
+Murilo Rangel,Novorizontino,defender,BRA,26,70,76,74
+Diego Torres,Novorizontino,midfielder,URU,29,70,76,74
+Quirino,Novorizontino,midfielder,BRA,27,68,78,74
+Roberson Novorizontino,Novorizontino,midfielder,BRA,30,66,74,68
+Patrick Novorizontino,Novorizontino,midfielder,BRA,26,68,78,74
+Lucas Tocantins,Novorizontino,midfielder,BRA,28,68,76,72
+Léo Tocantins,Novorizontino,midfielder,BRA,25,68,78,74
+Cléo Silva,Novorizontino,forward,BRA,28,70,74,72
+Ronaldo Novorizontino,Novorizontino,forward,BRA,24,70,80,80
+Airton,Novorizontino,forward,BRA,28,68,72,70
+Douglas Baggio,Novorizontino,forward,BRA,28,68,74,70
+Júnior Todinho,Novorizontino,forward,BRA,24,70,80,80
+Marcelinho Novorizontino,Novorizontino,midfielder,BRA,32,66,70,68
+Oliveira Novorizontino,Novorizontino,midfielder,BRA,27,68,76,72
