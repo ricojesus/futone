@@ -7,7 +7,8 @@ Revisão completa de lógica, implementação e UX. Cada achado tem severidade, 
 > - **Enum sem `free_agent`**: `competition_players.status` não aceitava o valor usado pelo código — migration `2026_07_06_000001` adicionada.
 > - **Overflow de saldo negativo**: `goals_for - goals_against` com colunas UNSIGNED estoura no MySQL quando o saldo é negativo (crash latente no antigo `tableRank`) — resolvido com CAST no `scopeStandingsOrder`.
 > E confirmaram a gravidade de **A5**: `joined_at` tem `useCurrent()`, então TODO jogador nasce dentro dos "6 meses reais" de contrato mínimo — o mercado fica quase todo bloqueado até a spec 004.
-> Pendentes: C1 (spec 002), A1+A3+M4+M5 (spec 003), A5+A6 (specs 002/004), V1, V2.
+> **Spec 002 ENTREGUE (2026-07-07):** C1 corrigido (fase reseta, um único criador de Séries A/B via `league_teams.national_division`, filtro por temporada), A1 corrigido (cota de TV paga na criação de cada competição, Copa incluída), A6 parcialmente corrigido (`market_value` recalculado na virada). Mais um gap de migration achado e corrigido: enum de `competitions.competition_type` sem `'copa'` (migration `2026_07_06_000003`).
+> Pendentes: A3+M4+M5 (spec 003), A5 + restante de A6 (spec 004), V1, V2.
 
 ---
 

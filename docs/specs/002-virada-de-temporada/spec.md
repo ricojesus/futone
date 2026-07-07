@@ -1,6 +1,6 @@
 # Spec 002 — Virada de Temporada Consistente
 
-> **Status:** Aprovada (2026-07-06, com decisões do dono — ver "Decisões")
+> **Status:** ✅ Entregue (2026-07-07) — ver ./tasks.md
 > **Origem:** Revisão 2026-07-06 — achados C1 (crítico), A6 e parte de A1
 > **Criada em:** 2026-07-06
 

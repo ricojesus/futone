@@ -43,7 +43,7 @@
 | RF-LIG-04 | Geração das competições da temporada: estaduais A1/A2 (27 estados), Copa do Brasil, Série A/B | ✅ | `LeagueGeneratorService`, `CopaBrasilService` |
 | RF-LIG-05 | Fases sequenciais da temporada: `state → copa → national`, com transição automática | ✅ | `GlobalRoundService::transitionPhase()` |
 | RF-LIG-06 | Avanço de rodada global pelo dono da liga (`advanceWeek`) simula todas as partidas da fase | ✅ | `GlobalRoundService` |
-| RF-LIG-07 | Promoção/rebaixamento entre A1↔A2 e Série A↔Série B na virada de temporada | ✅ | `SeasonTransitionService::calculateTransitions()` |
+| RF-LIG-07 | Promoção/rebaixamento entre A1↔A2 e Série A↔Série B na virada de temporada | ✅ | `SeasonTransitionService`; divisão nacional persistida em `league_teams.national_division`. **Spec:** [002](specs/002-virada-de-temporada/spec.md) (entregue 2026-07-07) |
 | RF-LIG-08 | Resumo de temporada (campeões, artilheiros) antes de avançar o ano | ✅ | `LeagueController::seasonSummary` |
 
 ## 4. Elenco e Escalação (ESC)
