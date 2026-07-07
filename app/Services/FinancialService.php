@@ -27,33 +27,30 @@ class FinancialService
     ];
 
     /**
-     * Paga cota de TV para todos os times de todas as competições da temporada atual.
-     * Deve ser chamado ao gerar competições no início de cada temporada.
+     * Paga a cota de TV de UMA competição aos seus participantes.
+     * Deve ser chamada no momento em que a competição é criada
+     * (estaduais na geração da temporada, Copa ao ser gerada,
+     * Séries A/B na transição para a fase nacional) — spec 002.
      */
-    public function payTvQuotas(League $league): void
+    public function payTvQuotaFor(Competition $competition): void
     {
-        DB::transaction(function () use ($league) {
-            $competitions = $league->competitions()
-                ->where('season', $league->season)
-                ->with('teams')
-                ->get();
+        $quota = $this->quotaFor($competition);
+        if ($quota === 0) {
+            return;
+        }
 
-            foreach ($competitions as $competition) {
-                $quota = $this->quotaFor($competition);
-                if ($quota === 0) continue;
+        DB::transaction(function () use ($competition, $quota) {
+            foreach ($competition->teams()->get() as $competitionTeam) {
+                LeagueTeam::where('id', $competitionTeam->league_team_id)
+                    ->increment('budget', $quota);
 
-                foreach ($competition->teams as $competitionTeam) {
-                    LeagueTeam::where('id', $competitionTeam->league_team_id)
-                        ->increment('budget', $quota);
-
-                    CompetitionTransaction::create([
-                        'competition_team_id' => $competitionTeam->id,
-                        'type'                => 'prize_money',
-                        'amount'              => $quota,
-                        'description'         => 'Cota de TV — ' . $competition->name,
-                        'round'               => 0,
-                    ]);
-                }
+                CompetitionTransaction::create([
+                    'competition_team_id' => $competitionTeam->id,
+                    'type'                => 'prize_money',
+                    'amount'              => $quota,
+                    'description'         => 'Cota de TV — ' . $competition->name,
+                    'round'               => 0,
+                ]);
             }
         });
     }
@@ -72,11 +69,35 @@ class FinancialService
                     ->where('status', 'active')
                     ->sum('wage');
 
-                if ($totalWage > 0) {
-                    $leagueTeam->decrement('budget', $totalWage);
+                if ($totalWage <= 0) {
+                    continue;
+                }
+
+                $leagueTeam->decrement('budget', $totalWage);
+
+                $compTeam = $this->currentCompetitionTeam($leagueTeam);
+                if ($compTeam) {
+                    CompetitionTransaction::create([
+                        'competition_team_id' => $compTeam->id,
+                        'type'                => 'wage_payment',
+                        'amount'              => -$totalWage,
+                        'description'         => 'Salários semanais do elenco',
+                        'round'               => $compTeam->competition?->current_round ?? 0,
+                    ]);
                 }
             }
         });
+    }
+
+    /**
+     * CompetitionTeam do time em uma competição ativa (para vincular transações).
+     */
+    private function currentCompetitionTeam(LeagueTeam $leagueTeam): ?object
+    {
+        return \App\Models\CompetitionTeam::where('league_team_id', $leagueTeam->id)
+            ->whereHas('competition', fn($q) => $q->where('status', Competition::STATUS_IN_PROGRESS))
+            ->with('competition')
+            ->first();
     }
 
     /**

@@ -128,17 +128,15 @@ class TransferService
         $player    = $offer->player;
         $minFee    = (int) ($player->market_value * 0.7);
 
-        if ($offer->offered_fee >= $minFee) {
-            $sellerLeagueTeamId = $player->league_team_id;
-            abort_unless(
-                $this->canSell(LeagueTeam::find($sellerLeagueTeamId), $player),
-                422, 'Time vendedor não pode vender: elenco abaixo do mínimo.'
-            );
-            $offer->update(['status' => 'pending_player']);
-            $this->resolvePlayerDecision($offer);
-        } else {
+        $sellerLeagueTeam = LeagueTeam::find($player->league_team_id);
+
+        if ($offer->offered_fee < $minFee || ! $this->canSell($sellerLeagueTeam, $player)) {
             $offer->update(['status' => 'rejected_team']);
+            return;
         }
+
+        $offer->update(['status' => 'pending_player']);
+        $this->resolvePlayerDecision($offer);
     }
 
     // ── Fase 2: decisão do jogador (sistema de pontuação) ───────────────
@@ -171,27 +169,37 @@ class TransferService
     }
 
     /**
-     * Técnico humano do time vendedor aceita perder o jogador mas
-     * oferece aumento de salário para retê-lo (resposta à contra-proposta).
+     * Técnico humano do time vendedor tenta reter o jogador oferecendo
+     * aumento de salário (resposta à contra-proposta).
+     *
+     * Regras:
+     *   1. Retenção >= counter_price (o valor que o próprio jogador pediu) → fica.
+     *   2. Abaixo disso, o jogador reavalia a proposta externa considerando o
+     *      salário de retenção como o "atual": pontuação >= 4 → vai embora.
+     *   O aumento só é persistido se o jogador ficar.
      */
     public function retentionOffer(CompetitionTransferOffer $offer, int $retentionWage): void
     {
         abort_unless($offer->status === 'countered', 409, 'Oferta não está em estado de contra-proposta.');
 
-        // Atualiza o salário do jogador e reavalia
-        $offer->player->update(['wage' => $retentionWage]);
+        $player       = $offer->player;
+        $requestedWage = (int) ($offer->counter_price ?? round($player->wage * 1.3));
 
-        $offeredWage = $offer->offered_wage;
-        $minWage     = $this->minimumWage($offer->player->fresh());
+        $stays = $retentionWage >= $requestedWage;
 
-        if ($retentionWage >= $minWage && $offeredWage >= (int) ($retentionWage * 1.15)) {
-            // Salário de retenção não é suficientemente melhor que a proposta → jogador vai
-            $offer->update(['status' => 'accepted']);
-            $this->executeTransfer($offer);
-        } else {
-            // Jogador prefere ficar
-            $offer->update(['status' => 'rejected_player']);
+        if (! $stays) {
+            $score = $this->playerScore($player, $offer->buyerTeam, $offer->offered_wage, $retentionWage);
+            $stays = $score < 4;
         }
+
+        if ($stays) {
+            $player->update(['wage' => $retentionWage]);
+            $offer->update(['status' => 'rejected_player']);
+            return;
+        }
+
+        $offer->update(['status' => 'accepted']);
+        $this->executeTransfer($offer);
     }
 
     // ── Pontuação de decisão do jogador ─────────────────────────────────
@@ -200,11 +208,12 @@ class TransferService
         CompetitionPlayer $player,
         CompetitionTeam   $buyerCompTeam,
         int               $offeredWage,
+        ?int              $currentWageOverride = null,
     ): int {
         $score = 0;
 
-        // 1. Salário oferecido vs. atual
-        $currentWage = max(1, $player->wage);
+        // 1. Salário oferecido vs. atual (override usado na reavaliação de retenção)
+        $currentWage = max(1, $currentWageOverride ?? $player->wage);
         $ratio = $offeredWage / $currentWage;
 
         $score += match (true) {
@@ -292,6 +301,10 @@ class TransferService
             $contractUntil = date('Y') + max(1, (int) $offer->contract_rounds);
             $competition   = $buyerCompTeam->competition;
             $round         = $competition?->current_round ?? 0;
+
+            // Remove o jogador de todas as escalações persistidas — se era titular
+            // do vendedor, a lineup antiga não pode continuar escalando-o
+            \App\Models\CompetitionLineupPlayer::where('competition_player_id', $player->id)->delete();
 
             // Move jogador
             $player->update([
@@ -411,8 +424,7 @@ class TransferService
         if (! $competition) return 'mid_half';
 
         $teams = CompetitionTeam::where('competition_id', $competition->id)
-            ->orderByDesc('points')
-            ->orderByDesc(DB::raw('goals_for - goals_against'))
+            ->standingsOrder()
             ->pluck('id')
             ->values();
 

@@ -147,7 +147,10 @@ class GlobalRoundService
     {
         DB::transaction(function () use ($league) {
             // Gera o bracket da Copa do Brasil
-            $this->copaBrasil->generate($league);
+            $copa = $this->copaBrasil->generate($league);
+
+            // Cota de TV paga na criação da competição (spec 002)
+            $this->financial->payTvQuotaFor($copa);
 
             // Recuperação parcial de fitness (descanso entre estaduais e copa)
             $this->applyInterPhaseRecovery($league);
@@ -214,6 +217,7 @@ class GlobalRoundService
                 }
 
                 $this->calendar->generate($compA);
+                $this->financial->payTvQuotaFor($compA);
             }
 
             if ($serieBTeams->count() >= 2) {
@@ -246,6 +250,7 @@ class GlobalRoundService
                 }
 
                 $this->calendar->generate($compB);
+                $this->financial->payTvQuotaFor($compB);
             }
 
             // Recuperação completa de fitness entre fases (descanso)
@@ -289,19 +294,18 @@ class GlobalRoundService
     }
 
     /**
-     * Retorna LeagueTeams da liga agrupados por national_division (first/second),
-     * baseando-se no campo Team::national_division do catálogo mestre.
+     * Retorna LeagueTeams da liga agrupados por national_division (first/second).
+     * A divisão vem do PRÓPRIO LeagueTeam — atualizada pelas viradas de temporada
+     * com promoções/rebaixamentos (spec 002) — nunca do catálogo mestre.
      *
      * @return Collection<string, Collection<LeagueTeam>>
      */
     private function getNationalLeagueTeams(League $league): Collection
     {
         return LeagueTeam::where('league_id', $league->id)
-            ->whereNotNull('team_id')
-            ->with('team')
+            ->whereIn('national_division', ['first', 'second'])
             ->get()
-            ->filter(fn(LeagueTeam $lt) => $lt->team?->national_division !== null)
-            ->groupBy(fn(LeagueTeam $lt) => $lt->team->national_division);
+            ->groupBy('national_division');
     }
 
     /**

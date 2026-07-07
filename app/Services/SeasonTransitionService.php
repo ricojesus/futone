@@ -16,6 +16,7 @@ class SeasonTransitionService
     public function __construct(
         private readonly CalendarGeneratorService $calendar,
         private readonly FinancialService         $financial,
+        private readonly MarketValueService       $marketValue,
     ) {}
 
     /**
@@ -33,7 +34,10 @@ class SeasonTransitionService
      */
     public function calculateTransitions(League $league): array
     {
+        // Apenas a temporada corrente — sem o filtro, competições de anos
+        // anteriores contaminariam o cálculo a partir da 2ª temporada
         $competitions = $league->competitions()
+            ->where('season', $league->season)
             ->with(['teams.leagueTeam.team', 'state'])
             ->get();
 
@@ -85,15 +89,15 @@ class SeasonTransitionService
 
         DB::transaction(function () use ($league, $transitions, $nextYear) {
 
-            // ── National ─────────────────────────────────────────────────
+            // ── National: NÃO clona competições — apenas persiste as novas
+            //    divisões nos LeagueTeams. As Séries A/B da próxima temporada
+            //    serão criadas pelo GlobalRoundService::transitionToNational
+            //    (único criador), já respeitando promoção/rebaixamento.
             if ($transitions['national']) {
-                $this->createNewSeasonPair(
-                    $league,
-                    $transitions['national'],
-                    $nextYear,
-                    Competition::COMPETITION_TYPE_NATIONAL,
-                    null,
-                );
+                [$firstIds, $secondIds] = $this->divisionMembers($transitions['national']);
+
+                LeagueTeam::whereIn('id', $firstIds)->update(['national_division' => 'first']);
+                LeagueTeam::whereIn('id', $secondIds)->update(['national_division' => 'second']);
             }
 
             // ── State pairs ───────────────────────────────────────────────
@@ -116,17 +120,26 @@ class SeasonTransitionService
             CompetitionPlayer::whereIn('league_team_id', $leagueTeamIds)
                 ->update(['fitness' => 100, 'goals_scored' => 0]);
 
-            // ── Bump league season ────────────────────────────────────────
-            $league->update(['season' => $nextYear]);
+            // ── Valor de mercado acompanha o envelhecimento ───────────────
+            CompetitionPlayer::whereIn('league_team_id', $leagueTeamIds)
+                ->chunkById(500, function ($players) {
+                    foreach ($players as $player) {
+                        $player->update(['market_value' => $this->marketValue->calculate($player)]);
+                    }
+                });
+
+            // ── Bump league season + reinício do ciclo de fases ───────────
+            // (satisfação NÃO é tocada — carrega da temporada anterior)
+            $league->update([
+                'season'        => $nextYear,
+                'current_phase' => League::PHASE_STATE,
+            ]);
 
             // ── Auto-encerrar se atingiu o limite de temporadas ───────────
             if ($league->fresh()->isLastSeason()) {
                 $league->update(['status' => League::STATUS_FINISHED, 'finished_at' => now()]);
             }
         });
-
-        // Paga cota de TV da nova temporada
-        $this->financial->payTvQuotas($league->fresh());
 
         return $league->fresh();
     }
@@ -168,14 +181,7 @@ class SeasonTransitionService
      */
     private function standings(Competition $competition): Collection
     {
-        return $competition->teams
-            ->sortByDesc(fn(CompetitionTeam $ct) => [
-                $ct->points,
-                $ct->wins,
-                $ct->goals_for - $ct->goals_against,
-                $ct->goals_for,
-            ])
-            ->values();
+        return CompetitionTeam::sortStandings($competition->teams);
     }
 
     /**
@@ -194,36 +200,7 @@ class SeasonTransitionService
         /** @var Competition|null $oldSecond */
         $oldSecond = $block['second_division'];
 
-        /** @var Collection $relegated */
-        $relegated = $block['relegated'];
-        /** @var Collection $promoted */
-        $promoted  = $block['promoted'];
-
-        // ── Teams for new first division ──────────────────────────────
-        // Stay: first division teams not relegated
-        $relegatedLeagueTeamIds = $relegated->pluck('league_team_id')->all();
-
-        $firstStaying = $block['first_standings']
-            ->reject(fn(CompetitionTeam $ct) => in_array($ct->league_team_id, $relegatedLeagueTeamIds))
-            ->values();
-
-        // Promoted from second division come up
-        $newFirstLeagueTeamIds = $firstStaying->pluck('league_team_id')
-            ->concat($promoted->pluck('league_team_id'))
-            ->unique()->values();
-
-        // ── Teams for new second division ─────────────────────────────
-        // Stay: second division teams not promoted
-        $promotedLeagueTeamIds = $promoted->pluck('league_team_id')->all();
-
-        $secondStaying = $block['second_standings']
-            ->reject(fn(CompetitionTeam $ct) => in_array($ct->league_team_id, $promotedLeagueTeamIds))
-            ->values();
-
-        // Relegated teams from first division go down
-        $newSecondLeagueTeamIds = $secondStaying->pluck('league_team_id')
-            ->concat($relegated->pluck('league_team_id'))
-            ->unique()->values();
+        [$newFirstLeagueTeamIds, $newSecondLeagueTeamIds] = $this->divisionMembers($block);
 
         // Build league_team_id -> CompetitionTeam map for name/team_id lookup
         $allOldCts = collect()
@@ -244,6 +221,7 @@ class SeasonTransitionService
                 ]);
             }
             $this->calendar->generate($newFirst);
+            $this->financial->payTvQuotaFor($newFirst);
         }
 
         // ── Create new second division ────────────────────────────────
@@ -259,7 +237,34 @@ class SeasonTransitionService
                 ]);
             }
             $this->calendar->generate($newSecond);
+            $this->financial->payTvQuotaFor($newSecond);
         }
+    }
+
+    /**
+     * Resolve quem fica em cada divisão na temporada seguinte a partir de um
+     * transition block: [ids da 1ª divisão, ids da 2ª divisão].
+     *
+     * @return array{0: Collection, 1: Collection}
+     */
+    private function divisionMembers(array $block): array
+    {
+        $relegatedIds = $block['relegated']->pluck('league_team_id')->all();
+        $promotedIds  = $block['promoted']->pluck('league_team_id')->all();
+
+        $newFirst = $block['first_standings']
+            ->reject(fn(CompetitionTeam $ct) => in_array($ct->league_team_id, $relegatedIds))
+            ->pluck('league_team_id')
+            ->concat($block['promoted']->pluck('league_team_id'))
+            ->unique()->values();
+
+        $newSecond = $block['second_standings']
+            ->reject(fn(CompetitionTeam $ct) => in_array($ct->league_team_id, $promotedIds))
+            ->pluck('league_team_id')
+            ->concat($block['relegated']->pluck('league_team_id'))
+            ->unique()->values();
+
+        return [$newFirst, $newSecond];
     }
 
     /**

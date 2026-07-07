@@ -35,8 +35,13 @@ class TransferController extends Controller
 
         $query = CompetitionPlayer::query()
             ->with(['leagueTeam.team', 'leagueTeam.league'])
-            ->where('status', 'active')
-            ->where('league_team_id', '!=', $myLeagueTeam->id);
+            // Apenas jogadores DESTA liga — nunca vazar elencos de outras salas
+            ->whereHas('leagueTeam', fn($q) => $q->where('league_id', $league->id))
+            ->whereIn('status', ['active', 'free_agent'])
+            ->where(function ($q) use ($myLeagueTeam) {
+                $q->where('league_team_id', '!=', $myLeagueTeam->id)
+                  ->orWhere('status', 'free_agent');
+            });
 
         // Filtros
         if ($request->filled('position')) {
@@ -86,7 +91,8 @@ class TransferController extends Controller
             ->first();
 
         abort_unless($myLeagueTeam, 403);
-        abort_if($player->league_team_id === $myLeagueTeam->id, 404, 'Este jogador já é seu.');
+        abort_unless($player->leagueTeam?->league_id === $league->id, 404);
+        abort_if($player->league_team_id === $myLeagueTeam->id && ! $player->isFreeAgent(), 404, 'Este jogador já é seu.');
 
         $myCompTeam = $this->transfers->primaryCompetitionTeamPublic($myLeagueTeam);
         abort_unless($myCompTeam, 422, 'Seu time não está em nenhuma competição ativa.');
@@ -125,14 +131,24 @@ class TransferController extends Controller
         $myCompTeam = $this->transfers->primaryCompetitionTeamPublic($myLeagueTeam);
 
         abort_unless($myCompTeam, 422, 'Seu time não está em nenhuma competição ativa.');
+        abort_unless($player->leagueTeam?->league_id === $league->id, 404);
 
-        $offer = $this->transfers->makeDirectOffer(
-            buyerCompTeam:  $myCompTeam,
-            player:         $player,
-            offeredFee:     $validated['offered_fee'],
-            offeredWage:    $validated['offered_wage'],
-            contractYears:  $validated['contract_years'],
-        );
+        if ($player->isFreeAgent()) {
+            $offer = $this->transfers->signFreeAgent(
+                buyerCompTeam:  $myCompTeam,
+                player:         $player,
+                offeredWage:    $validated['offered_wage'],
+                contractYears:  $validated['contract_years'],
+            );
+        } else {
+            $offer = $this->transfers->makeDirectOffer(
+                buyerCompTeam:  $myCompTeam,
+                player:         $player,
+                offeredFee:     $validated['offered_fee'],
+                offeredWage:    $validated['offered_wage'],
+                contractYears:  $validated['contract_years'],
+            );
+        }
 
         $label = $offer->statusLabel();
 

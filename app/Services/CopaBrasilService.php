@@ -199,11 +199,7 @@ class CopaBrasilService
         $thirdPlace   = collect();
 
         foreach ($stateComps as $comp) {
-            $sorted = $comp->teams
-                ->sortByDesc('points')
-                ->sortByDesc('wins')
-                ->sortByDesc(fn($t) => $t->goals_for - $t->goals_against)
-                ->values();
+            $sorted = CompetitionTeam::sortStandings($comp->teams);
 
             // Campeão e vice
             if ($sorted->count() >= 1) {
@@ -234,7 +230,7 @@ class CopaBrasilService
                 ->get();
 
             foreach ($a2Comps as $comp) {
-                $sorted = $comp->teams->sortByDesc('points')->values();
+                $sorted = CompetitionTeam::sortStandings($comp->teams);
                 foreach ($sorted as $ct) {
                     if ($participants->count() >= self::TARGET_TEAMS) break;
                     if (! $participants->contains('id', $ct->leagueTeam?->id)) {

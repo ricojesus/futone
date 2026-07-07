@@ -62,6 +62,25 @@
 
     <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
 
+        {{-- ── Avisos ao técnico ── --}}
+        @if ($isMyTeam)
+            @if ($leagueTeam->budget < 0)
+                <div class="mb-4 flex items-center gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-3 text-sm text-red-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-red-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+                    <span><strong>Saldo negativo.</strong> As finanças do clube estão no vermelho — venda jogadores, ajuste o ingresso ou reduza a folha salarial.</span>
+                </div>
+            @endif
+            @if ($lineup && $starters->count() < 11)
+                <div class="mb-4 flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-3 text-sm text-amber-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+                    <span>
+                        <strong>Escalação incompleta:</strong> apenas {{ $starters->count() }} de 11 titulares definidos.
+                        <a href="{{ route('leagues.lineup.edit', [$league, $leagueTeam]) }}" class="underline font-semibold hover:text-amber-200">Completar escalação</a>
+                    </span>
+                </div>
+            @endif
+        @endif
+
         {{-- ── Painel financeiro (apenas técnico humano do próprio time) ── --}}
         @if ($isMyTeam)
             <div class="space-y-4 mb-8">

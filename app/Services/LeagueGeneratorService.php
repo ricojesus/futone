@@ -146,6 +146,7 @@ class LeagueGeneratorService
 
                 $this->attachTeams($league, $compA1, $a1Teams);
                 $this->calendar->generate($compA1);
+                $this->financial->payTvQuotaFor($compA1);
                 $created['state'][] = $compA1;
 
                 // ── Estadual A2 ───────────────────────────────────────────
@@ -163,6 +164,7 @@ class LeagueGeneratorService
 
                     $this->attachTeams($league, $compA2, $a2Teams);
                     $this->calendar->generate($compA2);
+                    $this->financial->payTvQuotaFor($compA2);
                     $created['state'][] = $compA2;
                 }
             }
@@ -173,9 +175,6 @@ class LeagueGeneratorService
             // Adiciona técnicos free agents ao pool da liga (30 aleatórios excluindo os já vinculados)
             $this->seedFreeAgentPool($league);
         });
-
-        // Paga cota de TV para todos os times após gerar as competições
-        $this->financial->payTvQuotas($league);
 
         return $created;
     }
@@ -275,14 +274,19 @@ class LeagueGeneratorService
                     'team_id'   => $team->id,
                 ],
                 [
-                    'user_id'          => null,
-                    'coach_id'         => $team->coach_id,
-                    'name'             => $team->name,
-                    'tolerance'        => $team->tolerance,
-                    'fans'             => $team->fans_base,
-                    'stadium_capacity' => $team->stadium_capacity,
-                    'budget'           => $this->initialBudget($team),
-                    'ticket_price'     => $this->initialTicketPrice($team),
+                    'user_id'           => null,
+                    'coach_id'          => $team->coach_id,
+                    'name'              => $team->name,
+                    // Ponto de partida vindo do catálogo; daqui em diante a
+                    // divisão nacional evolui com as viradas de temporada da liga
+                    'national_division' => in_array($team->national_division, ['first', 'second'], true)
+                        ? $team->national_division
+                        : null,
+                    'tolerance'         => $team->tolerance,
+                    'fans'              => $team->fans_base,
+                    'stadium_capacity'  => $team->stadium_capacity,
+                    'budget'            => $this->initialBudget($team),
+                    'ticket_price'      => $this->initialTicketPrice($team),
                 ]
             );
 

@@ -16,6 +16,7 @@ class LeagueTeam extends Model
     protected $fillable = [
         'league_id',
         'team_id',
+        'national_division',
         'user_id',
         'coach_id',
         'name',

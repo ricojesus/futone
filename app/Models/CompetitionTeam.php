@@ -86,6 +86,37 @@ class CompetitionTeam extends Model
         return $this->leagueTeam->lineups();
     }
 
+    // ── Classificação ────────────────────────────────────────────────────
+
+    /**
+     * Critério oficial de classificação: pontos → vitórias → saldo → gols pró.
+     */
+    public function scopeStandingsOrder($query)
+    {
+        return $query
+            ->orderByDesc('points')
+            ->orderByDesc('wins')
+            // CAST: colunas são UNSIGNED e a subtração estoura quando o saldo é negativo
+            ->orderByRaw('(CAST(goals_for AS SIGNED) - CAST(goals_against AS SIGNED)) DESC')
+            ->orderByDesc('goals_for');
+    }
+
+    /**
+     * Mesma ordenação para Collections já carregadas.
+     * Atenção: nunca encadear sortByDesc() — o último sort domina.
+     */
+    public static function sortStandings(\Illuminate\Support\Collection $teams): \Illuminate\Support\Collection
+    {
+        return $teams
+            ->sortByDesc(fn(self $ct) => [
+                $ct->points,
+                $ct->wins,
+                $ct->goals_for - $ct->goals_against,
+                $ct->goals_for,
+            ])
+            ->values();
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────
 
     public function isCpu(): bool

@@ -22,8 +22,8 @@ class LiveMatchSimulator
     private const HALFTIME_PLAY = 45;
 
     public function __construct(
-        private readonly MatchNarrator   $narrator   = new MatchNarrator(),
-        private readonly FinancialService $financial = new FinancialService(),
+        private readonly MatchNarrator    $narrator,
+        private readonly FinancialService $financial,
     ) {}
 
     // ── API pública ──────────────────────────────────────────────────

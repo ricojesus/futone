@@ -215,9 +215,9 @@ class SatisfactionService
             return 50.0;
         }
 
-        return (float) \App\Models\CompetitionPlayer::where('league_team_id', $leagueTeamId)
+        return (float) (\App\Models\CompetitionPlayer::where('league_team_id', $leagueTeamId)
             ->where('status', 'active')
-            ->avg('strength') ?? 50.0;
+            ->avg('strength') ?? 50.0);
     }
 
     private function fireCoach(LeagueTeam $leagueTeam, League $league): void

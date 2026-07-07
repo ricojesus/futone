@@ -50,11 +50,8 @@ class CompetitionController extends Controller
         // É dono da liga?
         $isOwner = $league->owner_id === auth()->id();
 
-        // Classificação: times ordenados por pontos
-        $standings = $competition->teams
-            ->sortByDesc('points')
-            ->sortByDesc('wins')
-            ->values();
+        // Classificação: pontos → vitórias → saldo → gols pró (critério oficial)
+        $standings = \App\Models\CompetitionTeam::sortStandings($competition->teams);
 
         // Artilheiros: jogadores dos times desta competição, com gols, top 10
         $leagueTeamIds = $competition->teams->pluck('league_team_id')->filter();

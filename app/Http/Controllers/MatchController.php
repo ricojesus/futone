@@ -298,9 +298,7 @@ class MatchController extends Controller
 
             // Artilharia e fitness (reutiliza o match fresh com eventos completos)
             $this->applyGoalsScored($match->fresh());
-            $homeTeam->load('competition');
-            $awayTeam->load('competition');
-            $this->applyFitnessDegradation($homeTeam, $awayTeam);
+            $this->applyFitnessDegradation($homeTeam, $awayTeam, $match->round);
 
             // Avança a rodada se todos os jogos daquela rodada estão finalizados
             $pending = CompetitionMatch::where('competition_id', $competition->id)
@@ -485,7 +483,7 @@ class MatchController extends Controller
      * Degrada apenas os titulares que jogaram o segundo tempo (após substituições).
      * Reservas que não entraram em campo ficam intactos.
      */
-    private function applyFitnessDegradation(CompetitionTeam $homeTeam, CompetitionTeam $awayTeam): void
+    private function applyFitnessDegradation(CompetitionTeam $homeTeam, CompetitionTeam $awayTeam, int $round): void
     {
         $starterIds = collect();
 
@@ -494,10 +492,12 @@ class MatchController extends Controller
                 continue;
             }
 
-            // Busca escalação ativa para esta rodada (override com subs ou padrão)
+            // Busca escalação ativa para esta rodada (override com subs ou padrão).
+            // Usa a rodada da PARTIDA — current_round ainda não foi incrementado
+            // e apontaria para a lineup errada, ignorando as subs do intervalo.
             $lineup = \App\Models\CompetitionLineup::where('league_team_id', $compTeam->league_team_id)
                 ->where('status', 'active')
-                ->whereIn('round', [$compTeam->competition->current_round ?? 0, 0])
+                ->whereIn('round', [$round, 0])
                 ->orderByDesc('round')
                 ->first();
 

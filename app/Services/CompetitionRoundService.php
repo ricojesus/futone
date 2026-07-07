@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\DB;
  */
 class CompetitionRoundService
 {
+    // Mesmo limite do fluxo humano (MatchController::applySubstitutions)
+    public const MAX_HALFTIME_SUBS = 5;
+
     public function __construct(
         private readonly MatchSimulator     $simulator,
         private readonly LiveMatchSimulator $liveSimulator,
@@ -211,17 +214,33 @@ class CompetitionRoundService
 
     private function applyFitnessDegradation(Collection $matches): void
     {
-        $leagueTeamIds = collect();
+        // Apenas quem entrou em campo se desgasta: titulares da lineup usada
+        // em cada partida (reservas e demais jogadores do elenco ficam intactos)
+        $starterIds = collect();
 
         foreach ($matches as $match) {
-            if ($match->homeTeam) $leagueTeamIds->push($match->homeTeam->league_team_id);
-            if ($match->awayTeam) $leagueTeamIds->push($match->awayTeam->league_team_id);
+            foreach ([$match->homeTeam, $match->awayTeam] as $compTeam) {
+                if (! $compTeam?->league_team_id) continue;
+
+                $lineup = CompetitionLineup::where('league_team_id', $compTeam->league_team_id)
+                    ->where('status', 'active')
+                    ->whereIn('round', [$match->round, 0])
+                    ->orderByDesc('round')
+                    ->first();
+
+                if (! $lineup) continue;
+
+                $lineup->lineupPlayers()
+                    ->where('is_starter', true)
+                    ->pluck('competition_player_id')
+                    ->each(fn($id) => $starterIds->push($id));
+            }
         }
 
-        $leagueTeamIds = $leagueTeamIds->filter()->unique()->values();
-        if ($leagueTeamIds->isEmpty()) return;
+        $starterIds = $starterIds->unique()->values();
+        if ($starterIds->isEmpty()) return;
 
-        $players = CompetitionPlayer::whereIn('league_team_id', $leagueTeamIds)->get();
+        $players = CompetitionPlayer::whereIn('id', $starterIds)->get();
 
         foreach ($players as $player) {
             $stamina   = max(1, $player->stamina ?? 50);
@@ -299,6 +318,25 @@ class CompetitionRoundService
 
             if (! $lineup) continue;
 
+            // As trocas valem só para esta partida: nunca mutar a escalação
+            // padrão (round 0) — cria um override da rodada, como no fluxo humano
+            if ($lineup->round !== $match->round) {
+                $override        = $lineup->replicate(['id', 'created_at', 'updated_at']);
+                $override->round = $match->round;
+                $override->save();
+
+                foreach ($lineup->lineupPlayers as $lp) {
+                    $override->lineupPlayers()->create([
+                        'competition_player_id' => $lp->competition_player_id,
+                        'role'                  => $lp->role,
+                        'is_starter'            => $lp->is_starter,
+                        'slot'                  => $lp->slot,
+                    ]);
+                }
+
+                $lineup = $override->fresh(['lineupPlayers']);
+            }
+
             $all = $lineup->lineupPlayers()->with('competitionPlayer')->get();
 
             $tiredStarters = $all
@@ -313,7 +351,7 @@ class CompetitionRoundService
             $subsCount = 0;
 
             foreach ($tiredStarters as $out) {
-                if ($subsCount >= 3 || $bench->isEmpty()) break;
+                if ($subsCount >= self::MAX_HALFTIME_SUBS || $bench->isEmpty()) break;
 
                 $outPos = $out->competitionPlayer->position ?? 'midfielder';
                 $in     = $bench->first(fn($lp) => ($lp->competitionPlayer->position ?? '') === $outPos);
