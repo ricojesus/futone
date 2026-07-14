@@ -1,6 +1,6 @@
 # Futone — Documento de Requisitos
 
-> **Versão:** 1.1 — 2026-07-06
+> **Versão:** 1.2 — 2026-07-14
 > **Processo:** Spec-Driven Development (ver [constitution.md](constitution.md), Artigo I). Este documento é o **inventário e backlog**: toda feature nova nasce aqui como requisito (`💡 Proposto`). Para ser implementado, um requisito ganha uma spec em [specs/](specs/) (`NNN-nome/spec.md` → `plan.md` → `tasks.md`, com aprovação a cada etapa). Ao entregar, atualizar o status aqui com link para a spec.
 
 **Legenda de status:**
@@ -86,7 +86,7 @@
 | RF-SAT-02 | Tabela de variação casa/fora × força relativa do adversário (aprovada em 2026-06-08) | ✅ | `SatisfactionService::DELTAS` — valores a calibrar em testes |
 | RF-SAT-03 | Demissão automática de técnico quando satisfação cruza a tolerância; time humano vira CPU | ✅ | `SatisfactionService::checkFirings` |
 | RF-SAT-04 | Pool de técnicos da liga (free agents) alimentado por demissões | ✅ | `LeagueCoach`, `releaseCoachToPool` |
-| RF-SAT-05 | Notificar/convidar usuário demitido para assumir outro time | ❌ | TODO em `SatisfactionService:239` |
+| RF-SAT-05 | Notificar/convidar usuário demitido para assumir outro time | ✅ | entregue via RF-GES-03 ([spec 005](specs/005-escritorio-do-tecnico/spec.md)) |
 | RF-SAT-06 | UI de contratação de técnico do pool | ❌ | sem controller/rota |
 
 ## 8. Financeiro (FIN)
@@ -94,7 +94,7 @@
 | ID | Requisito | Status | Rastreabilidade |
 |---|---|---|---|
 | RF-FIN-01 | Saldo inicial por divisão: 15M (1ª) / 7,5M (2ª) | ✅ | `LeagueGeneratorService` |
-| RF-FIN-02 | Cota de TV no início da temporada, por competição (Série A 10M, Copa 5M, Série B 4M, A1 2M, A2 1M) | ✅ | `FinancialService::payTvQuotas` |
+| RF-FIN-02 | Cota de TV no início da temporada, por competição (Série A 10M, Copa 5M, Série B 4M, A1 2M, A2 1M) | ✅ | `FinancialService::payTvQuotaFor`, paga na criação de cada competição (spec 002) |
 | RF-FIN-03 | Salários semanais debitados a cada `advanceWeek` | ✅ | `FinancialService::deductWeeklySalaries` |
 | RF-FIN-04 | Capacidade de estádio por time; renda de bilheteria só para o mandante | ✅ | `FinancialService::processMatchRevenue` |
 | RF-FIN-05 | Público = f(capacidade, satisfação, peso da competição, preço do ingresso) | ✅ | `FinancialService::calculateAndStoreAttendance` |
@@ -119,11 +119,19 @@
 | RF-TRF-10 | Times CPU ativos no mercado (comprar reforços, vender excedentes) | 💡 | hoje só a IA de *aceitação* existe; CPU nunca inicia negociação |
 | RF-TRF-11 | Impacto de lesão no valor de mercado | ❌ | previsto no design financeiro, adiado junto com RF-CON-05 |
 
-## 10. Requisitos Não Funcionais (RNF)
+## 10. Gestão — Escritório do Técnico (GES)
+
+| ID | Requisito | Status | Rastreabilidade |
+|---|---|---|---|
+| RF-GES-01 | Tela "Escritório" por liga: caixa de mensagens do técnico com lida/não lida e indicador de não lidas; é a home da liga para o técnico | ✅ | `OfficeController`, `leagues/office/index.blade.php`, redirect em `LeagueController::show`. **Spec:** [005](specs/005-escritorio-do-tecnico/spec.md) (entregue 2026-07-14) |
+| RF-GES-02 | Mensagens geradas por eventos do jogo: demissão/satisfação crítica, financeiro (cota de TV, salários, bilheteria, saldo baixo), transferências (proposta recebida, resultado, retenção) e escalação/partida | ✅ | `MessageService` + hooks em `FinancialService`, `TransferService`, `SatisfactionService`, `GlobalRoundService` |
+| RF-GES-03 | Usuário demitido recebe a cada rodada convites de times CPU de divisão igual ou inferior; convite não exclusivo (primeiro a aceitar leva), expira no `advanceWeek` seguinte; ex-clube só após carência de 12 rodadas | ✅ | `InvitationService`; relógio novo `leagues.global_round`; vínculo `league_members.status = fired`. Absorve RF-SAT-05 |
+
+## 11. Requisitos Não Funcionais (RNF)
 
 | ID | Requisito | Status | Observação |
 |---|---|---|---|
-| RNF-01 | Cobertura de testes Pest para services de regra de negócio (financeiro, transferências, satisfação, temporada) | ⚠️ | Infra pronta (MySQL `futone_testing`, helpers em `tests/Pest.php`) + 11 testes de transferências/financeiro/classificação (2026-07-06). Falta: satisfação, temporada, partida |
+| RNF-01 | Cobertura de testes Pest para services de regra de negócio (financeiro, transferências, satisfação, temporada) | ⚠️ | 58 testes: transferências/financeiro/classificação (2026-07-06), temporada (spec 002), mensagens/demissão/convites (spec 005, inclui zona crítica de satisfação). Falta: partida |
 | RNF-02 | Autorização consistente: validar cadeia `league → competition → match` e posse do time em toda action | ⚠️ | convenção existe; mercado ganhou escopo de liga + testes (2026-07-06); demais áreas sem verificação sistemática |
 | RNF-03 | Escritas multi-tabela sempre em `DB::transaction()` | ⚠️ | convenção documentada; auditar pontos críticos (transferências, avanço de rodada) |
 | RNF-04 | Tema dark consistente (slate + emerald para o time do usuário), interatividade via Alpine.js | ✅ | convenções no CLAUDE.md |
@@ -142,5 +150,5 @@ Ordem sugerida considerando risco × valor:
 4. **RF-TRF-09 — Ciclo de contratos.** Expiração + renovação fecha o loop do mercado; sem isso `contract_until` é cosmético.
 5. **RF-TRF-10 — CPU ativa no mercado.** Dá vida à economia: hoje o mercado só se move quando um humano age.
 6. **RF-CON-05 — Lesões dinâmicas.** Profundidade tática (força rotação de elenco); depende de 3 para o risco por fadiga fazer sentido.
-7. **RF-SAT-05 + RF-SAT-06 — Ciclo de demissão/recontratação de técnicos.** Completa o loop multiplayer de demissões.
+7. ~~RF-GES-01..03 — Escritório do Técnico~~ **Entregue em 2026-07-14** (spec 005). Restante do ciclo de técnicos: RF-SAT-06 (contratar técnico CPU do pool).
 8. **RF-FIN-08 — Regra de saldo negativo.** Decisão de game design pendente; sem ela a economia não tem pressão real.

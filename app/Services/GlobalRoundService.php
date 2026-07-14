@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Models\Championship;
 use App\Models\Competition;
+use App\Models\CompetitionMatch;
 use App\Models\CompetitionPlayer;
 use App\Models\CompetitionTeam;
 use App\Models\League;
+use App\Models\LeagueMessage;
 use App\Models\LeagueTeam;
 use App\Models\Player;
 use App\Models\Team;
@@ -28,6 +30,8 @@ class GlobalRoundService
         private readonly MatchSimulator           $simulator,
         private readonly SatisfactionService      $satisfaction,
         private readonly FinancialService         $financial,
+        private readonly MessageService           $messages,
+        private readonly InvitationService        $invitations,
     ) {}
 
     /**
@@ -43,6 +47,10 @@ class GlobalRoundService
      */
     public function advance(League $league): array
     {
+        // Relógio do jogo: unidade de tempo de mensagens, convites e carências (spec 005)
+        $league->increment('global_round');
+        $league->refresh();
+
         $phase      = $league->current_phase;
         $compType   = $this->phaseToType($phase);
         $liveUrl    = null;
@@ -82,10 +90,15 @@ class GlobalRoundService
         if (! empty($roundsCompleted)) {
             $this->satisfaction->updateAfterRound($league, $roundsCompleted);
             $this->satisfaction->checkFirings($league);
+            $this->sendMatchResultMessages($league, $roundsCompleted);
         }
 
         // Desconta salários semanais de todos os times da liga
         $this->financial->deductWeeklySalaries($league);
+
+        // Ciclo de convites para técnicos demitidos + aviso de escalação (spec 005)
+        $this->invitations->expireAndGenerate($league);
+        $this->warnIncompleteLineups($league);
 
         // Verifica se a fase inteira encerrou
         $phaseCompleted = $league->competitions()
@@ -120,6 +133,76 @@ class GlobalRoundService
             $q->where('league_id', $league->id)
               ->where('competition_type', $compType);
         })->where('status', 'halftime')->exists();
+    }
+
+    // ── Mensagens do Escritório (spec 005) ────────────────────────────────
+
+    /**
+     * Envia o resultado da rodada aos técnicos humanos envolvidos.
+     *
+     * @param array<string, int> $roundsCompleted  Map competition_id → round jogado
+     */
+    private function sendMatchResultMessages(League $league, array $roundsCompleted): void
+    {
+        foreach ($roundsCompleted as $competitionId => $round) {
+            $matches = CompetitionMatch::where('competition_id', $competitionId)
+                ->where('round', $round)
+                ->where('status', 'finished')
+                ->with(['homeTeam.leagueTeam', 'awayTeam.leagueTeam', 'competition'])
+                ->get();
+
+            foreach ($matches as $match) {
+                $home = $match->homeTeam?->leagueTeam;
+                $away = $match->awayTeam?->leagueTeam;
+
+                if (! $home || ! $away) {
+                    continue;
+                }
+
+                $score = "{$home->name} {$match->home_score} × {$match->away_score} {$away->name}";
+
+                foreach ([$home, $away] as $team) {
+                    $this->messages->sendToTeam(
+                        $team,
+                        LeagueMessage::TYPE_MATCH,
+                        "Resultado — {$match->competition->name}",
+                        "{$score} (rodada {$round}). Veja o replay completo.",
+                        $match,
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * Alerta técnicos humanos com escalação incompleta antes da próxima rodada.
+     */
+    private function warnIncompleteLineups(League $league): void
+    {
+        $humanTeams = LeagueTeam::where('league_id', $league->id)
+            ->whereNotNull('user_id')
+            ->get();
+
+        foreach ($humanTeams as $team) {
+            $lineup   = $team->activeLineup();
+            $starters = $lineup
+                ? $lineup->lineupPlayers()->where('is_starter', true)->count()
+                : 0;
+
+            if ($starters >= 11) {
+                continue;
+            }
+
+            $this->messages->sendToTeam(
+                $team,
+                LeagueMessage::TYPE_LINEUP,
+                'Escalação incompleta',
+                $lineup
+                    ? "Sua escalação tem apenas {$starters} titulares. Complete os 11 antes da próxima rodada."
+                    : 'Seu time ainda não tem escalação definida. Monte os 11 titulares antes da próxima rodada.',
+                $team,
+            );
+        }
     }
 
     // ── Transições de fase ────────────────────────────────────────────────

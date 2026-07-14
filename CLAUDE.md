@@ -116,9 +116,10 @@ Jogador acessa /matches/{match}/halftime
 
 Quando `league.team_assignment = 'auto'`:
 
-1. Jogadores entram via `POST /leagues/{league}/lobby/join` → criam `LeagueMember` com `status = waiting`
-2. Dono clica "Sortear Times" → `POST /leagues/{league}/lobby/draw`
-3. `LeagueLobbyController::draw()` faz shuffle de membros e `LeagueTeam`s CPU, atribui `user_id`
+1. **O dono já entra na fila ao criar a liga** (`LeagueController::store` cria seu `LeagueMember` com `status = waiting`)
+2. Demais jogadores entram via `POST /leagues/{league}/lobby/join`
+3. Dono pode clicar "Sortear Times" (`POST /leagues/{league}/lobby/draw`) — ou simplesmente iniciar/gerar a liga: `start` e `generate` sorteiam automaticamente quem estiver na fila (`LobbyService::drawWaitingMembers`)
+4. O sorteio faz shuffle de membros e `LeagueTeam`s CPU (`team_id` preenchido), atribui `user_id` e libera o técnico CPU para o pool
 
 Quando `team_assignment = 'manual'`: fluxo antigo via `LeagueTeamController`.
 
@@ -201,6 +202,9 @@ php artisan league:reset {league_id}
 | Transição de fase | `state → copa`, não direto para `national` | `GlobalRoundService::transitionToCopa()` chama `CopaBrasilService::generate()` |
 | `users.id` | É `bigint`, não UUID | Sempre usar `foreignId('user_id')` em migrations |
 | `teams:fix-slugs` | Update antes de delete viola unique | Apagar o duplicado primeiro, depois atualizar o original |
+| Iniciar liga de sorteio | Depois de `in_progress` o `draw` do lobby não roda mais (fila ficaria órfã) | `start`/`generate` chamam `LobbyService::drawWaitingMembers` antes de iniciar |
+| Intervalo sem lineup salva | Painel de substituições exige `$lineup` — sem ele o botão de 2º tempo sumia e a liga travava (`hasPendingLive`) | `halftime.blade.php` tem painel fallback só com o botão; `resumeSecondHalf` não exige lineup |
+| Dono avança sem escalar | Time jogaria no 4-4-2 automático sem aviso | `advanceWeek` bloqueia e redireciona o dono para `lineup.edit`; outros humanos jogam no automático (decisão 2026-07-14) |
 
 ---
 

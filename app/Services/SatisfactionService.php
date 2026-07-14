@@ -6,6 +6,8 @@ use App\Models\Competition;
 use App\Models\CompetitionMatch;
 use App\Models\League;
 use App\Models\LeagueCoach;
+use App\Models\LeagueMember;
+use App\Models\LeagueMessage;
 use App\Models\LeagueTeam;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -29,6 +31,13 @@ class SatisfactionService
 {
     // Threshold de diferença de força para considerar times distintos
     private const STRENGTH_THRESHOLD = 8;
+
+    // Margem acima do limiar de demissão que dispara o aviso de zona crítica (a calibrar)
+    private const CRITICAL_ZONE_MARGIN = 5;
+
+    public function __construct(
+        private readonly MessageService $messages,
+    ) {}
 
     // [resultado][local][relação_de_força: stronger|equal|weaker]
     private const DELTAS = [
@@ -134,6 +143,7 @@ class SatisfactionService
 
         foreach ($leagueTeams as $leagueTeam) {
             if (! $leagueTeam->shouldFireCoach()) {
+                $this->warnIfCriticalZone($leagueTeam, $league);
                 continue;
             }
 
@@ -141,6 +151,30 @@ class SatisfactionService
                 $this->fireCoach($leagueTeam, $league);
             });
         }
+    }
+
+    /**
+     * Avisa o técnico humano quando a satisfação entra na zona crítica —
+     * a poucos pontos do limiar de demissão (RF-GES-02).
+     */
+    private function warnIfCriticalZone(LeagueTeam $leagueTeam, League $league): void
+    {
+        if ($leagueTeam->user_id === null) {
+            return;
+        }
+
+        $threshold = $leagueTeam->firingThreshold();
+
+        if ($leagueTeam->satisfaction >= $threshold + self::CRITICAL_ZONE_MARGIN) {
+            return;
+        }
+
+        $this->messages->sendToTeam(
+            $leagueTeam,
+            LeagueMessage::TYPE_CLUB,
+            'A diretoria está impaciente',
+            "A satisfação do clube caiu para {$leagueTeam->satisfaction}/100, muito perto do limiar de demissão ({$threshold}). Um resultado ruim pode custar o cargo.",
+        );
     }
 
     /**
@@ -232,11 +266,31 @@ class SatisfactionService
                 ->update(['league_team_id' => null]);
         }
 
-        // 2. Se era um humano, remove o controle (time volta a ser CPU)
-        $wasHuman = $leagueTeam->user_id !== null;
-        if ($wasHuman) {
+        // 2. Se era um humano, remove o controle (time volta a ser CPU).
+        //    O LeagueMember 'fired' mantém a liga visível no dashboard do
+        //    demitido e alimenta o ciclo de convites (spec 005).
+        $firedUserId = $leagueTeam->user_id;
+        if ($firedUserId !== null) {
             $leagueTeam->update(['user_id' => null]);
-            // TODO: criar LeagueInvitation para o usuário demitido (sprint futuro)
+
+            LeagueMember::updateOrCreate(
+                ['league_id' => $league->id, 'user_id' => $firedUserId],
+                [
+                    'status'                    => LeagueMember::STATUS_FIRED,
+                    'fired_from_league_team_id' => $leagueTeam->id,
+                    'fired_at_global_round'     => $league->global_round ?? 0,
+                ],
+            );
+
+            $this->messages->sendToUser(
+                $league,
+                $firedUserId,
+                LeagueMessage::TYPE_CLUB,
+                "Você foi demitido do {$leagueTeam->name}",
+                'A diretoria perdeu a paciência com os resultados e encerrou seu contrato. ' .
+                    'Continue acompanhando a liga pelo Escritório: a cada rodada, clubes sem técnico podem convidá-lo.',
+                $leagueTeam,
+            );
         }
 
         // 3. Atribui um free agent do pool da liga

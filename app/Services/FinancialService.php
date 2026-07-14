@@ -7,11 +7,16 @@ use App\Models\CompetitionMatch;
 use App\Models\CompetitionPlayer;
 use App\Models\CompetitionTransaction;
 use App\Models\League;
+use App\Models\LeagueMessage;
 use App\Models\LeagueTeam;
 use Illuminate\Support\Facades\DB;
 
 class FinancialService
 {
+    public function __construct(
+        private readonly MessageService $messages,
+    ) {}
+
     private const TV_QUOTAS = [
         Competition::COMPETITION_TYPE_NATIONAL => [
             Competition::DIVISION_FIRST  => 10_000_000,
@@ -41,8 +46,12 @@ class FinancialService
 
         DB::transaction(function () use ($competition, $quota) {
             foreach ($competition->teams()->get() as $competitionTeam) {
-                LeagueTeam::where('id', $competitionTeam->league_team_id)
-                    ->increment('budget', $quota);
+                $leagueTeam = LeagueTeam::find($competitionTeam->league_team_id);
+                if (! $leagueTeam) {
+                    continue;
+                }
+
+                $leagueTeam->increment('budget', $quota);
 
                 CompetitionTransaction::create([
                     'competition_team_id' => $competitionTeam->id,
@@ -51,6 +60,13 @@ class FinancialService
                     'description'         => 'Cota de TV — ' . $competition->name,
                     'round'               => 0,
                 ]);
+
+                $this->messages->sendToTeam(
+                    $leagueTeam,
+                    LeagueMessage::TYPE_FINANCIAL,
+                    "Cota de TV — {$competition->name}",
+                    "A emissora depositou {$this->money($quota)} pela participação na competição.",
+                );
             }
         });
     }
@@ -85,6 +101,21 @@ class FinancialService
                         'round'               => $compTeam->competition?->current_round ?? 0,
                     ]);
                 }
+
+                $balance = $leagueTeam->fresh()->budget;
+                $body    = "Folha semanal de {$this->money($totalWage)} debitada. Saldo atual: {$this->money($balance)}.";
+
+                // Alerta: caixa não cobre nem uma semana de folha (a calibrar)
+                if ($balance < $totalWage) {
+                    $body .= ' Atenção: o caixa não cobre a próxima semana de salários.';
+                }
+
+                $this->messages->sendToTeam(
+                    $leagueTeam,
+                    LeagueMessage::TYPE_FINANCIAL,
+                    'Salários semanais pagos',
+                    $body,
+                );
             }
         });
     }
@@ -154,6 +185,19 @@ class FinancialService
             'attendance'    => $attendance,
             'match_revenue' => $revenue,
         ]);
+
+        $this->messages->sendToTeam(
+            $leagueTeam,
+            LeagueMessage::TYPE_FINANCIAL,
+            'Renda de bilheteria',
+            "{$attendance} torcedores renderam {$this->money($revenue)} como mandante.",
+            $match,
+        );
+    }
+
+    private function money(int $value): string
+    {
+        return 'R$ ' . number_format($value, 0, ',', '.');
     }
 
     private function attendanceFor(LeagueTeam $leagueTeam, Competition $competition): int

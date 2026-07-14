@@ -364,6 +364,13 @@
                 {{-- ── Atalhos do técnico ──────────────────────────────────────── --}}
                 @if ($myLeagueTeamInLeague && $league->isInProgress())
                     <div class="mb-6 flex flex-wrap gap-2">
+                        <a href="{{ route('leagues.office', $league) }}"
+                           class="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:border-slate-600 hover:text-white transition">
+                            🗄️ Escritório
+                            @if (($unreadMessages ?? 0) > 0)
+                                <span class="inline-flex items-center rounded-full bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold text-slate-900">{{ $unreadMessages }}</span>
+                            @endif
+                        </a>
                         <a href="{{ route('leagues.teams.show', [$league, $myLeagueTeamInLeague]) }}"
                            class="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:border-slate-600 hover:text-white transition">
                             Meu Time

@@ -15,6 +15,7 @@ use App\Http\Controllers\LeagueJoinController;
 use App\Http\Controllers\LeagueLobbyController;
 use App\Http\Controllers\LeagueTeamController;
 use App\Http\Controllers\LineupController;
+use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserDashboardController;
@@ -49,6 +50,12 @@ Route::middleware('auth')->group(function () {
     // Lobby (sorteio automático de times)
     Route::post('/leagues/{league}/lobby/join', [LeagueLobbyController::class, 'join'])->name('leagues.lobby.join');
     Route::post('/leagues/{league}/lobby/draw', [LeagueLobbyController::class, 'draw'])->name('leagues.lobby.draw');
+
+    // Escritório do Técnico (spec 005)
+    Route::get( '/leagues/{league}/office',                                    [OfficeController::class, 'index'])->name('leagues.office');
+    Route::post('/leagues/{league}/office/messages/{message}/read',            [OfficeController::class, 'readMessage'])->name('leagues.office.messages.read');
+    Route::post('/leagues/{league}/office/invitations/{invitation}/accept',    [OfficeController::class, 'acceptInvitation'])->name('leagues.office.invitations.accept');
+    Route::post('/leagues/{league}/office/invitations/{invitation}/decline',   [OfficeController::class, 'declineInvitation'])->name('leagues.office.invitations.decline');
 
     // Team enrollment
     Route::get('/leagues/{league}/join',   [LeagueTeamController::class, 'create'])->name('leagues.teams.create');

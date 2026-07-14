@@ -40,6 +40,7 @@ class League extends Model
         'season',
         'season_start',
         'current_phase',
+        'global_round',
         'team_assignment',
         'max_seasons',
         'started_at',

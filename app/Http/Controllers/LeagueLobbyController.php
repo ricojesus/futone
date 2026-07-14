@@ -5,9 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\League;
 use App\Models\LeagueMember;
 use App\Models\LeagueTeam;
-use App\Services\SatisfactionService;
+use App\Services\LobbyService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class LeagueLobbyController extends Controller
 {
@@ -70,53 +69,15 @@ class LeagueLobbyController extends Controller
                 ->with('error', 'Nenhum jogador na fila para sortear.');
         }
 
-        // Times CPU disponíveis (sem dono)
-        $availableTeams = LeagueTeam::where('league_id', $league->id)
-            ->whereNull('user_id')
-            ->whereNotNull('team_id')
-            ->get()
-            ->shuffle();
+        $result = app(LobbyService::class)->drawWaitingMembers($league);
 
-        if ($availableTeams->isEmpty()) {
+        if ($result['assigned'] === 0) {
             return redirect()->route('leagues.show', $league)
                 ->with('error', 'Não há times disponíveis para sortear.');
         }
 
-        // Sorteia: cada membro recebe um time aleatório
-        $membersShuffled = $waitingMembers->shuffle();
-        $assigned = 0;
-
-        $satisfactionService = app(SatisfactionService::class);
-
-        DB::transaction(function () use ($membersShuffled, $availableTeams, &$assigned, $league, $satisfactionService) {
-            foreach ($membersShuffled as $index => $member) {
-                $team = $availableTeams->get($index);
-
-                if (! $team) break; // Mais jogadores do que times disponíveis
-
-                $previousCoachId = $team->coach_id;
-
-                $team->update([
-                    'user_id'  => $member->user_id,
-                    'coach_id' => null, // humano assume; técnico vai para o mercado
-                ]);
-
-                // Libera o técnico padrão do clube para o pool de livres
-                if ($previousCoachId) {
-                    $satisfactionService->releaseCoachToPool(
-                        $league->id,
-                        $team->id,
-                        $previousCoachId
-                    );
-                }
-
-                $member->update(['status' => LeagueMember::STATUS_ASSIGNED]);
-                $assigned++;
-            }
-        });
-
-        $skipped = $waitingMembers->count() - $assigned;
-        $msg = "{$assigned} time(s) sorteado(s) com sucesso!";
+        $skipped = $result['waiting'] - $result['assigned'];
+        $msg = "{$result['assigned']} time(s) sorteado(s) com sucesso!";
         if ($skipped > 0) {
             $msg .= " {$skipped} jogador(es) ficaram sem time (times insuficientes).";
         }

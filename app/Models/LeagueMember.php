@@ -12,11 +12,14 @@ class LeagueMember extends Model
 
     const STATUS_WAITING  = 'waiting';
     const STATUS_ASSIGNED = 'assigned';
+    const STATUS_FIRED    = 'fired';
 
     protected $fillable = [
         'league_id',
         'user_id',
         'status',
+        'fired_from_league_team_id',
+        'fired_at_global_round',
     ];
 
     public function league(): BelongsTo

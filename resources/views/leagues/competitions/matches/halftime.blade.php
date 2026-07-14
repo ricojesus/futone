@@ -564,7 +564,28 @@
                             </button>
                         </form>
                     </div>
-                    @elseif (! $canResume)
+                    {{-- ══ PAINEL SEM ESCALAÇÃO SALVA (time jogou no 4-4-2 automático) ══ --}}
+                    @elseif ($canResume)
+                    <div class="rounded-2xl border border-amber-500/30 bg-amber-500/5 px-6 py-6 text-center space-y-4">
+                        <p class="text-amber-400 font-semibold text-sm">Seu time está jogando com escalação automática</p>
+                        <p class="text-slate-500 text-xs">
+                            Sem escalação salva não há substituições no intervalo — mas o jogo continua.
+                            Monte seus 11 titulares na tela de escalação antes das próximas rodadas.
+                        </p>
+                        <form action="{{ route('matches.halftime.resume', [$league, $competition, $match]) }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                class="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-emerald-400 active:scale-95">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                @if ($isHumanVsHuman)
+                                    Confirmar Intervalo
+                                @else
+                                    Iniciar 2º Tempo
+                                @endif
+                            </button>
+                        </form>
+                    </div>
+                    @else
                         <div class="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 px-6 py-8 text-center">
                             <p class="text-amber-400 font-semibold text-sm mb-1">Aguardando o intervalo terminar</p>
                             <p class="text-slate-500 text-xs">O técnico do time está preparando as substituições.</p>

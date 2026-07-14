@@ -8,6 +8,7 @@ use App\Models\CompetitionTeam;
 use App\Models\CompetitionTransaction;
 use App\Models\CompetitionTransfer;
 use App\Models\CompetitionTransferOffer;
+use App\Models\LeagueMessage;
 use App\Models\LeagueTeam;
 use Illuminate\Support\Facades\DB;
 
@@ -15,6 +16,7 @@ class TransferService
 {
     public function __construct(
         private readonly MarketValueService $marketValue,
+        private readonly MessageService $messages,
     ) {}
 
     // ── Validações de elenco ─────────────────────────────────────────────
@@ -85,6 +87,15 @@ class TransferService
         $sellerLeagueTeam = LeagueTeam::find($player->league_team_id);
         if ($sellerLeagueTeam?->isCpu()) {
             $this->resolveTeamDecision($offer);
+        } elseif ($sellerLeagueTeam) {
+            $this->messages->sendToTeam(
+                $sellerLeagueTeam,
+                LeagueMessage::TYPE_TRANSFER,
+                "Proposta recebida por {$player->name}",
+                "O {$buyerLeagueTeam->name} ofereceu " . $this->money($offeredFee) .
+                    " por {$player->name}. Responda na tela de propostas.",
+                $offer,
+            );
         }
 
         return $offer->fresh();
@@ -132,6 +143,8 @@ class TransferService
 
         if ($offer->offered_fee < $minFee || ! $this->canSell($sellerLeagueTeam, $player)) {
             $offer->update(['status' => 'rejected_team']);
+            $this->notifyBuyer($offer, "Proposta recusada por {$player->name}",
+                "O clube de {$player->name} recusou a proposta de " . $this->money($offer->offered_fee) . '.');
             return;
         }
 
@@ -151,6 +164,8 @@ class TransferService
 
         if ($offeredWage < $minWage) {
             $offer->update(['status' => 'rejected_player']);
+            $this->notifyBuyer($offer, "Proposta recusada por {$player->name}",
+                "{$player->name} considerou o salário oferecido abaixo das suas expectativas.");
             return;
         }
 
@@ -163,8 +178,28 @@ class TransferService
             // Counter-proposta: pede salário 30% maior que o atual
             $counterWage = (int) ($player->wage * 1.3);
             $offer->update(['status' => 'countered', 'counter_price' => $counterWage]);
+
+            $sellerLeagueTeam = $player->league_team_id
+                ? LeagueTeam::find($player->league_team_id)
+                : null;
+
+            if ($sellerLeagueTeam) {
+                $this->messages->sendToTeam(
+                    $sellerLeagueTeam,
+                    LeagueMessage::TYPE_TRANSFER,
+                    "{$player->name} pede aumento para ficar",
+                    "{$player->name} recebeu proposta de outro clube e pede salário de " .
+                        $this->money($counterWage) . " para ficar. Decida a retenção na tela de propostas.",
+                    $offer,
+                );
+            }
+
+            $this->notifyBuyer($offer, "{$player->name} negocia com o clube atual",
+                "{$player->name} pediu uma contra-oferta salarial ao clube atual. Aguarde a decisão.");
         } else {
             $offer->update(['status' => 'rejected_player']);
+            $this->notifyBuyer($offer, "Proposta recusada por {$player->name}",
+                "{$player->name} não se interessou pelo projeto do seu clube.");
         }
     }
 
@@ -195,6 +230,8 @@ class TransferService
         if ($stays) {
             $player->update(['wage' => $retentionWage]);
             $offer->update(['status' => 'rejected_player']);
+            $this->notifyBuyer($offer, "{$player->name} ficou no clube atual",
+                "O clube atual cobriu a proposta e {$player->name} decidiu ficar.");
             return;
         }
 
@@ -364,6 +401,44 @@ class TransferService
 
             $offer->update(['status' => 'accepted']);
         });
+
+        $this->messages->sendToTeam(
+            $buyerLeagueTeam,
+            LeagueMessage::TYPE_TRANSFER,
+            "Contratação confirmada: {$player->name}",
+            "{$player->name} assinou com o clube" .
+                ($offer->offered_fee > 0 ? ' por ' . $this->money($offer->offered_fee) : ' sem custo de transferência') .
+                ", com salário de {$this->money($offer->offered_wage)}.",
+            $offer,
+        );
+
+        if ($sellerLeagueTeam) {
+            $this->messages->sendToTeam(
+                $sellerLeagueTeam,
+                LeagueMessage::TYPE_TRANSFER,
+                "Venda concluída: {$player->name}",
+                "{$player->name} foi vendido ao {$buyerLeagueTeam->name}" .
+                    ($offer->offered_fee > 0 ? " por {$this->money($offer->offered_fee)}." : '.'),
+                $offer,
+            );
+        }
+    }
+
+    /**
+     * Notifica o técnico humano do time comprador sobre o desfecho da proposta.
+     */
+    private function notifyBuyer(CompetitionTransferOffer $offer, string $title, string $body): void
+    {
+        $buyerLeagueTeam = $offer->buyerTeam?->leagueTeam;
+
+        if ($buyerLeagueTeam) {
+            $this->messages->sendToTeam($buyerLeagueTeam, LeagueMessage::TYPE_TRANSFER, $title, $body, $offer);
+        }
+    }
+
+    private function money(int $value): string
+    {
+        return 'R$ ' . number_format($value, 0, ',', '.');
     }
 
     // ── Helpers privados ─────────────────────────────────────────────────
