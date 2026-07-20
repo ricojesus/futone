@@ -321,6 +321,17 @@ class MatchController extends Controller
         app(SatisfactionService::class)->applyLiveMatchResult($freshMatch, $league);
         app(FinancialService::class)->processMatchRevenue($freshMatch);
 
+        // O resultado pode ter derrubado a satisfação abaixo do limiar e demitido
+        // o próprio técnico que acabou de jogar — nesse caso vai direto ao escritório.
+        $wasFired = LeagueTeam::where('id', $myLeagueTeam->id)
+            ->where('user_id', auth()->id())
+            ->doesntExist();
+
+        if ($wasFired) {
+            return redirect()->route('leagues.office', $league)
+                ->with('error', "Você foi demitido do {$myLeagueTeam->name} após o resultado desta partida.");
+        }
+
         return redirect()
             ->route('matches.show', [$league, $competition, $match->fresh(), 'replay' => 1, 'second_half' => 1])
             ->with('success', 'Segundo tempo concluído! Assista ao replay completo.');

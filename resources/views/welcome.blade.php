@@ -7,6 +7,9 @@
 
         <title>{{ config('app.name', 'Futone') }}</title>
 
+        <link rel="icon" type="image/png" href="{{ asset('images/logos/favicon-32.png') }}">
+        <link rel="apple-touch-icon" href="{{ asset('images/logos/favicon-180.png') }}">
+
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=outfit:300,400,500,600,700,800&display=swap" rel="stylesheet" />
 
@@ -29,14 +32,19 @@
                     class="mb-6 h-28 w-auto drop-shadow-2xl sm:h-36 lg:h-44"
                 />
 
+                {{-- Slogan --}}
+                <p class="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-emerald-400 sm:text-base">
+                    A nova geração dos jogos de gestão de futebol
+                </p>
+
                 {{-- Headline + Subtitle --}}
                 <div class="mb-10 max-w-2xl rounded-2xl bg-slate-950/70 px-6 py-8 text-center backdrop-blur-sm sm:px-10">
                     <h1 class="mb-4 text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
                         Gerencie, dispute e conquiste sua liga.
                     </h1>
                     <p class="text-base font-medium leading-relaxed text-white/90 sm:text-lg">
-                        Futone é um jogo no estilo futmanager com criação de ligas online,
-                        partidas multiplayer em tempo real e confrontos contra times controlados pelo computador.
+                        Futone é um jogo de gestão de times de futebol online, com criação de ligas
+                        e partidas multiplayer em tempo real.
                     </p>
                 </div>
 

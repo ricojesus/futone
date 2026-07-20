@@ -26,6 +26,7 @@ class LeagueTeam extends Model
         'ticket_price',
         'tolerance',
         'satisfaction',
+        'coach_satisfaction',
     ];
 
     // ── Relacionamentos ───────────────────────────────────────────────────
@@ -112,12 +113,15 @@ class LeagueTeam extends Model
     }
 
     /**
-     * Retorna true quando a satisfação do clube caiu abaixo do limiar de demissão.
+     * Retorna true quando a satisfação do clube COM O TÉCNICO caiu abaixo do limiar de demissão.
      * Maior tolerância = clube mais paciente = limiar mais baixo = mais difícil demitir.
+     *
+     * Não confundir com `satisfaction` (torcida com o clube, usada na bilheteria) —
+     * `coach_satisfaction` é resetada a cada troca de técnico (ver SatisfactionService).
      */
     public function shouldFireCoach(): bool
     {
-        return $this->satisfaction < $this->firingThreshold();
+        return $this->coach_satisfaction < $this->firingThreshold();
     }
 
     /**

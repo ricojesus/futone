@@ -250,7 +250,7 @@ class LeagueController extends Controller
                     ->with('success', 'Temporada encerrada! Veja o resumo.');
             }
 
-            return redirect()->route('leagues.show', $league)
+            return redirect()->route('leagues.office', $league)
                 ->with('success', "Fase estadual concluída! {$nextLabel} criado automaticamente.");
         }
 
@@ -258,7 +258,7 @@ class LeagueController extends Controller
             ? "{$result['competitionsAdvanced']} competições avançaram para a próxima rodada."
             : 'Nenhuma competição disponível para avançar.';
 
-        return redirect()->route('leagues.show', $league)->with('success', $msg);
+        return redirect()->route('leagues.office', $league)->with('success', $msg);
     }
 
     public function seasonSummary(League $league, SeasonTransitionService $transitionService)

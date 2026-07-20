@@ -24,6 +24,7 @@ class LiveMatchSimulator
     public function __construct(
         private readonly MatchNarrator    $narrator,
         private readonly FinancialService $financial,
+        private readonly CpuLineupService $cpuLineups,
     ) {}
 
     // ── API pública ──────────────────────────────────────────────────

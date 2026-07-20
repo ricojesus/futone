@@ -314,7 +314,7 @@
                 {{-- ── Card de satisfação do clube (só para técnicos humanos em jogo) ── --}}
                 @if ($myLeagueTeamInLeague && $league->isInProgress())
                     @php
-                        $sat       = $myLeagueTeamInLeague->satisfaction;
+                        $sat       = $myLeagueTeamInLeague->coach_satisfaction;
                         $threshold = $myLeagueTeamInLeague->firingThreshold();
                         $margin    = $sat - $threshold;
 

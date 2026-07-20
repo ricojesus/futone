@@ -80,6 +80,10 @@ class InvitationService
                 $team->update(['coach_id' => null]);
             }
 
+            // Novo técnico começa com a diretoria zerada, independente de como
+            // o CPU anterior deixou o clube.
+            $this->satisfaction->resetCoachSatisfaction($team);
+
             $locked->update(['status' => LeagueInvitation::STATUS_ACCEPTED]);
 
             // Convites concorrentes: os demais do usuário e os de outros usuários para este time

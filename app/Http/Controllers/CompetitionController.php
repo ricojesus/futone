@@ -8,6 +8,7 @@ use App\Models\CompetitionMatch;
 use App\Models\CompetitionPlayer;
 use App\Models\CompetitionTeam;
 use App\Models\League;
+use App\Models\LeagueMember;
 use App\Models\LeagueTeam;
 use App\Models\Team;
 use App\Services\CompetitionRoundService;
@@ -103,9 +104,16 @@ class CompetitionController extends Controller
             $phaseNames = CopaBrasilService::PHASE_NAMES;
         }
 
+        // Técnico demitido (sem time, mas ainda com vínculo na liga) — deve ir ao
+        // Escritório para aguardar convites, não escolher um time livremente.
+        $isFired = ! $myLeagueTeam && LeagueMember::where('league_id', $league->id)
+            ->where('user_id', auth()->id())
+            ->where('status', LeagueMember::STATUS_FIRED)
+            ->exists();
+
         return view('leagues.competitions.show', compact(
             'league', 'competition', 'matchesByRound', 'myLeagueTeam', 'myTeam', 'standings', 'isOwner', 'topScorers',
-            'myHalftimeMatch', 'myHalftimeUrl', 'bracketPhases', 'phaseNames'
+            'myHalftimeMatch', 'myHalftimeUrl', 'bracketPhases', 'phaseNames', 'isFired'
         ));
     }
 
@@ -264,7 +272,7 @@ class CompetitionController extends Controller
             ? "{$result['cpuCount']} partidas simuladas. {$result['liveCount']} partida(s) aguardando o intervalo."
             : "Rodada {$result['nextRound']} simulada! {$result['cpuCount']} partidas jogadas.";
 
-        return redirect()->route('competitions.show', [$league, $competition])->with('success', $msg);
+        return redirect()->route('leagues.office', $league)->with('success', $msg);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────

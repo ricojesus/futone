@@ -51,8 +51,12 @@ class OfficeController extends Controller
                 ->get()
             : collect();
 
+        $weeklyWage = $myTeam
+            ? $myTeam->players()->where('status', 'active')->sum('wage')
+            : 0;
+
         return view('leagues.office.index', compact(
-            'league', 'myTeam', 'isOwner', 'isFired', 'messages', 'unreadCount', 'invitations',
+            'league', 'myTeam', 'isOwner', 'isFired', 'messages', 'unreadCount', 'invitations', 'weeklyWage',
         ));
     }
 

@@ -16,6 +16,11 @@
         </div>
     @endif
 
+    @php
+        $allCompetitionsFinished = $league->competitions->isNotEmpty()
+            && $league->competitions->every(fn($c) => $c->status === \App\Models\Competition::STATUS_FINISHED);
+    @endphp
+
     {{-- Hero do Escritório --}}
     <div class="relative overflow-hidden border-b border-slate-800 bg-slate-900">
         <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.08),transparent_60%)]"></div>
@@ -29,17 +34,22 @@
             </div>
 
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h1 class="text-2xl font-extrabold text-white sm:text-3xl">🗄️ Escritório do Técnico</h1>
-                    <p class="mt-1 text-slate-400">
-                        @if ($myTeam)
-                            Comandando o <strong class="text-emerald-400">{{ $myTeam->name }}</strong> · {{ $league->seasonLabel() }}
-                        @elseif ($isFired)
-                            <span class="text-amber-400">Sem clube no momento</span> — aguardando convites · {{ $league->seasonLabel() }}
-                        @else
-                            {{ $league->seasonLabel() }}
-                        @endif
-                    </p>
+                <div class="flex items-center gap-3">
+                    @if ($myTeam)
+                        <x-team-badge :team="$myTeam" size="lg" />
+                    @endif
+                    <div>
+                        <h1 class="text-2xl font-extrabold text-white sm:text-3xl">🗄️ Escritório do Técnico</h1>
+                        <p class="mt-1 text-slate-400">
+                            @if ($myTeam)
+                                Comandando o <strong class="text-emerald-400">{{ $myTeam->name }}</strong> · {{ $league->seasonLabel() }}
+                            @elseif ($isFired)
+                                <span class="text-amber-400">Sem clube no momento</span> — aguardando convites · {{ $league->seasonLabel() }}
+                            @else
+                                {{ $league->seasonLabel() }}
+                            @endif
+                        </p>
+                    </div>
                 </div>
 
                 <div class="flex flex-wrap gap-2">
@@ -61,12 +71,124 @@
                             Mercado
                         </a>
                     @endif
+                    @if ($isOwner && $league->isInProgress() && ! $allCompetitionsFinished)
+                        <form action="{{ route('leagues.advance-week', $league) }}" method="POST" class="inline-flex">
+                            @csrf
+                            <button type="submit"
+                                class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 active:scale-95">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061A1.125 1.125 0 0 1 3 16.811V8.69ZM12.75 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061a1.125 1.125 0 0 1-1.683-.977V8.69Z" />
+                                </svg>
+                                Avançar Rodada
+                            </button>
+                        </form>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
 
     <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+
+        {{-- ── Situação do clube (satisfação do técnico + torcida + finanças) ─────── --}}
+        @if ($myTeam)
+            @php
+                $sat       = $myTeam->coach_satisfaction;
+                $threshold = $myTeam->firingThreshold();
+                $margin    = $sat - $threshold;
+
+                [$barColor, $cardBorder, $cardBg, $statusColor, $statusLabel] = match(true) {
+                    $margin >= 20 => ['bg-emerald-500', 'border-emerald-500/20', 'bg-emerald-500/5',  'text-emerald-400', '✓ Cargo seguro'],
+                    $margin >= 5  => ['bg-amber-400',   'border-amber-500/20',   'bg-amber-500/5',    'text-amber-400',   '⚠ Atenção'],
+                    $margin >= 0  => ['bg-orange-500',  'border-orange-500/20',  'bg-orange-500/5',   'text-orange-400',  '⚠ Em risco'],
+                    default       => ['bg-red-500',     'border-red-500/30',     'bg-red-500/5',      'text-red-400',     '⛔ Demissão iminente'],
+                };
+
+                $torcida = $myTeam->satisfaction;
+                $budget  = $myTeam->budget;
+            @endphp
+
+            <section>
+                <h2 class="mb-3 text-lg font-bold text-white">📊 Situação do Clube</h2>
+
+                {{-- Satisfação do clube com o técnico (risco de demissão) --}}
+                <div class="mb-4 rounded-2xl border {{ $cardBorder }} {{ $cardBg }} px-5 py-4">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <p class="text-sm font-bold text-white leading-tight">Satisfação do Clube com Você</p>
+                            <p class="text-xs text-slate-500 mt-0.5">Quanto a diretoria do {{ $myTeam->name }} confia no seu trabalho</p>
+                        </div>
+                        <div class="flex items-center gap-4 min-w-[220px] flex-1 justify-end">
+                            <div class="flex-1 max-w-[180px]">
+                                <div class="flex justify-between text-[10px] text-slate-500 mb-1.5">
+                                    <span class="font-bold {{ $statusColor }}">{{ $sat }}/100</span>
+                                    <span>limiar {{ $threshold }}</span>
+                                </div>
+                                <div class="relative h-2 rounded-full bg-slate-700/80">
+                                    <div class="{{ $barColor }} h-full rounded-full transition-all duration-500"
+                                         style="width:{{ $sat }}%"></div>
+                                    <div class="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-white/30"
+                                         style="left:{{ $threshold }}%"></div>
+                                </div>
+                            </div>
+                            <span class="shrink-0 text-xs font-semibold {{ $statusColor }}">{{ $statusLabel }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Condição financeira + satisfação da torcida (influencia bilheteria) --}}
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
+                        <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">Satisfação da Torcida</p>
+                        <p class="text-xl font-bold mb-2 {{ $torcida >= 60 ? 'text-emerald-400' : ($torcida >= 35 ? 'text-yellow-400' : 'text-red-400') }}">
+                            {{ $torcida }}/100
+                        </p>
+                        <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                            <div class="h-2 rounded-full {{ $torcida >= 60 ? 'bg-emerald-500' : ($torcida >= 35 ? 'bg-yellow-500' : 'bg-red-500') }}"
+                                 style="width: {{ $torcida }}%"></div>
+                        </div>
+                        <p class="text-xs text-slate-600 mt-1">Influencia o público nos jogos</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
+                        <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">Saldo</p>
+                        <p class="text-xl font-bold {{ $budget >= 0 ? 'text-emerald-400' : 'text-red-400' }}">
+                            R$ {{ number_format(abs($budget), 0, ',', '.') }}
+                            {{ $budget < 0 ? '(negativo)' : '' }}
+                        </p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
+                        <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">Folha Salarial / Semana</p>
+                        <p class="text-xl font-bold text-slate-200">
+                            R$ {{ number_format($weeklyWage, 0, ',', '.') }}
+                        </p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
+                        <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">Preço do Ingresso</p>
+                        <form method="POST" action="{{ route('leagues.teams.ticket-price', [$league, $myTeam]) }}" class="mt-1 flex items-center gap-2">
+                            @csrf @method('PATCH')
+                            <span class="text-slate-400 text-sm">R$</span>
+                            <input type="number" name="ticket_price" min="10" max="500" title="Mín. R$10 · Máx. R$500"
+                                   value="{{ old('ticket_price', $myTeam->ticket_price) }}"
+                                   class="w-16 rounded-lg bg-slate-800 border border-slate-600 px-2 py-1 text-sm text-white focus:border-emerald-500 focus:outline-none">
+                            <button type="submit"
+                                    class="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1 text-xs font-semibold text-white transition">
+                                Salvar
+                            </button>
+                        </form>
+                        @error('ticket_price')
+                            <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                @if ($budget < 0)
+                    <div class="mt-4 flex items-center gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-3 text-sm text-red-300">
+                        <span>⚠️</span>
+                        <span><strong>Saldo negativo.</strong> As finanças do clube estão no vermelho — venda jogadores, ajuste o ingresso ou reduza a folha salarial.</span>
+                    </div>
+                @endif
+            </section>
+        @endif
 
         {{-- ── Convites (usuário demitido) ─────────────────────────────── --}}
         @if ($isFired)
@@ -95,6 +217,10 @@
                                         · Estádio para {{ number_format($club->stadium_capacity, 0, ',', '.') }}
                                     </p>
                                 </div>
+                                <a href="{{ route('leagues.teams.show', [$league, $club]) }}"
+                                   class="mb-2 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:border-slate-600 hover:text-white transition">
+                                    🔎 Ver jogadores, finanças e classificação
+                                </a>
                                 <div class="mt-auto flex gap-2">
                                     <form method="POST" action="{{ route('leagues.office.invitations.accept', [$league, $invitation]) }}" class="flex-1">
                                         @csrf

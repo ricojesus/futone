@@ -225,6 +225,12 @@ trait SimulatesMatch
             ->orderByDesc('round')
             ->first();
 
+        // Time CPU sem escalação para esta rodada: gera e persiste uma,
+        // considerando o desgaste atual do elenco (ver CpuLineupService).
+        if (! $lineup && $leagueTeam->isCpu()) {
+            $lineup = $this->cpuLineups->generateForRound($leagueTeam, $round);
+        }
+
         if ($lineup) {
             $players = $lineup->players()
                 ->where('competition_lineup_players.is_starter', true)

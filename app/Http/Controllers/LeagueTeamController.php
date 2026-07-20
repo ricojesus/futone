@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Coach;
 use App\Models\Competition;
+use App\Models\CompetitionTeam;
 use App\Models\League;
 use App\Models\LeagueTeam;
 use App\Models\Team;
@@ -52,6 +53,18 @@ class LeagueTeamController extends Controller
             ->orderByDesc('points')
             ->get();
 
+        // Posição na classificação de cada competição (critério oficial: pts → vitórias → saldo → gols pró)
+        $standingsPositions = [];
+        foreach ($competitionTeams->pluck('competition_id')->unique() as $competitionId) {
+            $sorted = CompetitionTeam::sortStandings(
+                CompetitionTeam::where('competition_id', $competitionId)->get()
+            );
+
+            foreach ($sorted as $index => $ct) {
+                $standingsPositions[$ct->id] = $index + 1;
+            }
+        }
+
         // Time do usuário logado nesta liga (para saber se é "meu time")
         $myLeagueTeam = LeagueTeam::where('league_id', $league->id)
             ->where('user_id', auth()->id())
@@ -59,9 +72,16 @@ class LeagueTeamController extends Controller
 
         $isMyTeam = $myLeagueTeam && $myLeagueTeam->id === $leagueTeam->id;
 
+        // Convite pendente do usuário para este clube — permite ver finanças
+        // antes de decidir aceitar (spec 005: convites pós-demissão).
+        $hasPendingInvitation = \App\Models\LeagueInvitation::where('league_team_id', $leagueTeam->id)
+            ->where('user_id', auth()->id())
+            ->where('status', \App\Models\LeagueInvitation::STATUS_PENDING)
+            ->exists();
+
         return view('leagues.teams.show', compact(
             'league', 'leagueTeam', 'lineup', 'starters', 'squad',
-            'competitionTeams', 'isMyTeam', 'myLeagueTeam',
+            'competitionTeams', 'standingsPositions', 'isMyTeam', 'myLeagueTeam', 'hasPendingInvitation',
         ));
     }
 
@@ -152,9 +172,13 @@ class LeagueTeamController extends Controller
                     $previousCoachId
                 );
             }
+
+            // Novo técnico começa com a diretoria zerada, independente de como
+            // o CPU anterior deixou o clube.
+            app(SatisfactionService::class)->resetCoachSatisfaction($leagueTeam);
         });
 
-        return redirect()->route('leagues.show', $league)
+        return redirect()->route('leagues.office', $league)
             ->with('success', "{$leagueTeam->name} inscrito com sucesso!");
     }
 

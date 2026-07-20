@@ -27,6 +27,7 @@ class SyncTeamBadges extends Command
         'remo'                  => 'clube-do-remo',
         'mirassol-sp'           => 'mirassol',
         'vitoria-ba'            => 'vitoria',
+        'nautico-pe'            => 'nautico',
         'atletico-mineiro'      => 'atletico-mineiro',   // garante sem acento
         'gremio'                => 'gremio',
         'sao-paulo'             => 'sao-paulo',

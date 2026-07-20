@@ -14,6 +14,7 @@ class MatchSimulator
 
     public function __construct(
         private readonly MatchNarrator $narrator = new MatchNarrator(),
+        private readonly CpuLineupService $cpuLineups = new CpuLineupService(),
     ) {}
 
     /**

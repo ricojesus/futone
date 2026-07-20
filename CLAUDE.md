@@ -92,7 +92,7 @@ A transição é automática via `GlobalRoundService::transitionPhase()` quando 
 | `MatchNarrator` | Gera narração textual para cada evento |
 | `SeasonTransitionService` | Calcula promoções/rebaixamentos e gera competitions da temporada seguinte |
 | `CalendarGeneratorService` | Gera o calendário de partidas de uma competition |
-| `StaminaService` | Calcula degradação de fitness pós-partida |
+| `CpuLineupService` | Gera e persiste a escalação automática de um time CPU a cada rodada, escolhendo os 11 melhores por posição considerando fitness atual (desgaste) |
 
 ---
 
@@ -205,6 +205,7 @@ php artisan league:reset {league_id}
 | Iniciar liga de sorteio | Depois de `in_progress` o `draw` do lobby não roda mais (fila ficaria órfã) | `start`/`generate` chamam `LobbyService::drawWaitingMembers` antes de iniciar |
 | Intervalo sem lineup salva | Painel de substituições exige `$lineup` — sem ele o botão de 2º tempo sumia e a liga travava (`hasPendingLive`) | `halftime.blade.php` tem painel fallback só com o botão; `resumeSecondHalf` não exige lineup |
 | Dono avança sem escalar | Time jogaria no 4-4-2 automático sem aviso | `advanceWeek` bloqueia e redireciona o dono para `lineup.edit`; outros humanos jogam no automático (decisão 2026-07-14) |
+| Times CPU nunca desgastavam | `applyFitnessDegradation()` só desconta fitness de jogadores com `CompetitionLineup` persistida da rodada; times CPU nunca tinham uma (usavam fallback `autoSelectPlayers()` recalculado e descartado a cada partida) | Corrigido (2026-07-20): `SimulatesMatch::loadLineup()` chama `CpuLineupService::generateForRound()` quando o time é CPU e não há lineup da rodada, persistindo os 11 melhores por fitness/power — isso alimenta a degradação normalmente |
 
 ---
 

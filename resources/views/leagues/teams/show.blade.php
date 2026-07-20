@@ -81,9 +81,12 @@
             @endif
         @endif
 
-        {{-- ── Painel financeiro (apenas técnico humano do próprio time) ── --}}
-        @if ($isMyTeam)
+        {{-- ── Painel financeiro (próprio time, ou clube que convidou o técnico) ── --}}
+        @if ($isMyTeam || $hasPendingInvitation)
             <div class="space-y-4 mb-8">
+            @if (! $isMyTeam)
+                <p class="text-xs font-semibold uppercase tracking-widest text-emerald-400">Prévia do clube — convite pendente</p>
+            @endif
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4">
                     <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">Saldo</p>
@@ -125,21 +128,25 @@
             {{-- Preço do ingresso --}}
             <div class="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4 mt-4">
                 <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">Preço do Ingresso</p>
-                <form method="POST" action="{{ route('leagues.teams.ticket-price', [$league, $leagueTeam]) }}" class="flex items-center gap-3">
-                    @csrf @method('PATCH')
-                    <span class="text-slate-400 text-sm">R$</span>
-                    <input type="number" name="ticket_price" min="10" max="500"
-                           value="{{ old('ticket_price', $leagueTeam->ticket_price) }}"
-                           class="w-28 rounded-lg bg-slate-800 border border-slate-600 px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none">
-                    <button type="submit"
-                            class="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition">
-                        Salvar
-                    </button>
-                    <span class="text-xs text-slate-500">Mín. R$10 · Máx. R$500</span>
-                </form>
-                @error('ticket_price')
-                    <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
-                @enderror
+                @if ($isMyTeam)
+                    <form method="POST" action="{{ route('leagues.teams.ticket-price', [$league, $leagueTeam]) }}" class="flex items-center gap-3">
+                        @csrf @method('PATCH')
+                        <span class="text-slate-400 text-sm">R$</span>
+                        <input type="number" name="ticket_price" min="10" max="500"
+                               value="{{ old('ticket_price', $leagueTeam->ticket_price) }}"
+                               class="w-28 rounded-lg bg-slate-800 border border-slate-600 px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none">
+                        <button type="submit"
+                                class="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition">
+                            Salvar
+                        </button>
+                        <span class="text-xs text-slate-500">Mín. R$10 · Máx. R$500</span>
+                    </form>
+                    @error('ticket_price')
+                        <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                    @enderror
+                @else
+                    <p class="text-xl font-bold text-slate-200">R$ {{ number_format($leagueTeam->ticket_price, 0, ',', '.') }}</p>
+                @endif
             </div>
             </div>{{-- /space-y-4 --}}
         @endif
@@ -153,6 +160,7 @@
                         <thead>
                             <tr class="border-b border-slate-800 text-left text-xs text-slate-500 uppercase tracking-wide">
                                 <th class="px-4 py-2.5 font-medium">Competição</th>
+                                <th class="px-3 py-2.5 text-center font-medium">Pos.</th>
                                 <th class="px-3 py-2.5 text-center font-medium">J</th>
                                 <th class="px-3 py-2.5 text-center font-medium">V</th>
                                 <th class="px-3 py-2.5 text-center font-medium">E</th>
@@ -169,6 +177,7 @@
                                     <td class="px-4 py-3">
                                         <p class="font-medium text-white text-sm">{{ $ct->competition->name }}</p>
                                     </td>
+                                    <td class="px-3 py-3 text-center font-bold text-emerald-400 tabular-nums">{{ $standingsPositions[$ct->id] ?? '-' }}º</td>
                                     <td class="px-3 py-3 text-center text-slate-400 tabular-nums">{{ $jogos }}</td>
                                     <td class="px-3 py-3 text-center text-slate-400 tabular-nums">{{ $ct->wins }}</td>
                                     <td class="px-3 py-3 text-center text-slate-400 tabular-nums">{{ $ct->draws }}</td>

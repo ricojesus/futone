@@ -66,7 +66,7 @@
     {{-- ══ Painel de satisfação ════════════════════════════════════════════════ --}}
     @if ($league->isInProgress())
         @php
-            $sat       = $leagueTeam->satisfaction;
+            $sat       = $leagueTeam->coach_satisfaction;
             $threshold = $leagueTeam->firingThreshold();
             $margin    = $sat - $threshold;
 

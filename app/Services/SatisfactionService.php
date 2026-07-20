@@ -94,13 +94,7 @@ class SatisfactionService
         }
 
         foreach ($deltas as $leagueTeamId => $delta) {
-            DB::table('league_teams')
-                ->where('id', $leagueTeamId)
-                ->update([
-                    'satisfaction' => DB::raw(
-                        "LEAST(100, GREATEST(1, satisfaction + ({$delta})))"
-                    ),
-                ]);
+            $this->applyDelta($leagueTeamId, $delta);
         }
     }
 
@@ -121,16 +115,29 @@ class SatisfactionService
         [$homeDelta, $awayDelta] = $this->computeDeltas($match);
 
         foreach ([[$homeLeagueTeamId, $homeDelta], [$awayLeagueTeamId, $awayDelta]] as [$id, $delta]) {
-            DB::table('league_teams')
-                ->where('id', $id)
-                ->update([
-                    'satisfaction' => DB::raw(
-                        "LEAST(100, GREATEST(1, satisfaction + ({$delta})))"
-                    ),
-                ]);
+            $this->applyDelta($id, $delta);
         }
 
         $this->checkFirings($league);
+    }
+
+    /**
+     * Aplica o mesmo delta de resultado às duas métricas de satisfação:
+     * a torcida sente o resultado do clube, e o clube reavalia o técnico.
+     * Só `coach_satisfaction` é resetada em trocas de técnico (ver fireCoach/hire).
+     */
+    private function applyDelta(string $leagueTeamId, int $delta): void
+    {
+        DB::table('league_teams')
+            ->where('id', $leagueTeamId)
+            ->update([
+                'satisfaction' => DB::raw(
+                    "LEAST(100, GREATEST(1, satisfaction + ({$delta})))"
+                ),
+                'coach_satisfaction' => DB::raw(
+                    "LEAST(100, GREATEST(1, coach_satisfaction + ({$delta})))"
+                ),
+            ]);
     }
 
     /**
@@ -165,7 +172,7 @@ class SatisfactionService
 
         $threshold = $leagueTeam->firingThreshold();
 
-        if ($leagueTeam->satisfaction >= $threshold + self::CRITICAL_ZONE_MARGIN) {
+        if ($leagueTeam->coach_satisfaction >= $threshold + self::CRITICAL_ZONE_MARGIN) {
             return;
         }
 
@@ -173,8 +180,21 @@ class SatisfactionService
             $leagueTeam,
             LeagueMessage::TYPE_CLUB,
             'A diretoria está impaciente',
-            "A satisfação do clube caiu para {$leagueTeam->satisfaction}/100, muito perto do limiar de demissão ({$threshold}). Um resultado ruim pode custar o cargo.",
+            "A satisfação do clube com você caiu para {$leagueTeam->coach_satisfaction}/100, muito perto do limiar de demissão ({$threshold}). Um resultado ruim pode custar o cargo.",
         );
+    }
+
+    /**
+     * Zera a satisfação do clube COM O TÉCNICO quando um humano assume um time
+     * (convite aceito ou escolha livre). Evita que o novo técnico herde uma
+     * satisfação já baixa deixada pelo técnico/CPU anterior e seja demitido
+     * antes de disputar uma partida sequer.
+     *
+     * Não afeta `satisfaction` (torcida com o clube), que segue intacta.
+     */
+    public function resetCoachSatisfaction(LeagueTeam $leagueTeam): void
+    {
+        $leagueTeam->update(['coach_satisfaction' => 50]);
     }
 
     /**
@@ -257,7 +277,7 @@ class SatisfactionService
     private function fireCoach(LeagueTeam $leagueTeam, League $league): void
     {
         Log::info("SatisfactionService: demitindo técnico do time {$leagueTeam->name} " .
-                  "(sat={$leagueTeam->satisfaction}, threshold={$leagueTeam->firingThreshold()})");
+                  "(coach_sat={$leagueTeam->coach_satisfaction}, threshold={$leagueTeam->firingThreshold()})");
 
         // 1. Move técnico atual para o mercado (se houver)
         if ($leagueTeam->coach_id) {
@@ -306,10 +326,11 @@ class SatisfactionService
             $newCoachId = $newLeagueCoach->coach_id;
         }
 
-        // 4. Atualiza o time: novo técnico + reset de satisfação
+        // 4. Atualiza o time: novo técnico + reset da satisfação COM O TÉCNICO
+        //    (a satisfação da torcida com o clube não é afetada pela troca).
         $leagueTeam->update([
-            'coach_id'     => $newCoachId,
-            'satisfaction' => 50,
+            'coach_id'           => $newCoachId,
+            'coach_satisfaction' => 50,
         ]);
     }
 }

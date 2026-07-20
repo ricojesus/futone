@@ -69,6 +69,7 @@ class LeagueGeneratorService
     public function __construct(
         private readonly CalendarGeneratorService $calendar,
         private readonly FinancialService         $financial,
+        private readonly PlayerGeneratorService    $playerGenerator,
     ) {}
 
     // ── API pública ───────────────────────────────────────────────────────
@@ -316,16 +317,24 @@ class LeagueGeneratorService
     /**
      * Copies players from the most recent LeagueTeam reference for this team.
      * Creates CompetitionPlayer records associated with the LeagueTeam.
+     *
+     * Se não houver LeagueTeam anterior para copiar (clube nunca teve elenco
+     * gerado), gera um elenco novo via PlayerGeneratorService.
      */
     private function copyPlayers(Team $team, LeagueTeam $newLeagueTeam): void
     {
-        // Look for an older LeagueTeam for the same team (from a previous season)
+        // Look for an older LeagueTeam for the same team that actually has players
+        // (a LeagueTeam with zero players — e.g. itself never generated — can't be copied from)
         $ref = LeagueTeam::where('team_id', $team->id)
             ->where('id', '!=', $newLeagueTeam->id)
+            ->whereHas('players')
             ->latest()
             ->first();
 
-        if (! $ref) return;
+        if (! $ref) {
+            $this->playerGenerator->generateForTeam($team, $newLeagueTeam);
+            return;
+        }
 
         $ref->players()
             ->whereIn('status', ['active', 'injured'])
